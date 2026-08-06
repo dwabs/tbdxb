@@ -2,14 +2,14 @@
 
 /* ---------------------------------------------------------------------------
    The Bucket List DXB — design tokens
-   Direction: the logo's pink and primary, on a faintly pink off-white canvas.
+   Direction: the logo's maroon and pink, on a faintly pink off-white canvas.
    Airbnb's generosity (big photography, air, soft elevation) with shadcn's
    discipline (hairline borders, restrained radii, muted-foreground hierarchy).
 --------------------------------------------------------------------------- */
 
 @theme {
   /**
-   * Everything is derived from the client's logo: its primary #4A2536 is the
+   * Everything is derived from the client's logo: its maroon #4A2536 is the
    * primary, its pink #F47EB4 the accent.
    *
    * The accent is light — white on it is only 2.47:1 — so it never carries
@@ -17,14 +17,14 @@
    * which is the logo's own pairing.
    */
 
-  /* Canvas + ink (primary-tinted, from the logo's own dark) */
+  /* Canvas + ink (maroon-tinted, from the logo's own dark) */
   --color-canvas: #fffafc;
   --color-paper: #ffffff;
   --color-ink: #331924; /* 15.6:1 on canvas */
   --color-ink-muted: #7a5766; /* 6.0:1 */
   --color-ink-subtle: #8a6b78; /* 4.6:1 — the lightest that still clears AA */
 
-  /* Primary — the logo's primary */
+  /* Primary — the logo's maroon */
   --color-primary: #4a2536; /* white on it: 13.1:1 */
   --color-primary-hover: #5d2f44; /* white on it: 10.7:1 */
 
@@ -94,42 +94,52 @@
   }
 }
 
-:root {
-  color-scheme: light;
-}
+/**
+ * Base element styles live in @layer base on purpose. Unlayered CSS beats
+ * anything in a layer regardless of specificity, so a global rule declared
+ * outside a layer could never be overridden by a Tailwind utility — e.g.
+ * `focus-visible:outline-none` on an input silently lost to the focus ring
+ * below. Inside @layer base, utilities win, which is what you expect.
+ */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
 
-html {
-  -webkit-tap-highlight-color: transparent;
-}
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
 
-body {
-  background-color: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-synthesis-weight: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
 
-/* Every interactive element gets one consistent, visible focus ring. */
-:focus-visible {
-  outline: 2px solid var(--color-accent-deep);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
+  /* Default focus ring. Controls that show focus another way opt out with
+     `focus-visible:outline-none` — see the search fields, which light the
+     whole cell instead. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-deep);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 
-/* Headings and anchors */
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-  text-wrap: balance;
-}
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
 
-[id] {
-  scroll-margin-top: 6rem;
+  [id] {
+    scroll-margin-top: 6rem;
+  }
 }
 
 /* Numbers that sit in columns or get compared (prices, counts) */

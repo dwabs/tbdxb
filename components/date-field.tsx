@@ -59,7 +59,10 @@ export function DateField({
         <PopoverTrigger
           aria-label={`${label} — ${selected ? display.format(selected) : placeholder.toLowerCase()}`}
           className={cn(
-            "group flex min-w-0 flex-col items-start rounded-2xl px-4 py-2.5 text-left transition-colors duration-200 hover:bg-paper/70 data-[state=open]:bg-paper data-[state=open]:shadow-lift [touch-action:manipulation]",
+            // Matches the text fields beside it: the cell itself lights up on
+            // focus, so it opts out of the default ring rather than showing
+            // both. Keyboard users still get a clear indicator.
+            "group flex min-w-0 flex-col items-start rounded-2xl px-4 py-2.5 text-left transition-colors duration-200 hover:bg-paper/70 focus-visible:bg-paper focus-visible:shadow-lift focus-visible:outline-none data-[state=open]:bg-paper data-[state=open]:shadow-lift [touch-action:manipulation]",
             className,
           )}
         >
