@@ -52,7 +52,11 @@ export function DateField({
   const min = toDate(fromDate ?? "");
 
   return (
-    <>
+    // `display: contents` so the trigger still lays out as a direct child of
+    // the search row, while the DOM keeps one element per cell — the pill's
+    // dividers select their neighbours with `+`, and a bare fragment would
+    // put this hidden input in the way.
+    <div className="contents" data-open={open ? "" : undefined}>
       <input type="hidden" name={name} value={selected ? toValue(selected) : ""} />
 
       <Popover open={open} onOpenChange={setOpen}>
@@ -109,6 +113,6 @@ export function DateField({
           ) : null}
         </PopoverContent>
       </Popover>
-    </>
+    </div>
   );
 }

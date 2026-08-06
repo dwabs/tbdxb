@@ -185,6 +185,32 @@
   }
 }
 
+/**
+ * The hairlines between the search pill's cells. A cell lights up on hover or
+ * focus by filling with white and rounding off, which leaves the hairline
+ * cutting into that rounded edge. So the dividers on either side of the live
+ * cell fade out, and the one under the cursor goes too — separators are only
+ * useful between cells that are both at rest.
+ *
+ * Sibling selectors rather than utilities: each rule is about a divider's
+ * neighbour, which is a relationship, not a state the divider can carry.
+ */
+@layer components {
+  .field-divider {
+    transition: opacity 0.2s var(--ease-out-soft);
+  }
+
+  /* `[data-open]` marks a date cell whose calendar is showing. It's a plain
+     attribute because `:has()` cannot be nested inside `:has()` — reaching
+     for the trigger's own `[data-state]` from the divider would invalidate
+     the selector, and one bad selector drops the whole list. */
+  .field-divider:hover,
+  :is(:hover, :focus-within, [data-open]) + .field-divider,
+  .field-divider:has(+ :is(:hover, :focus-within, [data-open])) {
+    opacity: 0;
+  }
+}
+
 /* Numbers that sit in columns or get compared (prices, counts) */
 .tabular {
   font-variant-numeric: tabular-nums;

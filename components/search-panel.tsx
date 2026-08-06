@@ -134,7 +134,10 @@ export function SearchPanel() {
 }
 
 const Divider = () => (
-  <span aria-hidden="true" className="hidden h-8 w-px shrink-0 bg-line-strong lg:block" />
+  <span
+    aria-hidden="true"
+    className="field-divider hidden h-8 w-px shrink-0 bg-line-strong lg:block"
+  />
 );
 
 function StepperButton({
