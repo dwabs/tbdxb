@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Clock, MapPin, Users } from "lucide-react";
+import { Check, ChevronRight, Clock, Hourglass, MapPin, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -46,6 +46,7 @@ export default async function EventPage({ params }: Params) {
       label: "When",
       value: `${formatDateLong(experience.date)} · ${formatTimeRange(experience.startTime, experience.endTime)}`,
     },
+    { icon: Hourglass, label: "Duration", value: experience.durationLabel },
     { icon: Users, label: "Group size", value: experience.groupSize },
   ];
 
@@ -74,7 +75,7 @@ export default async function EventPage({ params }: Params) {
 
       <div className="mt-12 grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-16">
         <div className="min-w-0">
-          <ul className="grid gap-5 border-y border-line py-6 sm:grid-cols-3">
+          <ul className="grid gap-5 border-y border-line py-6 sm:grid-cols-2 lg:grid-cols-4">
             {facts.map((fact) => (
               <li key={fact.label} className="flex min-w-0 gap-3">
                 <fact.icon aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0 text-accent-deep" />

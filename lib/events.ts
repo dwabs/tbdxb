@@ -12,7 +12,6 @@ export type Experience = {
   durationLabel: string;
   groupSize: string;
   images: { src: string; alt: string; width: number; height: number }[];
-  tone: Tone;
   tags: string[];
   summary: string;
   body: string[];
@@ -24,9 +23,6 @@ export type Experience = {
    */
   isSample: boolean;
 };
-
-/** Duotone grounds used for sample listings that have no photography yet. */
-export type Tone = "berry" | "teal" | "amber" | "sand" | "photo";
 
 export const CATEGORIES = [
   { id: "best-this-month", label: "Best Things to Do This Month" },
@@ -51,7 +47,6 @@ export const EXPERIENCES: Experience[] = [
     endTime: "18:00",
     durationLabel: "2 hours",
     groupSize: "Up to 16 people",
-    tone: "photo",
     tags: ["Workshop", "Hands-on", "Includes food"],
     images: [
       {
@@ -105,7 +100,6 @@ export const EXPERIENCES: Experience[] = [
     endTime: "21:00",
     durationLabel: "2.5 hours",
     groupSize: "Up to 24 people",
-    tone: "photo",
     tags: ["Dinner", "On the water", "Sunset"],
     images: [
       {
@@ -136,7 +130,6 @@ export const EXPERIENCES: Experience[] = [
     endTime: "22:30",
     durationLabel: "2.5 hours",
     groupSize: "Up to 60 people",
-    tone: "photo",
     tags: ["Outdoors", "Late night"],
     images: [
       {
@@ -165,7 +158,6 @@ export const EXPERIENCES: Experience[] = [
     endTime: "22:00",
     durationLabel: "3 hours",
     groupSize: "8 – 24 people",
-    tone: "photo",
     tags: ["Sport", "Beginner friendly", "Includes food"],
     images: [
       {
@@ -194,7 +186,6 @@ export const EXPERIENCES: Experience[] = [
     endTime: "22:00",
     durationLabel: "4.5 hours",
     groupSize: "Up to 30 people",
-    tone: "photo",
     tags: ["Dinner", "Out of town", "Stargazing"],
     images: [
       {
@@ -223,7 +214,6 @@ export const EXPERIENCES: Experience[] = [
     endTime: "13:00",
     durationLabel: "2 hours",
     groupSize: "Up to 6 people",
-    tone: "photo",
     tags: ["Workshop", "Hands-on", "Small group"],
     images: [
       {
@@ -252,7 +242,6 @@ export const EXPERIENCES: Experience[] = [
     endTime: "19:30",
     durationLabel: "2.5 hours",
     groupSize: "Up to 12 people",
-    tone: "photo",
     tags: ["Workshop", "Beginner friendly"],
     images: [
       {
