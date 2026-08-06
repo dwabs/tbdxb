@@ -1,26 +1,174 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+   The Bucket List DXB — design tokens
+   Direction: the brand's bubblegum pink, deepened into a berry and set on a
+   warm off-white canvas. Airbnb's generosity (big photography, air, soft
+   elevation) with shadcn's discipline (hairline borders, restrained radii,
+   muted-foreground hierarchy).
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* Canvas + ink */
+  --color-canvas: #fdfcfb;
+  --color-paper: #ffffff;
+  --color-ink: #1c1917;
+  --color-ink-muted: #6b6259;
+  /* 4.7:1 on canvas — the lightest this can go and still clear WCAG AA. */
+  --color-ink-subtle: #7a7066;
+
+  /* Brand */
+  --color-berry: #c2185b;
+  --color-berry-deep: #9c1049;
+  --color-berry-soft: #f5c6da;
+  --color-blush: #fce7f0;
+
+  /* Structure */
+  --color-sand: #e7e2db;
+  --color-sand-soft: #f4f1ed;
+  --color-line: #eae5de;
+  --color-line-strong: #ded8d0;
+
+  /* Support */
+  --color-teal: #17403d;
+  --color-amber: #b4791a;
+
+  /* Type */
+  --font-display: var(--font-gabarito), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid display sizes */
+  --text-hero: clamp(2.75rem, 1.4rem + 5.4vw, 5.25rem);
+  --text-hero--line-height: 0.94;
+  --text-hero--letter-spacing: -0.035em;
+
+  --text-display: clamp(2rem, 1.2rem + 3vw, 3.25rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.03em;
+
+  --text-section: clamp(1.5rem, 1.1rem + 1.4vw, 2.125rem);
+  --text-section--line-height: 1.08;
+  --text-section--letter-spacing: -0.025em;
+
+  /* Elevation — soft and warm, never grey */
+  --shadow-lift: 0 1px 2px rgba(28, 25, 23, 0.05), 0 8px 24px -12px rgba(28, 25, 23, 0.14);
+  --shadow-lift-lg: 0 2px 4px rgba(28, 25, 23, 0.05), 0 18px 44px -16px rgba(28, 25, 23, 0.2);
+  --shadow-rail: 0 1px 2px rgba(28, 25, 23, 0.04), 0 14px 40px -20px rgba(28, 25, 23, 0.22);
+
+  --radius-card: 0.875rem;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-rise: rise 0.6s var(--ease-out-soft) both;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
+@keyframes draw-tick {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Every interactive element gets one consistent, visible focus ring. */
+:focus-visible {
+  outline: 2px solid var(--color-berry);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Headings and anchors */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+[id] {
+  scroll-margin-top: 6rem;
+}
+
+/* Numbers that sit in columns or get compared (prices, counts) */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Signature ground: the faint ruled sheet a bucket list gets written on. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(2rem - 1px),
+    var(--color-line) calc(2rem - 1px),
+    var(--color-line) 2rem
+  );
+}
+
+/**
+ * Small icon buttons keep their compact look but get a 44×44 hit area, so
+ * they stay tappable without inflating the layout around them.
+ */
+.tap-target {
+  position: relative;
+}
+.tap-target::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+/* Horizontal scroll rails: hide the bar, keep the scrolling. */
+.rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

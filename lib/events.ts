@@ -1,0 +1,236 @@
+export type Experience = {
+  slug: string;
+  title: string;
+  shortTitle: string;
+  venue: string;
+  area: string;
+  category: string;
+  priceAED: number;
+  date: string; // ISO
+  endTime: string; // 24h "HH:MM"
+  startTime: string; // 24h "HH:MM"
+  durationLabel: string;
+  groupSize: string;
+  images: { src: string; alt: string; width: number; height: number }[];
+  tone: Tone;
+  tags: string[];
+  summary: string;
+  body: string[];
+  includes: string[];
+  /**
+   * Real listings are copied verbatim from thebucketlistdxb.com. Sample rows
+   * exist only so the redesigned category rails can be evaluated with content
+   * in them — replace them with live API data before this ships.
+   */
+  isSample: boolean;
+};
+
+/** Duotone grounds used for sample listings that have no photography yet. */
+export type Tone = "berry" | "teal" | "amber" | "sand" | "photo";
+
+export const CATEGORIES = [
+  { id: "best-this-month", label: "Best Things to Do This Month" },
+  { id: "date-night", label: "Date Night" },
+  { id: "group-plans", label: "Group Plans" },
+  { id: "try-something-new", label: "Try Something New" },
+  { id: "summer-in-the-city", label: "Summer in the City" },
+] as const;
+
+export const EXPERIENCES: Experience[] = [
+  {
+    // ---- Real listing, copied from the live site ----
+    slug: "an-afternoon-at-salt-candle-making-mango-softies",
+    title: "An Afternoon at SALT: Candle Making & Mango Softies",
+    shortTitle: "An Afternoon at SALT",
+    venue: "SALT, Museum of the Future",
+    area: "Sheikh Zayed Road",
+    category: "best-this-month",
+    priceAED: 169,
+    date: "2026-08-08",
+    startTime: "16:00",
+    endTime: "18:00",
+    durationLabel: "2 hours",
+    groupSize: "Up to 16 people",
+    tone: "photo",
+    tags: ["Workshop", "Hands-on", "Includes food"],
+    images: [
+      {
+        src: "/events/salt-1.jpeg",
+        alt: "A mango softie shaped candle lit against a blue backdrop",
+        width: 1080,
+        height: 1350,
+      },
+      {
+        src: "/events/salt-2.jpeg",
+        alt: "Hands stirring a candle wick into a glass vessel at a workshop table",
+        width: 736,
+        height: 1104,
+      },
+      {
+        src: "/events/salt-3.jpeg",
+        alt: "A hand holding SALT’s signature mango softie in a branded cup",
+        width: 800,
+        height: 1066,
+      },
+    ],
+    summary:
+      "One of Dubai’s favourite summer treats — turned into a candle. Pour and customise your own Mango Softie scent, then eat the real thing.",
+    body: [
+      "One of Dubai’s favourite summer treats—turned into a candle. 🥭🕯️",
+      "Spend your Saturday afternoon at SALT, Museum of the Future creating your very own scented candle inspired by SALT’s iconic Mango Softie—then enjoy the real thing afterwards. During this two-hour guided workshop, you’ll learn how to pour, customise, and take home your handmade candle, with all materials included.",
+      "Whether you’re planning a fun date, a girls’ catch-up, or simply looking for something different to do this summer, this is one of those uniquely Dubai experiences you won’t want to miss. Trust us…this is one you’ll definitely want to tick off your bucket list.",
+    ],
+    includes: [
+      "A guided Mango Softie-inspired candle-making workshop",
+      "All candle-making materials and supplies",
+      "SALT’s signature Mango Softie",
+      "Your handmade candle to take home",
+    ],
+    isSample: false,
+  },
+
+  // ---- Sample listings below: placeholder content for layout review only ----
+  {
+    slug: "sunset-dhow-supper-al-seef",
+    title: "Sunset Dhow Supper on Dubai Creek",
+    shortTitle: "Sunset Dhow Supper",
+    venue: "Al Seef Marine Station",
+    area: "Al Seef",
+    category: "date-night",
+    priceAED: 295,
+    date: "2026-08-14",
+    startTime: "18:30",
+    endTime: "21:00",
+    durationLabel: "2.5 hours",
+    groupSize: "Up to 24 people",
+    tone: "teal",
+    tags: ["Dinner", "On the water", "Sunset"],
+    images: [],
+    summary:
+      "A slow loop of the creek on a restored wooden dhow, with a four-course Emirati supper served as the light goes.",
+    body: [
+      "A slow loop of the creek on a restored wooden dhow, with a four-course Emirati supper served as the light goes.",
+    ],
+    includes: ["Four-course Emirati supper", "Soft drinks and karak", "Two-hour creek cruise"],
+    isSample: true,
+  },
+  {
+    slug: "rooftop-film-club-alserkal",
+    title: "Rooftop Film Club at Alserkal Avenue",
+    shortTitle: "Rooftop Film Club",
+    venue: "Alserkal Avenue",
+    area: "Al Quoz",
+    category: "date-night",
+    priceAED: 120,
+    date: "2026-08-21",
+    startTime: "20:00",
+    endTime: "22:30",
+    durationLabel: "2.5 hours",
+    groupSize: "Up to 60 people",
+    tone: "berry",
+    tags: ["Outdoors", "Late night"],
+    images: [],
+    summary:
+      "Deckchairs, wireless headphones and a cult film on a warehouse roof, with the Al Quoz skyline behind the screen.",
+    body: ["Deckchairs, wireless headphones and a cult film on a warehouse roof."],
+    includes: ["Reserved deckchair", "Wireless headphones", "One drink from the kiosk"],
+    isSample: true,
+  },
+  {
+    slug: "padel-and-pizza-social",
+    title: "Padel & Pizza Social",
+    shortTitle: "Padel & Pizza Social",
+    venue: "Padel Pro, Al Barsha",
+    area: "Al Barsha",
+    category: "group-plans",
+    priceAED: 145,
+    date: "2026-08-16",
+    startTime: "19:00",
+    endTime: "22:00",
+    durationLabel: "3 hours",
+    groupSize: "8 – 24 people",
+    tone: "amber",
+    tags: ["Sport", "Beginner friendly", "Includes food"],
+    images: [],
+    summary:
+      "Two hours of round-robin padel across four courts, then pizza on the terrace. Rackets provided, no partner needed.",
+    body: ["Two hours of round-robin padel across four courts, then pizza on the terrace."],
+    includes: ["Court hire and rackets", "Round-robin matches", "Pizza and drinks after"],
+    isSample: true,
+  },
+  {
+    slug: "desert-supper-club",
+    title: "Desert Supper Club at Al Marmoom",
+    shortTitle: "Desert Supper Club",
+    venue: "Al Marmoom Desert Conservation Reserve",
+    area: "Al Marmoom",
+    category: "group-plans",
+    priceAED: 420,
+    date: "2026-08-29",
+    startTime: "17:30",
+    endTime: "22:00",
+    durationLabel: "4.5 hours",
+    groupSize: "Up to 30 people",
+    tone: "sand",
+    tags: ["Dinner", "Out of town", "Stargazing"],
+    images: [],
+    summary:
+      "A long table set in the dunes, a fire-pit menu cooked in front of you, and a telescope once the sky clears.",
+    body: ["A long table set in the dunes, with a fire-pit menu cooked in front of you."],
+    includes: ["Return transfer from Dubai", "Fire-pit dinner", "Guided stargazing"],
+    isSample: true,
+  },
+  {
+    slug: "glassblowing-taster-dubai-glass",
+    title: "Glassblowing Taster Session",
+    shortTitle: "Glassblowing Taster",
+    venue: "Dubai Glass Studio",
+    area: "Al Quoz",
+    category: "try-something-new",
+    priceAED: 350,
+    date: "2026-08-12",
+    startTime: "11:00",
+    endTime: "13:00",
+    durationLabel: "2 hours",
+    groupSize: "Up to 6 people",
+    tone: "teal",
+    tags: ["Workshop", "Hands-on", "Small group"],
+    images: [],
+    summary:
+      "Gather, shape and blow your first piece at a 1,100°C furnace, under one-to-one instruction. Take it home the next week.",
+    body: ["Gather, shape and blow your first piece at a 1,100°C furnace."],
+    includes: ["Two-hour guided session", "All materials", "Your finished piece, collected later"],
+    isSample: true,
+  },
+  {
+    slug: "arabic-calligraphy-workshop",
+    title: "Arabic Calligraphy from Scratch",
+    shortTitle: "Arabic Calligraphy",
+    venue: "Sikka Art Space",
+    area: "Al Fahidi",
+    category: "try-something-new",
+    priceAED: 190,
+    date: "2026-08-19",
+    startTime: "17:00",
+    endTime: "19:30",
+    durationLabel: "2.5 hours",
+    groupSize: "Up to 12 people",
+    tone: "berry",
+    tags: ["Workshop", "Beginner friendly"],
+    images: [],
+    summary:
+      "Learn to cut a reed pen and write your name in Diwani script, taught by a calligrapher in a wind-tower house.",
+    body: ["Learn to cut a reed pen and write your name in Diwani script."],
+    includes: ["Reed pen and ink to keep", "Practice sheets", "Arabic coffee and dates"],
+    isSample: true,
+  },
+];
+
+export const experiencesByCategory = (categoryId: string) =>
+  EXPERIENCES.filter((experience) => experience.category === categoryId);
+
+export const getExperience = (slug: string) =>
+  EXPERIENCES.find((experience) => experience.slug === slug);
+
+export const relatedExperiences = (experience: Experience, limit = 3) =>
+  EXPERIENCES.filter((candidate) => candidate.slug !== experience.slug).slice(0, limit);
