@@ -85,15 +85,6 @@
   }
 }
 
-@keyframes draw-tick {
-  from {
-    stroke-dashoffset: 24;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 /**
  * Base element styles live in @layer base on purpose. Unlayered CSS beats
  * anything in a layer regardless of specificity, so a global rule declared

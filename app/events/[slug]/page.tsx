@@ -105,7 +105,7 @@ export default async function EventPage({ params }: Params) {
             <h2 id="includes-heading" className="text-section font-semibold text-ink">
               What’s Included
             </h2>
-            <ul className="mt-5 grid max-w-2xl gap-3 sm:grid-cols-2">
+            <ul className="mt-5 grid gap-3 sm:grid-cols-2">
               {experience.includes.map((item) => (
                 <li
                   key={item}

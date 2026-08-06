@@ -3,7 +3,6 @@
 import { Minus, Plus, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
-import { BucketListToggle } from "@/components/bucket-list-toggle";
 import { Button } from "@/components/ui/button";
 import type { Experience } from "@/lib/events";
 import { formatDateLong, formatPrice, formatTimeRange } from "@/lib/utils";
@@ -15,15 +14,12 @@ export function BookingPanel({ experience }: { experience: Experience }) {
   return (
     <>
       <div className="rounded-card border border-line bg-paper p-6 shadow-rail">
-        <div className="flex items-start justify-between gap-4">
-          <p className="tabular text-[1.75rem] leading-none font-bold tracking-[-0.02em] text-ink">
-            {formatPrice(experience.priceAED)}
-            <span className="block pt-1.5 text-[0.9375rem] font-normal tracking-normal text-ink-muted">
-              per person
-            </span>
-          </p>
-          <BucketListToggle title={experience.title} size="lg" className="border-line-strong bg-paper" />
-        </div>
+        <p className="tabular text-[1.75rem] leading-none font-bold tracking-[-0.02em] text-ink">
+          {formatPrice(experience.priceAED)}
+          <span className="block pt-1.5 text-[0.9375rem] font-normal tracking-normal text-ink-muted">
+            per person
+          </span>
+        </p>
 
         <dl className="mt-6 divide-y divide-line rounded-xl border border-line">
           <div className="flex items-baseline justify-between gap-4 px-4 py-3">

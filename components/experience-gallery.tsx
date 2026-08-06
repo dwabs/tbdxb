@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { ExperienceMedia } from "@/components/experience-media";
 import type { Experience } from "@/lib/events";
+import { cn } from "@/lib/utils";
 
 /**
  * Pure CSS: a snap carousel on mobile, a mosaic from md up. No JS, no
@@ -15,6 +16,28 @@ export function ExperienceGallery({ experience }: { experience: Experience }) {
       <div className="aspect-[16/10] overflow-hidden rounded-card md:aspect-[2/1]">
         <ExperienceMedia experience={experience} sizes="100vw" priority={true} />
       </div>
+    );
+  }
+
+  /**
+   * A single photo has no mosaic to fill. Stretching it across the full 86rem
+   * column would mean either a 2.9:1 letterbox or a 700px-tall wall, so it
+   * gets its own narrower measure instead: a centred 16/9 hero, which is a
+   * light crop on the 3:2 photography these listings use.
+   */
+  if (rest.length === 0) {
+    return (
+      <figure className="mx-auto aspect-[16/10] w-full overflow-hidden rounded-card bg-sand-soft md:aspect-[16/9] md:max-w-5xl">
+        <Image
+          src={cover.src}
+          alt={cover.alt}
+          width={cover.width}
+          height={cover.height}
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 64rem"
+          preload
+          className="size-full object-cover"
+        />
+      </figure>
     );
   }
 
@@ -35,7 +58,13 @@ export function ExperienceGallery({ experience }: { experience: Experience }) {
       {rest.map((image) => (
         <figure
           key={image.src}
-          className="relative w-[85vw] shrink-0 snap-center overflow-hidden rounded-card bg-sand-soft md:w-auto"
+          className={cn(
+            "relative w-[85vw] shrink-0 snap-center overflow-hidden rounded-card bg-sand-soft md:w-auto",
+            // One image beside the cover takes the whole side column; two
+            // stack. Past three the grid would spill its fixed height, so
+            // listings are capped at three photos for now.
+            rest.length === 1 && "md:row-span-2",
+          )}
         >
           <Image
             src={image.src}
