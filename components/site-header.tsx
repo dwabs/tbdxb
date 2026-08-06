@@ -45,7 +45,7 @@ export function SiteHeader() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "rounded-full px-3.5 py-2 text-[0.9375rem] font-medium transition-colors duration-150",
-                  active ? "bg-blush text-pink-deep" : "text-ink-muted hover:bg-sand-soft hover:text-ink",
+                  active ? "bg-blush text-accent-deep" : "text-ink-muted hover:bg-sand-soft hover:text-ink",
                 )}
               >
                 {link.label}
@@ -59,7 +59,7 @@ export function SiteHeader() {
             <Globe aria-hidden="true" />
             English
           </Button>
-          <Button variant="ink" size="sm" asChild>
+          <Button size="sm" asChild>
             <Link href="/sign-in">Sign In</Link>
           </Button>
           <button

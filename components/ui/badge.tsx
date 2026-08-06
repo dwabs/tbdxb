@@ -9,9 +9,9 @@ const badgeVariants = cva(
     variants: {
       variant: {
         outline: "border border-line-strong bg-paper text-ink-muted",
-        blush: "bg-blush text-pink-deep",
+        blush: "bg-blush text-accent-deep",
         sand: "bg-sand-soft text-ink-muted",
-        ink: "bg-maroon text-white",
+        ink: "bg-primary text-white",
       },
       size: {
         sm: "h-6 px-2.5 text-[0.6875rem] tracking-wide uppercase",

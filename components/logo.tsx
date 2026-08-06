@@ -41,7 +41,7 @@ export function Wordmark({ className }: { className?: string }) {
         className,
       )}
     >
-      thebucketlist<span className="text-pink-deep">dxb</span>
+      thebucketlist<span className="text-accent-deep">dxb</span>
     </span>
   );
 }

@@ -44,13 +44,13 @@ export function SiteFooter() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail aria-hidden="true" className="size-4 shrink-0 text-ink-subtle" />
-                <a href={`mailto:${SITE.email}`} className="hover:text-pink-deep hover:underline">
+                <a href={`mailto:${SITE.email}`} className="hover:text-accent-deep hover:underline">
                   {SITE.email}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone aria-hidden="true" className="size-4 shrink-0 text-ink-subtle" />
-                <a href={SITE.phoneHref} className="tabular hover:text-pink-deep hover:underline">
+                <a href={SITE.phoneHref} className="tabular hover:text-accent-deep hover:underline">
                   {SITE.phone}
                 </a>
               </li>
@@ -61,7 +61,7 @@ export function SiteFooter() {
               target="_blank"
               rel="noreferrer noopener"
               aria-label="The Bucket List DXB on Instagram"
-              className="mt-6 inline-grid size-10 place-items-center rounded-full border border-line-strong text-ink transition-colors duration-150 hover:border-pink hover:text-pink-deep"
+              className="mt-6 inline-grid size-10 place-items-center rounded-full border border-line-strong text-ink transition-colors duration-150 hover:border-accent hover:text-accent-deep"
             >
               <InstagramMark />
             </a>
@@ -77,7 +77,7 @@ export function SiteFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-[0.9375rem] text-ink-muted transition-colors duration-150 hover:text-pink-deep hover:underline"
+                      className="text-[0.9375rem] text-ink-muted transition-colors duration-150 hover:text-accent-deep hover:underline"
                     >
                       {link.label}
                     </Link>
@@ -101,7 +101,7 @@ export function SiteFooter() {
           <p className="tabular">© {new Date().getFullYear()} thebucketlistdxb. All rights reserved.</p>
           <p>
             Speak to our expert at{" "}
-            <a href={SITE.phoneHref} className="tabular font-medium text-ink hover:text-pink-deep hover:underline">
+            <a href={SITE.phoneHref} className="tabular font-medium text-ink hover:text-accent-deep hover:underline">
               {SITE.phone}
             </a>
           </p>

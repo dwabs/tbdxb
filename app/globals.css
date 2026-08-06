@@ -2,35 +2,38 @@
 
 /* ---------------------------------------------------------------------------
    The Bucket List DXB — design tokens
-   Direction: the logo's pink and maroon, on a faintly pink off-white canvas.
+   Direction: the logo's pink and primary, on a faintly pink off-white canvas.
    Airbnb's generosity (big photography, air, soft elevation) with shadcn's
    discipline (hairline borders, restrained radii, muted-foreground hierarchy).
 --------------------------------------------------------------------------- */
 
 @theme {
   /**
-   * Everything is derived from the logo: its pink #F47EB4 is the primary, and
-   * its maroon #4A2536 is the ink family.
+   * Everything is derived from the client's logo: its primary #4A2536 is the
+   * primary, its pink #F47EB4 the accent.
    *
-   * The pink is light — white on it is only 2.47:1, so it can never carry white
-   * text. The logo already solves this: maroon on pink is 5.28:1. That is the
-   * pairing used for every primary button.
+   * The accent is light — white on it is only 2.47:1 — so it never carries
+   * white text. Where it fills a surface, the primary sits on top (5.28:1),
+   * which is the logo's own pairing.
    */
 
-  /* Canvas + ink (maroon-tinted, from the logo's own dark) */
+  /* Canvas + ink (primary-tinted, from the logo's own dark) */
   --color-canvas: #fffafc;
   --color-paper: #ffffff;
   --color-ink: #331924; /* 15.6:1 on canvas */
   --color-ink-muted: #7a5766; /* 6.0:1 */
   --color-ink-subtle: #8a6b78; /* 4.6:1 — the lightest that still clears AA */
 
-  /* Brand */
-  --color-pink: #f47eb4; /* the logo pink, exactly */
-  --color-pink-hover: #ee6ba6; /* maroon still reads at 4.5:1 */
-  --color-pink-deep: #be3775; /* for pink text on light: 5.1:1 */
-  --color-pink-soft: #fbc9de;
+  /* Primary — the logo's primary */
+  --color-primary: #4a2536; /* white on it: 13.1:1 */
+  --color-primary-hover: #5d2f44; /* white on it: 10.7:1 */
+
+  /* Accent — the logo's pink */
+  --color-accent: #f47eb4; /* primary on it: 5.28:1 */
+  --color-accent-hover: #ee6ba6; /* primary on it: 4.53:1 */
+  --color-accent-deep: #be3775; /* accent as *text* on light: 5.1:1 */
+  --color-accent-soft: #fbc9de;
   --color-blush: #fdeef5;
-  --color-maroon: #4a2536; /* the logo's ground; text on pink, dark surfaces */
 
   /* Structure */
   --color-sand: #f0e2e9;
@@ -111,7 +114,7 @@ body {
 
 /* Every interactive element gets one consistent, visible focus ring. */
 :focus-visible {
-  outline: 2px solid var(--color-pink-deep);
+  outline: 2px solid var(--color-accent-deep);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -160,6 +163,22 @@ h4 {
   width: 44px;
   height: 44px;
   transform: translate(-50%, -50%);
+}
+
+/* Popover entrance — no tailwindcss-animate dependency, just two keyframes. */
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.popover-content[data-state="open"] {
+  animation: popover-in 0.14s var(--ease-out-soft);
 }
 
 /* Horizontal scroll rails: hide the bar, keep the scrolling. */

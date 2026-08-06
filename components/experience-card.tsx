@@ -24,7 +24,7 @@ export function ExperienceCard({
         />
 
         {experience.tags[0] ? (
-          <Badge variant="ink" size="sm" className="absolute bottom-3 left-3 z-10 bg-ink/85 backdrop-blur-sm">
+          <Badge variant="ink" size="sm" className="absolute bottom-3 left-3 z-10 bg-primary/85 backdrop-blur-sm">
             {experience.tags[0]}
           </Badge>
         ) : null}

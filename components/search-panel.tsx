@@ -1,9 +1,10 @@
 "use client";
 
-import { CalendarDays, Minus, Plus, Search, Users } from "lucide-react";
+import { Minus, Plus, Search, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { DateField } from "@/components/date-field";
 import { Button } from "@/components/ui/button";
 import { Field, fieldInputClass } from "@/components/ui/field";
 
@@ -21,6 +22,9 @@ export function SearchPanel() {
     if (!Number.isFinite(seeded)) return 0;
     return Math.min(MAX_GUESTS, Math.max(0, Math.trunc(seeded)));
   });
+
+  // "From" bounds "To", so the range can never be inverted.
+  const [from, setFrom] = useState(() => params.get("from") ?? "");
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,41 +69,32 @@ export function SearchPanel() {
 
         <Divider />
 
-        <Field
+        <DateField
+          name="from"
           label="From"
-          htmlFor="search-from"
-          icon={<CalendarDays />}
-          className="rounded-2xl lg:flex-1 lg:rounded-full"
-        >
-          <input
-            id="search-from"
-            name="from"
-            type="date"
-            defaultValue={params.get("from") ?? ""}
-            className={fieldInputClass("[color-scheme:light]")}
-          />
-        </Field>
+          defaultValue={params.get("from") ?? ""}
+          onValueChange={setFrom}
+          className="lg:flex-1 lg:rounded-full"
+        />
+
+        <Divider />
+
+        <DateField
+          name="to"
+          label="To"
+          defaultValue={params.get("to") ?? ""}
+          fromDate={from}
+          className="lg:flex-1 lg:rounded-full"
+        />
 
         <Divider />
 
         <Field
-          label="To"
-          htmlFor="search-to"
-          icon={<CalendarDays />}
+          label="Guests"
+          htmlFor="search-guests"
+          icon={<Users />}
           className="rounded-2xl lg:flex-1 lg:rounded-full"
         >
-          <input
-            id="search-to"
-            name="to"
-            type="date"
-            defaultValue={params.get("to") ?? ""}
-            className={fieldInputClass("[color-scheme:light]")}
-          />
-        </Field>
-
-        <Divider />
-
-        <Field label="Guests" htmlFor="search-guests" icon={<Users />} className="rounded-2xl lg:flex-1 lg:rounded-full">
           <div className="flex items-center gap-2">
             <StepperButton
               label="Remove a guest"
@@ -125,7 +120,9 @@ export function SearchPanel() {
           </div>
         </Field>
 
-        <div className="mt-1 flex shrink-0 items-center gap-2 sm:col-span-2 lg:mt-0 lg:ml-1">
+        {/* lg:mr-1.5 makes the gap to the right of the button match the 15px
+            above and below it — the pill's rows are taller than the button. */}
+        <div className="mt-1 flex shrink-0 items-center gap-2 sm:col-span-2 lg:mt-0 lg:mr-1.5 lg:ml-1">
           <Button type="submit" size="lg" className="w-full lg:w-auto lg:px-6">
             <Search aria-hidden="true" />
             {isPending ? "Searching…" : "Search"}

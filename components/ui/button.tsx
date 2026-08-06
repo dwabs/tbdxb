@@ -10,12 +10,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-pink text-maroon shadow-lift hover:bg-pink-hover active:scale-[0.985] hover:shadow-lift-lg",
+          "bg-primary text-white shadow-lift hover:bg-primary-hover active:scale-[0.985] hover:shadow-lift-lg",
+        accent:
+          "bg-accent text-primary shadow-lift hover:bg-accent-hover active:scale-[0.985] hover:shadow-lift-lg",
         secondary:
           "border border-line-strong bg-paper text-ink hover:border-ink hover:bg-sand-soft active:scale-[0.985]",
         ghost: "text-ink-muted hover:bg-sand-soft hover:text-ink",
-        link: "text-pink-deep underline-offset-4 hover:underline",
-        ink: "bg-maroon text-white hover:bg-maroon/90 active:scale-[0.985]",
+        link: "text-accent-deep underline-offset-4 hover:underline",
       },
       size: {
         sm: "h-9 px-4 text-sm [&_svg]:size-4",

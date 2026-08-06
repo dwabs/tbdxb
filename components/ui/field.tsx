@@ -22,7 +22,7 @@ export function Field({
   return (
     <div
       className={cn(
-        "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200 focus-within:bg-paper hover:bg-paper/70 focus-within:shadow-lift",
+        "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200 hover:bg-paper/70 focus-within:bg-paper focus-within:shadow-lift",
         className,
       )}
     >
@@ -46,7 +46,9 @@ export function Field({
 
 export function fieldInputClass(className?: string) {
   return cn(
-    "w-full border-0 bg-transparent p-0 text-[0.9375rem] text-ink placeholder:text-ink-subtle focus:outline-none",
+    // The cell itself shows focus (white fill + lift), so the input needs no
+    // ring of its own — one indicator per control, not two.
+    "w-full border-0 bg-transparent p-0 text-[0.9375rem] text-ink placeholder:text-ink-subtle focus:outline-none focus-visible:outline-none",
     className,
   );
 }
