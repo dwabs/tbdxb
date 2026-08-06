@@ -43,10 +43,8 @@ function Hero() {
       <div className="relative mx-auto max-w-[86rem] px-5 pt-16 pb-12 sm:pt-24 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_20rem] xl:gap-20">
           <div className="max-w-3xl">
-            <p className="animate-rise flex items-center gap-2 text-[0.6875rem] font-semibold tracking-[0.14em] text-berry uppercase">
-              <span className="grid size-5 place-items-center rounded-md bg-berry text-white">
-                <Check aria-hidden="true" className="size-3.5" />
-              </span>
+            <p className="animate-rise flex items-center gap-2 text-[0.6875rem] font-semibold tracking-[0.14em] text-pink-deep uppercase">
+              <span aria-hidden="true" className="size-2 rounded-full bg-pink" />
               Dubai · Updated weekly
             </p>
 
@@ -63,7 +61,7 @@ function Hero() {
                 aria-hidden="true"
                 viewBox="0 0 220 22"
                 preserveAspectRatio="none"
-                className="absolute -bottom-1 left-0 h-3 w-full text-berry-soft"
+                className="absolute -bottom-1 left-0 h-3 w-full text-pink-soft"
               >
                 <path
                   d="M3 15C58 6 143 4 217 9"
@@ -128,7 +126,7 @@ function ListCard() {
             <span
               className={
                 item.done
-                  ? "grid size-5 shrink-0 place-items-center rounded-md bg-berry text-white"
+                  ? "grid size-5 shrink-0 place-items-center rounded-md bg-pink text-maroon"
                   : "grid size-5 shrink-0 place-items-center rounded-md border border-line-strong"
               }
             >
@@ -137,7 +135,7 @@ function ListCard() {
             <span
               className={
                 item.done
-                  ? "text-[0.9375rem] text-ink-subtle line-through decoration-berry/50"
+                  ? "text-[0.9375rem] text-ink-subtle line-through decoration-pink/50"
                   : "text-[0.9375rem] text-ink"
               }
             >
@@ -155,7 +153,7 @@ function WhyUs() {
     <section aria-labelledby="why-heading" className="mt-24 border-y border-line bg-blush/45">
       <div className="mx-auto max-w-[86rem] px-5 py-20 lg:px-8">
         <div className="max-w-2xl">
-          <p className="text-[0.6875rem] font-semibold tracking-[0.12em] text-berry uppercase">
+          <p className="text-[0.6875rem] font-semibold tracking-[0.12em] text-pink-deep uppercase">
             Why thebucketlistdxb
           </p>
           <h2 id="why-heading" className="mt-3 text-display font-bold text-ink">
@@ -165,10 +163,10 @@ function WhyUs() {
 
         <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {VALUE_PROPS.map((prop) => (
-            <li key={prop.title} className="border-t border-berry-soft pt-5">
+            <li key={prop.title} className="border-t border-pink-soft pt-5">
               <span
                 aria-hidden="true"
-                className="grid size-7 place-items-center rounded-full bg-berry text-white"
+                className="grid size-7 place-items-center rounded-full bg-pink text-maroon"
               >
                 <Check className="size-4" />
               </span>
@@ -180,7 +178,7 @@ function WhyUs() {
           ))}
         </ul>
 
-        <div className="mt-16 flex flex-col items-start gap-4 rounded-card border border-berry-soft bg-paper p-7 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-16 flex flex-col items-start gap-4 rounded-card border border-pink-soft bg-paper p-7 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-ink">Planning something bigger?</h3>
             <p className="mt-1 text-[0.9375rem] text-ink-muted">

@@ -1,7 +1,6 @@
 import { MapPin } from "lucide-react";
 import Link from "next/link";
 
-import { BucketListToggle } from "@/components/bucket-list-toggle";
 import { ExperienceMedia } from "@/components/experience-media";
 import { Badge } from "@/components/ui/badge";
 import type { Experience } from "@/lib/events";
@@ -23,11 +22,6 @@ export function ExperienceCard({
           sizes="(max-width: 640px) 78vw, (max-width: 1024px) 44vw, 24vw"
           className="transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:scale-[1.04]"
         />
-
-        {/* Sits above the card's stretched link so the tick stays clickable. */}
-        <div className="absolute top-3 right-3 z-20">
-          <BucketListToggle title={experience.title} />
-        </div>
 
         {experience.tags[0] ? (
           <Badge variant="ink" size="sm" className="absolute bottom-3 left-3 z-10 bg-ink/85 backdrop-blur-sm">

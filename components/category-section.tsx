@@ -23,7 +23,7 @@ export function CategorySection({
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           {eyebrow ? (
-            <p className="mb-1.5 text-[0.6875rem] font-semibold tracking-[0.12em] text-berry uppercase">
+            <p className="mb-1.5 text-[0.6875rem] font-semibold tracking-[0.12em] text-pink-deep uppercase">
               {eyebrow}
             </p>
           ) : null}
@@ -67,7 +67,7 @@ function EmptyCategory({ label }: { label: string }) {
     <div className="rounded-card border border-dashed border-line-strong bg-sand-soft/50 px-6 py-12 text-center">
       <span
         aria-hidden="true"
-        className="mx-auto grid size-12 place-items-center rounded-full bg-blush text-berry"
+        className="mx-auto grid size-12 place-items-center rounded-full bg-blush text-pink-deep"
       >
         <Compass className="size-5" />
       </span>

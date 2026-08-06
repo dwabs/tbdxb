@@ -77,7 +77,7 @@ export default async function EventPage({ params }: Params) {
           <ul className="grid gap-5 border-y border-line py-6 sm:grid-cols-3">
             {facts.map((fact) => (
               <li key={fact.label} className="flex min-w-0 gap-3">
-                <fact.icon aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0 text-berry" />
+                <fact.icon aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0 text-pink-deep" />
                 <div className="min-w-0">
                   <p className="text-[0.6875rem] font-semibold tracking-[0.1em] text-ink-subtle uppercase">
                     {fact.label}
@@ -113,7 +113,7 @@ export default async function EventPage({ params }: Params) {
                 >
                   <span
                     aria-hidden="true"
-                    className="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-blush text-berry"
+                    className="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-blush text-pink-deep"
                   >
                     <Check className="size-3" />
                   </span>
@@ -136,7 +136,7 @@ export default async function EventPage({ params }: Params) {
                 href={`https://maps.google.com/?q=${encodeURIComponent(`${experience.venue}, Dubai`)}`}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="text-[0.9375rem] font-medium text-berry underline-offset-4 hover:underline"
+                className="text-[0.9375rem] font-medium text-pink-deep underline-offset-4 hover:underline"
               >
                 Open in Maps
               </a>
@@ -178,7 +178,7 @@ function Breadcrumb({
     <nav aria-label="Breadcrumb">
       <ol className="flex flex-wrap items-center gap-1.5 text-[0.8125rem] text-ink-muted">
         <li>
-          <Link href="/" className="hover:text-berry hover:underline">
+          <Link href="/" className="hover:text-pink-deep hover:underline">
             Home
           </Link>
         </li>
@@ -186,7 +186,7 @@ function Breadcrumb({
           <>
             <ChevronRight aria-hidden="true" className="size-3.5 shrink-0 text-ink-subtle" />
             <li>
-              <Link href={`/#${category.id}`} className="hover:text-berry hover:underline">
+              <Link href={`/#${category.id}`} className="hover:text-pink-deep hover:underline">
                 {category.label}
               </Link>
             </li>

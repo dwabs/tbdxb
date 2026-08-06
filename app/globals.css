@@ -2,40 +2,49 @@
 
 /* ---------------------------------------------------------------------------
    The Bucket List DXB — design tokens
-   Direction: the brand's bubblegum pink, deepened into a berry and set on a
-   warm off-white canvas. Airbnb's generosity (big photography, air, soft
-   elevation) with shadcn's discipline (hairline borders, restrained radii,
-   muted-foreground hierarchy).
+   Direction: the logo's pink and maroon, on a faintly pink off-white canvas.
+   Airbnb's generosity (big photography, air, soft elevation) with shadcn's
+   discipline (hairline borders, restrained radii, muted-foreground hierarchy).
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* Canvas + ink */
-  --color-canvas: #fdfcfb;
+  /**
+   * Everything is derived from the logo: its pink #F47EB4 is the primary, and
+   * its maroon #4A2536 is the ink family.
+   *
+   * The pink is light — white on it is only 2.47:1, so it can never carry white
+   * text. The logo already solves this: maroon on pink is 5.28:1. That is the
+   * pairing used for every primary button.
+   */
+
+  /* Canvas + ink (maroon-tinted, from the logo's own dark) */
+  --color-canvas: #fffafc;
   --color-paper: #ffffff;
-  --color-ink: #1c1917;
-  --color-ink-muted: #6b6259;
-  /* 4.7:1 on canvas — the lightest this can go and still clear WCAG AA. */
-  --color-ink-subtle: #7a7066;
+  --color-ink: #331924; /* 15.6:1 on canvas */
+  --color-ink-muted: #7a5766; /* 6.0:1 */
+  --color-ink-subtle: #8a6b78; /* 4.6:1 — the lightest that still clears AA */
 
   /* Brand */
-  --color-berry: #c2185b;
-  --color-berry-deep: #9c1049;
-  --color-berry-soft: #f5c6da;
-  --color-blush: #fce7f0;
+  --color-pink: #f47eb4; /* the logo pink, exactly */
+  --color-pink-hover: #ee6ba6; /* maroon still reads at 4.5:1 */
+  --color-pink-deep: #be3775; /* for pink text on light: 5.1:1 */
+  --color-pink-soft: #fbc9de;
+  --color-blush: #fdeef5;
+  --color-maroon: #4a2536; /* the logo's ground; text on pink, dark surfaces */
 
   /* Structure */
-  --color-sand: #e7e2db;
-  --color-sand-soft: #f4f1ed;
-  --color-line: #eae5de;
-  --color-line-strong: #ded8d0;
+  --color-sand: #f0e2e9;
+  --color-sand-soft: #fbf3f6;
+  --color-line: #f2e4eb;
+  --color-line-strong: #e6d2dc;
 
   /* Support */
   --color-teal: #17403d;
   --color-amber: #b4791a;
 
-  /* Type */
-  --font-display: var(--font-gabarito), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  /* Type — Geist carries the titles, Inter the body */
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* Fluid display sizes */
   --text-hero: clamp(2.75rem, 1.4rem + 5.4vw, 5.25rem);
@@ -51,9 +60,9 @@
   --text-section--letter-spacing: -0.025em;
 
   /* Elevation — soft and warm, never grey */
-  --shadow-lift: 0 1px 2px rgba(28, 25, 23, 0.05), 0 8px 24px -12px rgba(28, 25, 23, 0.14);
-  --shadow-lift-lg: 0 2px 4px rgba(28, 25, 23, 0.05), 0 18px 44px -16px rgba(28, 25, 23, 0.2);
-  --shadow-rail: 0 1px 2px rgba(28, 25, 23, 0.04), 0 14px 40px -20px rgba(28, 25, 23, 0.22);
+  --shadow-lift: 0 1px 2px rgba(74, 37, 54, 0.05), 0 8px 24px -12px rgba(74, 37, 54, 0.14);
+  --shadow-lift-lg: 0 2px 4px rgba(74, 37, 54, 0.05), 0 18px 44px -16px rgba(74, 37, 54, 0.2);
+  --shadow-rail: 0 1px 2px rgba(74, 37, 54, 0.04), 0 14px 40px -20px rgba(74, 37, 54, 0.22);
 
   --radius-card: 0.875rem;
 
@@ -102,7 +111,7 @@ body {
 
 /* Every interactive element gets one consistent, visible focus ring. */
 :focus-visible {
-  outline: 2px solid var(--color-berry);
+  outline: 2px solid var(--color-pink-deep);
   outline-offset: 2px;
   border-radius: 4px;
 }

@@ -30,8 +30,8 @@ export function BucketListToggle({
         "tap-target grid place-items-center rounded-full border transition-[background-color,border-color,transform] duration-200 ease-[var(--ease-out-soft)] [touch-action:manipulation] active:scale-90",
         size === "lg" ? "size-11" : "size-9",
         ticked
-          ? "border-berry bg-berry text-white"
-          : "border-white/70 bg-white/85 text-ink backdrop-blur-sm hover:border-berry hover:text-berry",
+          ? "border-pink bg-pink text-maroon"
+          : "border-white/70 bg-white/85 text-ink backdrop-blur-sm hover:border-pink hover:text-pink-deep",
         className,
       )}
     >

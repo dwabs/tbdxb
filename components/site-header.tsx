@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { LogoMark, Wordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -30,10 +31,8 @@ export function SiteHeader() {
           className="flex shrink-0 items-center gap-2.5"
           aria-label="The Bucket List DXB, home"
         >
-          <Mark />
-          <span translate="no" className="font-display text-[1.0625rem] leading-none font-bold tracking-[-0.02em] text-ink">
-            thebucketlist<span className="text-berry">dxb</span>
-          </span>
+          <LogoMark className="size-9" />
+          <Wordmark className="text-[1.0625rem]" />
         </Link>
 
         <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
@@ -46,7 +45,7 @@ export function SiteHeader() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "rounded-full px-3.5 py-2 text-[0.9375rem] font-medium transition-colors duration-150",
-                  active ? "bg-blush text-berry-deep" : "text-ink-muted hover:bg-sand-soft hover:text-ink",
+                  active ? "bg-blush text-pink-deep" : "text-ink-muted hover:bg-sand-soft hover:text-ink",
                 )}
               >
                 {link.label}
@@ -99,25 +98,3 @@ export function SiteHeader() {
   );
 }
 
-/** The bucket, drawn as a tick dropping into it. */
-function Mark() {
-  return (
-    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-ink" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" className="size-5">
-        <path
-          d="M4.5 7.5h15l-1.6 11a2 2 0 0 1-2 1.7H8.1a2 2 0 0 1-2-1.7Z"
-          stroke="white"
-          strokeWidth="1.7"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M9 11.8 11.4 14.4 16 8.6"
-          stroke="var(--color-berry-soft)"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
-  );
-}

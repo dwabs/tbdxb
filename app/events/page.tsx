@@ -85,7 +85,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
         <div className="mt-12 rounded-card border border-dashed border-line-strong bg-sand-soft/50 px-6 py-16 text-center">
           <span
             aria-hidden="true"
-            className="mx-auto grid size-12 place-items-center rounded-full bg-blush text-berry"
+            className="mx-auto grid size-12 place-items-center rounded-full bg-blush text-pink-deep"
           >
             <SearchX className="size-5" />
           </span>

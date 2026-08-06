@@ -32,7 +32,7 @@ export function NewsletterForm() {
     return (
       <p
         aria-live="polite"
-        className="flex items-center gap-2 rounded-full border border-berry-soft bg-blush px-4 py-3 text-sm text-berry-deep"
+        className="flex items-center gap-2 rounded-full border border-pink-soft bg-blush px-4 py-3 text-sm text-pink-deep"
       >
         <Check aria-hidden="true" className="size-4 shrink-0" />
         You’re on the list. Look for us on Thursday.
@@ -46,7 +46,7 @@ export function NewsletterForm() {
         One email a week, on Thursday. The good stuff only.
       </label>
 
-      <div className="mt-2.5 flex items-center gap-2 rounded-full border border-line-strong bg-paper p-1.5 focus-within:border-berry">
+      <div className="mt-2.5 flex items-center gap-2 rounded-full border border-line-strong bg-paper p-1.5 focus-within:border-pink">
         <input
           id="newsletter-email"
           name="email"
@@ -67,7 +67,7 @@ export function NewsletterForm() {
       </div>
 
       {state.error ? (
-        <p id="newsletter-error" aria-live="polite" className="mt-2 text-sm text-berry-deep">
+        <p id="newsletter-error" aria-live="polite" className="mt-2 text-sm text-pink-deep">
           {state.error}
         </p>
       ) : null}
