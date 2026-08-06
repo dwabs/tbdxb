@@ -8,7 +8,7 @@ export default function NotFound() {
     <div className="mx-auto flex max-w-[86rem] flex-col items-start px-5 pt-20 pb-28 lg:px-8">
       {/* Same type as the heading below it, so the two read as one block. */}
       <p className="font-display text-display font-bold text-accent-deep">404</p>
-      <h1 className="mt-1 max-w-2xl text-display font-bold text-ink">
+      <h1 className="mt-4 max-w-2xl text-display font-bold text-ink">
         This one isn’t on the list.
       </h1>
       <p className="mt-4 max-w-[52ch] text-[1.0625rem] leading-relaxed text-ink-muted">
