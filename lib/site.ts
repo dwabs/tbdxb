@@ -16,6 +16,19 @@ export const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ] as const;
 
+/**
+ * The sidebar on secondary pages. Only routes that exist are listed — the
+ * live site's equivalent links to its bucket list and contact pages, which
+ * land in later phases. Add them here as they ship.
+ */
+export const SECONDARY_NAV = [
+  { href: "/about-us", label: "About Us" },
+  { href: "/faq", label: "FAQs" },
+  { href: "/refund-policy", label: "Refund Policy" },
+  { href: "/terms-conditions", label: "Terms & Conditions" },
+  { href: "/privacy-policy", label: "Privacy Policy" },
+] as const;
+
 export const FOOTER_COLUMNS = [
   {
     heading: "Quick Links",
