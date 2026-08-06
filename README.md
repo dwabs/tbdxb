@@ -44,7 +44,9 @@ Shadows are tinted with the maroon rather than neutral grey, so elevation stays 
 `lib/events.ts` is the single source of content.
 
 - **Real** — the SALT candle-making listing: title, venue, date, times, AED 169, full body copy and inclusions are copied from the live site. Its three photos are downloaded to `public/events/`.
-- **Sample** — the other six listings are marked `isSample: true` and exist only so the category rails can be judged with content in them. They have no photography; they render as duotone grounds via `components/experience-media.tsx`. **Replace these with live API data before shipping.**
+- **Sample** — the other six listings are marked `isSample: true` and exist only so the category rails can be judged with content in them. Their photography comes from [Unsplash](https://unsplash.com/license) (free for commercial use, no attribution required) and sits in `public/events/`. Every shot was opened and checked by eye, not chosen from its caption — searches return plenty of mislabelled results. **Replace both the copy and the photos with the operators' own before shipping.**
+
+`components/experience-media.tsx` still carries a duotone fallback for any listing that arrives without an image, so an empty `images: []` degrades gracefully rather than breaking the card.
 
 The live site shows "No Event Found" in four of five rails. Rather than reproduce that, the rails take real content and `Summer in the City` is left empty on purpose to demonstrate the designed empty state.
 

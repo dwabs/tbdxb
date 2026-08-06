@@ -90,6 +90,8 @@ export const EXPERIENCES: Experience[] = [
   },
 
   // ---- Sample listings below: placeholder content for layout review only ----
+  // Photography is from Unsplash (unsplash.com/license — free for commercial
+  // use, no attribution required). Swap for the operators' own shots at launch.
   {
     slug: "sunset-dhow-supper-al-seef",
     title: "Sunset Dhow Supper on Dubai Creek",
@@ -103,9 +105,16 @@ export const EXPERIENCES: Experience[] = [
     endTime: "21:00",
     durationLabel: "2.5 hours",
     groupSize: "Up to 24 people",
-    tone: "teal",
+    tone: "photo",
     tags: ["Dinner", "On the water", "Sunset"],
-    images: [],
+    images: [
+      {
+        src: "/events/sunset-dhow.jpg",
+        alt: "A lantern-lit wooden dhow crossing the water at night below the Dubai skyline",
+        width: 1600,
+        height: 1200,
+      },
+    ],
     summary:
       "A slow loop of the creek on a restored wooden dhow, with a four-course Emirati supper served as the light goes.",
     body: [
@@ -127,9 +136,16 @@ export const EXPERIENCES: Experience[] = [
     endTime: "22:30",
     durationLabel: "2.5 hours",
     groupSize: "Up to 60 people",
-    tone: "berry",
+    tone: "photo",
     tags: ["Outdoors", "Late night"],
-    images: [],
+    images: [
+      {
+        src: "/events/rooftop-cinema.jpg",
+        alt: "Two people in chairs watching a film on an open-air screen strung with festoon lights",
+        width: 1600,
+        height: 1067,
+      },
+    ],
     summary:
       "Deckchairs, wireless headphones and a cult film on a warehouse roof, with the Al Quoz skyline behind the screen.",
     body: ["Deckchairs, wireless headphones and a cult film on a warehouse roof."],
@@ -149,9 +165,16 @@ export const EXPERIENCES: Experience[] = [
     endTime: "22:00",
     durationLabel: "3 hours",
     groupSize: "8 – 24 people",
-    tone: "amber",
+    tone: "photo",
     tags: ["Sport", "Beginner friendly", "Includes food"],
-    images: [],
+    images: [
+      {
+        src: "/events/padel.jpg",
+        alt: "Two padel bats and scattered balls on a blue court, seen from above",
+        width: 1600,
+        height: 1067,
+      },
+    ],
     summary:
       "Two hours of round-robin padel across four courts, then pizza on the terrace. Rackets provided, no partner needed.",
     body: ["Two hours of round-robin padel across four courts, then pizza on the terrace."],
@@ -171,9 +194,16 @@ export const EXPERIENCES: Experience[] = [
     endTime: "22:00",
     durationLabel: "4.5 hours",
     groupSize: "Up to 30 people",
-    tone: "sand",
+    tone: "photo",
     tags: ["Dinner", "Out of town", "Stargazing"],
-    images: [],
+    images: [
+      {
+        src: "/events/desert-camp.jpg",
+        alt: "White canvas tents at a desert camp in the dunes at twilight",
+        width: 1600,
+        height: 1067,
+      },
+    ],
     summary:
       "A long table set in the dunes, a fire-pit menu cooked in front of you, and a telescope once the sky clears.",
     body: ["A long table set in the dunes, with a fire-pit menu cooked in front of you."],
@@ -193,9 +223,16 @@ export const EXPERIENCES: Experience[] = [
     endTime: "13:00",
     durationLabel: "2 hours",
     groupSize: "Up to 6 people",
-    tone: "teal",
+    tone: "photo",
     tags: ["Workshop", "Hands-on", "Small group"],
-    images: [],
+    images: [
+      {
+        src: "/events/glassblowing.jpg",
+        alt: "A glassmaker shaping a clear vessel in the flame of a torch",
+        width: 1600,
+        height: 1067,
+      },
+    ],
     summary:
       "Gather, shape and blow your first piece at a 1,100°C furnace, under one-to-one instruction. Take it home the next week.",
     body: ["Gather, shape and blow your first piece at a 1,100°C furnace."],
@@ -215,9 +252,16 @@ export const EXPERIENCES: Experience[] = [
     endTime: "19:30",
     durationLabel: "2.5 hours",
     groupSize: "Up to 12 people",
-    tone: "berry",
+    tone: "photo",
     tags: ["Workshop", "Beginner friendly"],
-    images: [],
+    images: [
+      {
+        src: "/events/calligraphy.jpg",
+        alt: "A calligrapher writing Arabic script in red ink with a reed pen",
+        width: 1600,
+        height: 1067,
+      },
+    ],
     summary:
       "Learn to cut a reed pen and write your name in Diwani script, taught by a calligrapher in a wind-tower house.",
     body: ["Learn to cut a reed pen and write your name in Diwani script."],
