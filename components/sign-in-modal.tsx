@@ -29,7 +29,7 @@ export function SignInModal({
   onSignedIn,
 }: {
   t: Dictionary["auth"];
-  onSignedIn: (name: string) => void;
+  onSignedIn: (name: string, isNewUser: boolean) => void;
 }) {
   const [supabase] = useState(() => createClient());
   const [open, setOpen] = useState(false);
@@ -85,7 +85,7 @@ export function SignInModal({
       setOtpError("");
       setUserId(data.user.id);
       if (profile?.full_name) {
-        onSignedIn(profile.full_name);
+        onSignedIn(profile.full_name, false);
         setOpen(false);
       } else {
         setStep("profile");
@@ -158,11 +158,11 @@ export function SignInModal({
     await sendOtp(email);
   }
 
-  async function handleProfileSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
+  async function handleProfileSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const fullName = String(new FormData(event.currentTarget).get("name") ?? "").trim();
+    const fullName = String(
+      new FormData(event.currentTarget).get("name") ?? "",
+    ).trim();
     const nextNameError = fullName.length === 0 ? t.profile.nameError : "";
     const nextMobileError =
       !mobile || !isValidPhoneNumber(mobile) ? t.profile.mobileError : "";
@@ -180,7 +180,7 @@ export function SignInModal({
       setSaveError(t.profile.saveError);
       return;
     }
-    onSignedIn(fullName);
+    onSignedIn(fullName, true);
     setOpen(false);
   }
 
@@ -347,7 +347,10 @@ export function SignInModal({
                 />
               </div>
               {saveError ? (
-                <p role="alert" className="mt-3 text-[0.8125rem] text-accent-deep">
+                <p
+                  role="alert"
+                  className="mt-3 text-[0.8125rem] text-accent-deep"
+                >
                   {saveError}
                 </p>
               ) : null}
@@ -405,7 +408,8 @@ function OtpInput({
           onChange={(event) => {
             const char = event.target.value.replace(/\D/g, "").slice(-1);
             setDigit(index, char);
-            if (char && index < OTP_LENGTH - 1) refs.current[index + 1]?.focus();
+            if (char && index < OTP_LENGTH - 1)
+              refs.current[index + 1]?.focus();
           }}
           onKeyDown={(event) => {
             if (event.key === "Backspace" && !digit && index > 0) {

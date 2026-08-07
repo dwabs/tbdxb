@@ -65,6 +65,10 @@ export const en = {
       settings: "Settings",
     },
     signOut: "Sign out",
+    welcome: {
+      new: "👋 Welcome, {name}!",
+      back: "👋 Welcome back, {name}!",
+    },
   },
 
   hero: {

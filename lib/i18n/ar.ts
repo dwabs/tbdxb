@@ -35,7 +35,8 @@ export const ar: Dictionary = {
     close: "إغلاق",
     email: {
       title: "تسجيل الدخول",
-      subtitle: "سنرسل إليك رمزًا مكوّنًا من 6 أرقام عبر البريد الإلكتروني — بلا كلمة مرور.",
+      subtitle:
+        "سنرسل إليك رمزًا مكوّنًا من 6 أرقام عبر البريد الإلكتروني — بلا كلمة مرور.",
       emailLabel: "البريد الإلكتروني",
       emailPlaceholder: "you@example.com",
       emailError: "أدخل بريدًا إلكترونيًا صحيحًا.",
@@ -72,6 +73,10 @@ export const ar: Dictionary = {
       settings: "الإعدادات",
     },
     signOut: "تسجيل الخروج",
+    welcome: {
+      new: "👋 أهلاً بك، {name}!",
+      back: "👋 أهلاً بعودتك، {name}!",
+    },
   },
 
   hero: {
