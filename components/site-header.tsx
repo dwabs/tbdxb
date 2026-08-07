@@ -7,10 +7,23 @@ import { useEffect, useState } from "react";
 
 import { LogoMark, Wordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+import type { Dictionary } from "@/lib/i18n";
+import {
+  DEFAULT_LOCALE,
+  localePath,
+  type Locale,
+  stripLocale,
+} from "@/lib/i18n/config";
 import { NAV_LINKS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+export function SiteHeader({
+  locale,
+  t,
+}: {
+  locale: Locale;
+  t: Dictionary["nav"];
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -23,20 +36,32 @@ export function SiteHeader() {
     };
   }, [open]);
 
+  const links = NAV_LINKS.map((link) => ({
+    href: localePath(locale, link.href),
+    label: t[link.key],
+  }));
+
+  // The same page in the other language, so switching never loses your place.
+  const other: Locale = locale === DEFAULT_LOCALE ? "ar" : DEFAULT_LOCALE;
+  const otherHref = localePath(other, stripLocale(pathname));
+
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-canvas/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[86rem] items-center gap-3 px-5 sm:h-[4.5rem] lg:px-8">
         <Link
-          href="/"
+          href={localePath(locale, "/")}
           className="flex shrink-0 items-center gap-2.5"
-          aria-label="The Bucket List DXB, home"
+          aria-label={t.homeAria}
         >
           <LogoMark className="size-9" />
           <Wordmark className="text-[1.0625rem]" />
         </Link>
 
-        <nav aria-label="Main" className="ml-6 hidden items-center gap-1 lg:flex">
-          {NAV_LINKS.map((link) => {
+        <nav
+          aria-label={t.main}
+          className="ms-6 hidden items-center gap-1 lg:flex"
+        >
+          {links.map((link) => {
             const active = pathname === link.href;
             return (
               <Link
@@ -45,7 +70,9 @@ export function SiteHeader() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "rounded-full px-3.5 py-2 text-[0.9375rem] font-medium transition-colors duration-150",
-                  active ? "bg-blush text-accent-deep" : "text-ink-muted hover:bg-sand-soft hover:text-ink",
+                  active
+                    ? "bg-blush text-accent-deep"
+                    : "text-ink-muted hover:bg-sand-soft hover:text-ink",
                 )}
               >
                 {link.label}
@@ -54,20 +81,27 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Globe aria-hidden="true" />
-            English
+        <div className="ms-auto flex items-center gap-2">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="hidden sm:inline-flex"
+          >
+            <Link href={otherHref} hrefLang={other} lang={other}>
+              <Globe aria-hidden="true" />
+              {t.switchLanguage}
+            </Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href="/sign-in">Sign In</Link>
+            <Link href={localePath(locale, "/sign-in")}>{t.signIn}</Link>
           </Button>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            aria-label={open ? "Close menu" : "Open menu"}
+            aria-label={open ? t.closeMenu : t.openMenu}
             className="tap-target grid size-10 place-items-center rounded-full border border-line-strong text-ink lg:hidden [touch-action:manipulation]"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -78,10 +112,10 @@ export function SiteHeader() {
       {open ? (
         <nav
           id="mobile-nav"
-          aria-label="Main"
+          aria-label={t.main}
           className="animate-rise overscroll-contain border-t border-line bg-canvas px-5 pt-2 pb-6 lg:hidden"
         >
-          {NAV_LINKS.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -92,9 +126,18 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <Link
+            href={otherHref}
+            hrefLang={other}
+            lang={other}
+            onClick={() => setOpen(false)}
+            className="mt-4 inline-flex items-center gap-2 text-[0.9375rem] font-medium text-accent-deep"
+          >
+            <Globe aria-hidden="true" className="size-4" />
+            {t.switchLanguage}
+          </Link>
         </nav>
       ) : null}
     </header>
   );
 }
-

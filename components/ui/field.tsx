@@ -27,7 +27,10 @@ export function Field({
       )}
     >
       {icon ? (
-        <span aria-hidden="true" className="shrink-0 text-ink-subtle [&_svg]:size-[1.125rem]">
+        <span
+          aria-hidden="true"
+          className="shrink-0 text-ink-subtle [&_svg]:size-[1.125rem]"
+        >
           {icon}
         </span>
       ) : null}

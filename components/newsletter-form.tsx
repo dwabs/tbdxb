@@ -4,10 +4,11 @@ import { ArrowRight, Check } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import type { Dictionary } from "@/lib/i18n";
 
 type State = { status: "idle" | "sending" | "done"; error: string | null };
 
-export function NewsletterForm() {
+export function NewsletterForm({ t }: { t: Dictionary["footer"] }) {
   const [state, setState] = useState<State>({ status: "idle", error: null });
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -16,7 +17,7 @@ export function NewsletterForm() {
     const email = String(new FormData(form).get("email") ?? "").trim();
 
     if (!email.includes("@")) {
-      setState({ status: "idle", error: "Enter an email address that includes an @." });
+      setState({ status: "idle", error: t.invalidEmail });
       form.querySelector<HTMLInputElement>("#newsletter-email")?.focus();
       return;
     }
@@ -35,15 +36,18 @@ export function NewsletterForm() {
         className="flex items-center gap-2 rounded-full border border-accent-soft bg-blush px-4 py-3 text-sm text-accent-deep"
       >
         <Check aria-hidden="true" className="size-4 shrink-0" />
-        You’re on the list. Look for us on Thursday.
+        {t.subscribed}
       </p>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate className="max-w-sm">
-      <label htmlFor="newsletter-email" className="block text-sm text-ink-muted">
-        One email a week, on Thursday. The good stuff only.
+      <label
+        htmlFor="newsletter-email"
+        className="block text-sm text-ink-muted"
+      >
+        {t.newsletterLabel}
       </label>
 
       <div className="mt-2.5 flex items-center gap-2 rounded-full border border-line-strong bg-paper p-1.5 focus-within:border-accent">
@@ -57,17 +61,21 @@ export function NewsletterForm() {
           required
           aria-invalid={state.error ? true : undefined}
           aria-describedby={state.error ? "newsletter-error" : undefined}
-          placeholder="you@example.com"
+          placeholder={t.emailPlaceholder}
           className="min-w-0 flex-1 bg-transparent px-3 text-[0.9375rem] text-ink placeholder:text-ink-subtle focus:outline-none"
         />
         <Button type="submit" size="sm" className="shrink-0">
-          {state.status === "sending" ? "Signing up…" : "Sign Up"}
+          {state.status === "sending" ? t.signingUp : t.signUp}
           <ArrowRight aria-hidden="true" />
         </Button>
       </div>
 
       {state.error ? (
-        <p id="newsletter-error" aria-live="polite" className="mt-2 text-sm text-accent-deep">
+        <p
+          id="newsletter-error"
+          aria-live="polite"
+          className="mt-2 text-sm text-accent-deep"
+        >
           {state.error}
         </p>
       ) : null}

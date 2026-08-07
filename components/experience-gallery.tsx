@@ -14,7 +14,11 @@ export function ExperienceGallery({ experience }: { experience: Experience }) {
   if (!cover) {
     return (
       <div className="aspect-[16/10] overflow-hidden rounded-card md:aspect-[2/1]">
-        <ExperienceMedia experience={experience} sizes="100vw" priority={true} />
+        <ExperienceMedia
+          experience={experience}
+          sizes="100vw"
+          priority={true}
+        />
       </div>
     );
   }

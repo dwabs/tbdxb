@@ -27,7 +27,7 @@ export function Calendar({
         // full width of the header row without the arrows pushing them around.
         months: "relative flex flex-col gap-4",
         month: "flex flex-col gap-3",
-        nav: "absolute top-0 right-0 flex items-center gap-1",
+        nav: "absolute top-0 end-0 flex items-center gap-1",
         button_previous:
           "inline-grid size-8 place-items-center rounded-full border border-line-strong text-ink transition-colors hover:border-ink disabled:opacity-35 [touch-action:manipulation]",
         button_next:
@@ -41,7 +41,8 @@ export function Calendar({
         dropdowns: "flex items-center gap-1",
         dropdown_root:
           "relative inline-flex items-center rounded-lg px-2 py-1 transition-colors hover:bg-sand-soft has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-accent-deep",
-        dropdown: "absolute inset-0 cursor-pointer opacity-0 [color-scheme:light]",
+        dropdown:
+          "absolute inset-0 cursor-pointer opacity-0 [color-scheme:light]",
         month_grid: "w-full border-collapse",
         weekdays: "flex",
         weekday:
@@ -62,7 +63,8 @@ export function Calendar({
         ...classNames,
       }}
       modifiersClassNames={{
-        selected: "[&>button]:bg-primary [&>button]:text-white [&>button]:font-semibold",
+        selected:
+          "[&>button]:bg-primary [&>button]:text-white [&>button]:font-semibold",
       }}
       components={{
         Chevron: ({ orientation, className: chevronClass, ...rest }) => {

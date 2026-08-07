@@ -4,15 +4,21 @@ import Link from "next/link";
 import { ExperienceMedia } from "@/components/experience-media";
 import { Badge } from "@/components/ui/badge";
 import type { Experience } from "@/lib/events";
+import { getDictionary, localePath, type Locale } from "@/lib/i18n";
 import { formatDateShort, formatPrice, formatTime } from "@/lib/utils";
 
 export function ExperienceCard({
   experience,
+  locale,
   priority = false,
 }: {
   experience: Experience;
+  locale: Locale;
   priority?: boolean;
 }) {
+  // A Server Component, so it reads the dictionary rather than having one
+  // string drilled through every list that renders a card.
+  const t = getDictionary(locale);
   return (
     <article className="group relative flex min-w-0 flex-col">
       <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-sand-soft">
@@ -24,7 +30,11 @@ export function ExperienceCard({
         />
 
         {experience.tags[0] ? (
-          <Badge variant="ink" size="sm" className="absolute bottom-3 left-3 z-10 bg-primary/85 backdrop-blur-sm">
+          <Badge
+            variant="ink"
+            size="sm"
+            className="absolute bottom-3 start-3 z-10 bg-primary/85 backdrop-blur-sm"
+          >
             {experience.tags[0]}
           </Badge>
         ) : null}
@@ -37,18 +47,25 @@ export function ExperienceCard({
         </p>
 
         <h3 className="text-[1.0625rem] leading-snug font-semibold tracking-[-0.015em] text-ink">
-          <Link href={`/events/${experience.slug}`} className="after:absolute after:inset-0 after:z-10">
+          <Link
+            href={localePath(locale, `/events/${experience.slug}`)}
+            className="after:absolute after:inset-0 after:z-10"
+          >
             <span className="line-clamp-2">{experience.title}</span>
           </Link>
         </h3>
 
         <p className="tabular text-[0.8125rem] text-ink-muted">
-          {formatDateShort(experience.date)} · {formatTime(experience.startTime)}
+          {formatDateShort(experience.date, locale)} ·{" "}
+          {formatTime(experience.startTime, locale)}
         </p>
 
         <p className="tabular mt-auto pt-1.5 text-[0.9375rem] font-semibold text-ink">
-          {formatPrice(experience.priceAED)}
-          <span className="font-normal text-ink-muted"> per person</span>
+          {formatPrice(experience.priceAED, locale)}
+          <span className="font-normal text-ink-muted">
+            {" "}
+            {t.detail.perPerson}
+          </span>
         </p>
       </div>
     </article>

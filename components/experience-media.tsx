@@ -20,7 +20,8 @@ const TONE_GROUNDS = [
 
 const groundFor = (slug: string) => {
   let hash = 0;
-  for (let i = 0; i < slug.length; i += 1) hash = (hash * 31 + slug.charCodeAt(i)) | 0;
+  for (let i = 0; i < slug.length; i += 1)
+    hash = (hash * 31 + slug.charCodeAt(i)) | 0;
   return TONE_GROUNDS[Math.abs(hash) % TONE_GROUNDS.length];
 };
 

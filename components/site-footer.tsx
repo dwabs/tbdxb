@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { LogoMark, Wordmark } from "@/components/logo";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { fill, localePath, type Dictionary, type Locale } from "@/lib/i18n";
 import { FOOTER_COLUMNS, SITE } from "@/lib/site";
 
 /** lucide v1 dropped brand glyphs, so the Instagram mark is drawn inline. */
@@ -23,7 +24,13 @@ function InstagramMark() {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({
+  locale,
+  t,
+}: {
+  locale: Locale;
+  t: Dictionary["footer"];
+}) {
   return (
     <footer className="mt-24 border-t border-line bg-sand-soft/60">
       <div className="mx-auto max-w-[86rem] px-5 py-16 lg:px-8">
@@ -34,23 +41,39 @@ export function SiteFooter() {
               <Wordmark className="text-xl" />
             </div>
             <p className="mt-3 max-w-xs text-[0.9375rem] leading-relaxed text-ink-muted">
-              {SITE.tagline}
+              {t.tagline}
             </p>
 
             <ul className="mt-6 space-y-2.5 text-[0.9375rem] text-ink-muted">
               <li className="flex items-center gap-2.5">
-                <MapPin aria-hidden="true" className="size-4 shrink-0 text-ink-subtle" />
-                {SITE.city}
+                <MapPin
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-ink-subtle"
+                />
+                {t.city}
               </li>
               <li className="flex items-center gap-2.5">
-                <Mail aria-hidden="true" className="size-4 shrink-0 text-ink-subtle" />
-                <a href={`mailto:${SITE.email}`} className="hover:text-accent-deep hover:underline">
+                <Mail
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-ink-subtle"
+                />
+                <a
+                  href={`mailto:${SITE.email}`}
+                  className="hover:text-accent-deep hover:underline"
+                >
                   {SITE.email}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
-                <Phone aria-hidden="true" className="size-4 shrink-0 text-ink-subtle" />
-                <a href={SITE.phoneHref} className="tabular hover:text-accent-deep hover:underline">
+                <Phone
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-ink-subtle"
+                />
+                <a
+                  href={SITE.phoneHref}
+                  dir="ltr"
+                  className="tabular hover:text-accent-deep hover:underline"
+                >
                   {SITE.phone}
                 </a>
               </li>
@@ -60,7 +83,7 @@ export function SiteFooter() {
               href={SITE.instagram}
               target="_blank"
               rel="noreferrer noopener"
-              aria-label="The Bucket List DXB on Instagram"
+              aria-label={t.instagramAria}
               className="mt-6 inline-grid size-10 place-items-center rounded-full border border-line-strong text-ink transition-colors duration-150 hover:border-accent hover:text-accent-deep"
             >
               <InstagramMark />
@@ -68,18 +91,18 @@ export function SiteFooter() {
           </div>
 
           {FOOTER_COLUMNS.map((column) => (
-            <nav key={column.heading} aria-label={column.heading}>
+            <nav key={column.heading} aria-label={t[column.heading]}>
               <h2 className="text-[0.6875rem] font-semibold tracking-[0.12em] text-ink uppercase">
-                {column.heading}
+                {t[column.heading]}
               </h2>
               <ul className="mt-4 space-y-2.5">
                 {column.links.map((link) => (
-                  <li key={link.label}>
+                  <li key={link.key}>
                     <Link
-                      href={link.href}
+                      href={localePath(locale, link.href)}
                       className="text-[0.9375rem] text-ink-muted transition-colors duration-150 hover:text-accent-deep hover:underline"
                     >
-                      {link.label}
+                      {t[link.key]}
                     </Link>
                   </li>
                 ))}
@@ -89,19 +112,25 @@ export function SiteFooter() {
 
           <div>
             <h2 className="text-[0.6875rem] font-semibold tracking-[0.12em] text-ink uppercase">
-              Newsletter
+              {t.newsletter}
             </h2>
             <div className="mt-4">
-              <NewsletterForm />
+              <NewsletterForm t={t} />
             </div>
           </div>
         </div>
 
         <div className="mt-14 flex flex-col gap-3 border-t border-line pt-6 text-sm text-ink-subtle sm:flex-row sm:items-center sm:justify-between">
-          <p className="tabular">© {new Date().getFullYear()} thebucketlistdxb. All rights reserved.</p>
+          <p className="tabular">
+            {fill(t.rights, { year: new Date().getFullYear() })}
+          </p>
           <p>
-            Speak to our expert at{" "}
-            <a href={SITE.phoneHref} className="tabular font-medium text-ink hover:text-accent-deep hover:underline">
+            {t.expert}{" "}
+            <a
+              href={SITE.phoneHref}
+              dir="ltr"
+              className="tabular font-medium text-ink hover:text-accent-deep hover:underline"
+            >
               {SITE.phone}
             </a>
           </p>

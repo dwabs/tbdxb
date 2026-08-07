@@ -45,9 +45,13 @@
   --color-teal: #17403d;
   --color-amber: #b4791a;
 
-  /* Type — Geist carries the titles, Inter the body */
-  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Type — Geist carries the titles, Inter the body.
+     The Arabic face sits behind both: font fallback resolves per glyph, so
+     Latin text still renders in Geist/Inter and only Arabic reaches Plex.
+     That way no locale-conditional CSS is needed, and a bilingual string
+     (a venue name inside Arabic copy) sets correctly in one pass. */
+  --font-display: var(--font-geist), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
 
   /* Fluid display sizes */
   --text-hero: clamp(2.75rem, 1.4rem + 5.4vw, 5.25rem);

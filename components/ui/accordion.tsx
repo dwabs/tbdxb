@@ -6,14 +6,22 @@ import { Plus } from "lucide-react";
  * stay a Server Component — a hand-rolled version would only be re-adding
  * behaviour the element already has.
  */
-export function Accordion({ items }: { items: { question: string; answer: string }[] }) {
+export function Accordion({
+  items,
+}: {
+  items: { question: string; answer: string }[];
+}) {
   return (
     // No top rule: each row carries its own bottom border, and whatever sits
     // above (a PageHeader) already ends in one.
     <div>
       {items.map((item) => (
-        <details key={item.question} name="faq" className="group border-b border-line">
-          <summary className="tap-target flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-left font-display text-[1.0625rem] font-semibold text-ink transition-colors duration-150 marker:content-none hover:text-accent-deep [&::-webkit-details-marker]:hidden">
+        <details
+          key={item.question}
+          name="faq"
+          className="group border-b border-line"
+        >
+          <summary className="tap-target flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-start font-display text-[1.0625rem] font-semibold text-ink transition-colors duration-150 marker:content-none hover:text-accent-deep [&::-webkit-details-marker]:hidden">
             {item.question}
             <span
               aria-hidden="true"

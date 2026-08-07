@@ -7,10 +7,17 @@ import { useState, useTransition } from "react";
 import { DateField } from "@/components/date-field";
 import { Button } from "@/components/ui/button";
 import { Field, fieldInputClass } from "@/components/ui/field";
+import { localePath, type Dictionary, type Locale } from "@/lib/i18n";
 
 const MAX_GUESTS = 16;
 
-export function SearchPanel() {
+export function SearchPanel({
+  locale,
+  t,
+}: {
+  locale: Locale;
+  t: Dictionary["search"];
+}) {
   const router = useRouter();
   const params = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -37,20 +44,22 @@ export function SearchPanel() {
     }
     if (guests > 0) next.set("guests", String(guests));
 
-    startTransition(() => router.push(`/events?${next.toString()}`));
+    startTransition(() =>
+      router.push(localePath(locale, `/events?${next.toString()}`)),
+    );
   }
 
   return (
     <form
       onSubmit={handleSubmit}
       role="search"
-      aria-label="Find an experience"
+      aria-label={t.label}
       className="rounded-[1.75rem] border border-line bg-sand-soft/80 p-2 shadow-rail backdrop-blur-sm lg:rounded-full"
     >
       {/* Stacked on phones, 2×2 on tablets, a single row only once it fits. */}
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:flex lg:items-center lg:gap-0">
         <Field
-          label="Search"
+          label={t.keyword}
           htmlFor="search-q"
           icon={<Search />}
           className="rounded-2xl sm:col-span-2 lg:flex-[1.4] lg:rounded-full"
@@ -60,7 +69,7 @@ export function SearchPanel() {
             name="q"
             type="search"
             defaultValue={params.get("q") ?? ""}
-            placeholder="Candle making, padel, dhow…"
+            placeholder={t.keywordPlaceholder}
             autoComplete="off"
             spellCheck={false}
             className={fieldInputClass()}
@@ -71,7 +80,10 @@ export function SearchPanel() {
 
         <DateField
           name="from"
-          label="From"
+          locale={locale}
+          anyDate={t.anyDate}
+          clearLabel={t.clear}
+          label={t.from}
           defaultValue={params.get("from") ?? ""}
           onValueChange={setFrom}
           className="lg:flex-1 lg:rounded-full"
@@ -81,7 +93,10 @@ export function SearchPanel() {
 
         <DateField
           name="to"
-          label="To"
+          locale={locale}
+          anyDate={t.anyDate}
+          clearLabel={t.clear}
+          label={t.to}
           defaultValue={params.get("to") ?? ""}
           fromDate={from}
           className="lg:flex-1 lg:rounded-full"
@@ -90,14 +105,14 @@ export function SearchPanel() {
         <Divider />
 
         <Field
-          label="Guests"
+          label={t.guests}
           htmlFor="search-guests"
           icon={<Users />}
           className="rounded-2xl lg:flex-1 lg:rounded-full"
         >
           <div className="flex items-center gap-2">
             <StepperButton
-              label="Remove a guest"
+              label={t.removeGuest}
               onClick={() => setGuests((n) => Math.max(0, n - 1))}
               disabled={guests === 0}
             >
@@ -108,10 +123,10 @@ export function SearchPanel() {
               aria-live="polite"
               className="tabular w-8 text-center text-[0.9375rem] font-medium text-ink"
             >
-              {guests === 0 ? "Any" : guests}
+              {guests === 0 ? t.any : guests}
             </output>
             <StepperButton
-              label="Add a guest"
+              label={t.addGuest}
               onClick={() => setGuests((n) => Math.min(MAX_GUESTS, n + 1))}
               disabled={guests === MAX_GUESTS}
             >
@@ -120,12 +135,12 @@ export function SearchPanel() {
           </div>
         </Field>
 
-        {/* lg:mr-1.5 makes the gap to the right of the button match the 15px
-            above and below it — the pill's rows are taller than the button. */}
-        <div className="mt-1 flex shrink-0 items-center gap-2 sm:col-span-2 lg:mt-0 lg:mr-1.5 lg:ml-1">
+        {/* lg:me-1.5 makes the gap past the button match the 15px above and
+            below it — the pill's rows are taller than the button. */}
+        <div className="mt-1 flex shrink-0 items-center gap-2 sm:col-span-2 lg:mt-0 lg:me-1.5 lg:ms-1">
           <Button type="submit" size="lg" className="w-full lg:w-auto lg:px-6">
             <Search aria-hidden="true" />
-            {isPending ? "Searching…" : "Search"}
+            {isPending ? t.submitting : t.submit}
           </Button>
         </div>
       </div>

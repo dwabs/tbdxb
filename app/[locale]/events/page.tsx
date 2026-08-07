@@ -6,33 +6,42 @@ import { Suspense } from "react";
 import { ExperienceCard } from "@/components/experience-card";
 import { SearchPanel } from "@/components/search-panel";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES, EXPERIENCES, type Experience } from "@/lib/events";
+import { allExperiences, CATEGORIES, type Experience } from "@/lib/events";
+import { fill, getDictionary, localePath, type Locale } from "@/lib/i18n";
 
-export const metadata: Metadata = {
-  title: "Search",
-  description: "Search every experience on The Bucket List DXB by keyword, date and group size.",
-};
+export async function generateMetadata({
+  params,
+}: PageProps<"/[locale]/events">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = getDictionary(locale).events;
+  return { title: t.title, description: t.metaDescription };
+}
 
 type Search = Promise<{ [key: string]: string | string[] | undefined }>;
 
 const first = (value: string | string[] | undefined) =>
   (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
 
-function filterExperiences(params: Awaited<Search>): Experience[] {
+function filterExperiences(
+  rows: Experience[],
+  params: Awaited<Search>,
+): Experience[] {
   const q = first(params.q).toLowerCase();
   const category = first(params.category);
   const from = first(params.from);
   const to = first(params.to);
   const guests = Number(first(params.guests)) || 0;
 
-  return EXPERIENCES.filter((experience) => {
+  return rows.filter((experience) => {
     if (category && experience.category !== category) return false;
     if (from && experience.date < from) return false;
     if (to && experience.date > to) return false;
 
     // "Up to 16 people" / "8 – 24 people" → the largest number is the cap.
     if (guests > 0) {
-      const capacity = Math.max(...(experience.groupSize.match(/\d+/g) ?? ["0"]).map(Number));
+      const capacity = Math.max(
+        ...(experience.groupSize.match(/\d+/g) ?? ["0"]).map(Number),
+      );
       if (capacity > 0 && guests > capacity) return false;
     }
 
@@ -53,23 +62,41 @@ function filterExperiences(params: Awaited<Search>): Experience[] {
   });
 }
 
-export default async function EventsPage({ searchParams }: { searchParams: Search }) {
-  const params = await searchParams;
-  const results = filterExperiences(params);
-  const category = CATEGORIES.find((entry) => entry.id === first(params.category));
+export default async function EventsPage({
+  params: routeParams,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Search;
+}) {
+  const [{ locale }, params] = await Promise.all([routeParams, searchParams]);
+  const dict = getDictionary(locale);
+  const t = dict.events;
+  const results = filterExperiences(allExperiences(locale as Locale), params);
+  const categoryId = CATEGORIES.find(
+    (entry) => entry === first(params.category),
+  );
   const query = first(params.q);
 
   return (
     <div className="mx-auto max-w-[86rem] px-5 py-10 lg:px-8">
-      <h1 className="text-display font-bold text-ink">{category ? category.label : "Search"}</h1>
+      <h1 className="text-display font-bold text-ink">
+        {categoryId ? dict.categories[categoryId] : t.title}
+      </h1>
       <p aria-live="polite" className="mt-3 text-[0.9375rem] text-ink-muted">
-        {results.length} {results.length === 1 ? "experience" : "experiences"}
-        {query ? ` matching “${query}”` : ""}
+        {fill(results.length === 1 ? t.countOne : t.countOther, {
+          count: results.length,
+        })}
+        {query ? fill(t.matching, { query }) : ""}
       </p>
 
       <div className="mt-8">
-        <Suspense fallback={<div className="h-[5.5rem] rounded-[1.75rem] bg-sand-soft/60" />}>
-          <SearchPanel />
+        <Suspense
+          fallback={
+            <div className="h-[5.5rem] rounded-[1.75rem] bg-sand-soft/60" />
+          }
+        >
+          <SearchPanel locale={locale as Locale} t={dict.search} />
         </Suspense>
       </div>
 
@@ -77,7 +104,11 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
         <ul className="mt-12 grid grid-cols-1 gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {results.map((experience, index) => (
             <li key={experience.slug}>
-              <ExperienceCard experience={experience} priority={index < 4} />
+              <ExperienceCard
+                experience={experience}
+                locale={locale as Locale}
+                priority={index < 4}
+              />
             </li>
           ))}
         </ul>
@@ -89,12 +120,16 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
           >
             <SearchX className="size-5" />
           </span>
-          <p className="mt-4 font-display text-lg font-semibold text-ink">No matches</p>
+          <p className="mt-4 font-display text-lg font-semibold text-ink">
+            {t.noMatchTitle}
+          </p>
           <p className="mx-auto mt-1.5 max-w-sm text-[0.9375rem] text-ink-muted">
-            Try a wider date range, fewer guests, or a different keyword.
+            {t.noMatchBody}
           </p>
           <Button asChild variant="secondary" size="sm" className="mt-5">
-            <Link href="/events">Clear Filters</Link>
+            <Link href={localePath(locale as Locale, "/events")}>
+              {t.clearFilters}
+            </Link>
           </Button>
         </div>
       )}

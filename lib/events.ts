@@ -1,3 +1,6 @@
+import { EXPERIENCES_AR } from "./events-ar";
+import type { Locale } from "./i18n/config";
+
 export type Experience = {
   slug: string;
   title: string;
@@ -24,13 +27,17 @@ export type Experience = {
   isSample: boolean;
 };
 
+/** Order matters — this is the order the rails appear in. Labels live in the
+ *  dictionaries, keyed by these ids. */
 export const CATEGORIES = [
-  { id: "best-this-month", label: "Best Things to Do This Month" },
-  { id: "date-night", label: "Date Night" },
-  { id: "group-plans", label: "Group Plans" },
-  { id: "try-something-new", label: "Try Something New" },
-  { id: "summer-in-the-city", label: "Summer in the City" },
+  "best-this-month",
+  "date-night",
+  "group-plans",
+  "try-something-new",
+  "summer-in-the-city",
 ] as const;
+
+export type CategoryId = (typeof CATEGORIES)[number];
 
 export const EXPERIENCES: Experience[] = [
   {
@@ -114,7 +121,11 @@ export const EXPERIENCES: Experience[] = [
     body: [
       "A slow loop of the creek on a restored wooden dhow, with a four-course Emirati supper served as the light goes.",
     ],
-    includes: ["Four-course Emirati supper", "Soft drinks and karak", "Two-hour creek cruise"],
+    includes: [
+      "Four-course Emirati supper",
+      "Soft drinks and karak",
+      "Two-hour creek cruise",
+    ],
     isSample: true,
   },
   {
@@ -141,8 +152,14 @@ export const EXPERIENCES: Experience[] = [
     ],
     summary:
       "Deckchairs, wireless headphones and a cult film on a warehouse roof, with the Al Quoz skyline behind the screen.",
-    body: ["Deckchairs, wireless headphones and a cult film on a warehouse roof."],
-    includes: ["Reserved deckchair", "Wireless headphones", "One drink from the kiosk"],
+    body: [
+      "Deckchairs, wireless headphones and a cult film on a warehouse roof.",
+    ],
+    includes: [
+      "Reserved deckchair",
+      "Wireless headphones",
+      "One drink from the kiosk",
+    ],
     isSample: true,
   },
   {
@@ -169,8 +186,14 @@ export const EXPERIENCES: Experience[] = [
     ],
     summary:
       "Two hours of round-robin padel across four courts, then pizza on the terrace. Rackets provided, no partner needed.",
-    body: ["Two hours of round-robin padel across four courts, then pizza on the terrace."],
-    includes: ["Court hire and rackets", "Round-robin matches", "Pizza and drinks after"],
+    body: [
+      "Two hours of round-robin padel across four courts, then pizza on the terrace.",
+    ],
+    includes: [
+      "Court hire and rackets",
+      "Round-robin matches",
+      "Pizza and drinks after",
+    ],
     isSample: true,
   },
   {
@@ -197,8 +220,14 @@ export const EXPERIENCES: Experience[] = [
     ],
     summary:
       "A long table set in the dunes, a fire-pit menu cooked in front of you, and a telescope once the sky clears.",
-    body: ["A long table set in the dunes, with a fire-pit menu cooked in front of you."],
-    includes: ["Return transfer from Dubai", "Fire-pit dinner", "Guided stargazing"],
+    body: [
+      "A long table set in the dunes, with a fire-pit menu cooked in front of you.",
+    ],
+    includes: [
+      "Return transfer from Dubai",
+      "Fire-pit dinner",
+      "Guided stargazing",
+    ],
     isSample: true,
   },
   {
@@ -226,7 +255,11 @@ export const EXPERIENCES: Experience[] = [
     summary:
       "Gather, shape and blow your first piece at a 1,100°C furnace, under one-to-one instruction. Take it home the next week.",
     body: ["Gather, shape and blow your first piece at a 1,100°C furnace."],
-    includes: ["Two-hour guided session", "All materials", "Your finished piece, collected later"],
+    includes: [
+      "Two-hour guided session",
+      "All materials",
+      "Your finished piece, collected later",
+    ],
     isSample: true,
   },
   {
@@ -254,16 +287,43 @@ export const EXPERIENCES: Experience[] = [
     summary:
       "Learn to cut a reed pen and write your name in Diwani script, taught by a calligrapher in a wind-tower house.",
     body: ["Learn to cut a reed pen and write your name in Diwani script."],
-    includes: ["Reed pen and ink to keep", "Practice sheets", "Arabic coffee and dates"],
+    includes: [
+      "Reed pen and ink to keep",
+      "Practice sheets",
+      "Arabic coffee and dates",
+    ],
     isSample: true,
   },
 ];
 
-export const experiencesByCategory = (categoryId: string) =>
-  EXPERIENCES.filter((experience) => experience.category === categoryId);
+/**
+ * English is the canonical row; other locales overlay only the prose. A
+ * missing translation falls back to English rather than blanking the card.
+ */
+function localise(experience: Experience, locale: Locale): Experience {
+  if (locale === "en") return experience;
+  const overlay = EXPERIENCES_AR[experience.slug];
+  return overlay ? { ...experience, ...overlay } : experience;
+}
 
-export const getExperience = (slug: string) =>
-  EXPERIENCES.find((experience) => experience.slug === slug);
+export const allExperiences = (locale: Locale) =>
+  EXPERIENCES.map((experience) => localise(experience, locale));
 
-export const relatedExperiences = (experience: Experience, limit = 3) =>
-  EXPERIENCES.filter((candidate) => candidate.slug !== experience.slug).slice(0, limit);
+export const experiencesByCategory = (categoryId: string, locale: Locale) =>
+  EXPERIENCES.filter((experience) => experience.category === categoryId).map(
+    (experience) => localise(experience, locale),
+  );
+
+export const getExperience = (slug: string, locale: Locale) => {
+  const found = EXPERIENCES.find((experience) => experience.slug === slug);
+  return found ? localise(found, locale) : undefined;
+};
+
+export const relatedExperiences = (
+  experience: Experience,
+  locale: Locale,
+  limit = 3,
+) =>
+  EXPERIENCES.filter((candidate) => candidate.slug !== experience.slug)
+    .slice(0, limit)
+    .map((candidate) => localise(candidate, locale));

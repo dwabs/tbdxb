@@ -1,70 +1,53 @@
 export const SITE = {
   name: "thebucketlistdxb",
-  tagline: "Not just things to do — things worth doing.",
   email: "thebucketlistdxb@gmail.com",
   phone: "+971509147621",
   phoneHref: "tel:+971509147621",
-  city: "Dubai, UAE",
   instagram: "https://www.instagram.com/thebucketlistdxb",
 } as const;
 
+/**
+ * Links carry a dictionary key, not a label — the href is structural and the
+ * wording belongs to the locale. Paths are unprefixed; `localePath` adds the
+ * locale at render time.
+ */
 export const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/about-us", label: "About Us" },
-  { href: "/bucket-list", label: "Your Bucket List" },
-  { href: "/faq", label: "FAQs" },
-  { href: "/contact", label: "Contact" },
+  { href: "/", key: "home" },
+  { href: "/about-us", key: "about" },
+  { href: "/faq", key: "faq" },
+  { href: "/contact", key: "contact" },
 ] as const;
 
 /**
  * The sidebar on secondary pages. Only routes that exist are listed — the
- * live site's equivalent links to its bucket list and contact pages, which
- * land in later phases. Add them here as they ship.
+ * live site's equivalent also links to its contact page, which lands in a
+ * later phase. Add it here when it ships.
  */
 export const SECONDARY_NAV = [
-  { href: "/about-us", label: "About Us" },
-  { href: "/faq", label: "FAQs" },
-  { href: "/refund-policy", label: "Refund Policy" },
-  { href: "/terms-conditions", label: "Terms & Conditions" },
-  { href: "/privacy-policy", label: "Privacy Policy" },
+  { href: "/about-us", key: "about" },
+  { href: "/faq", key: "faq" },
+  { href: "/refund-policy", key: "refund" },
+  { href: "/terms-conditions", key: "terms" },
+  { href: "/privacy-policy", key: "privacy" },
 ] as const;
 
 export const FOOTER_COLUMNS = [
   {
-    heading: "Quick Links",
+    heading: "quickLinks",
     links: [
-      { href: "/refund-policy", label: "Refund Policy" },
-      { href: "/faq", label: "FAQ" },
-      { href: "/privacy-policy", label: "Privacy Policy" },
-      { href: "/terms-conditions", label: "Terms of Use" },
+      { href: "/refund-policy", key: "refundPolicy" },
+      { href: "/faq", key: "faq" },
+      { href: "/privacy-policy", key: "privacyPolicy" },
+      { href: "/terms-conditions", key: "termsOfUse" },
     ],
   },
   {
-    heading: "Popular Links",
+    heading: "popularLinks",
     links: [
-      { href: "/", label: "Home" },
-      { href: "/about-us", label: "About Us" },
-      { href: "/contact", label: "Contact" },
-      { href: "/partner-with-us", label: "Partner With Us" },
+      { href: "/", key: "home" },
+      { href: "/about-us", key: "about" },
+      { href: "/contact", key: "contact" },
+      { href: "/partner-with-us", key: "partner" },
     ],
-  },
-] as const;
-
-export const VALUE_PROPS = [
-  {
-    title: "Made for Dubai locals",
-    body: "No tourist traps. Just the spots, events and experiences people here genuinely love.",
-  },
-  {
-    title: "Plans you actually follow through on",
-    body: "Less scrolling, more doing. We make it easy to go from “that looks cool” to “I’m going”.",
-  },
-  {
-    title: "For the moments that matter",
-    body: "Date nights, birthdays, last-minute plans — sorted, without the group-chat debate.",
-  },
-  {
-    title: "We don’t list everything",
-    body: "Only the experiences that are actually worth your time. If we wouldn’t go, it isn’t here.",
   },
 ] as const;
