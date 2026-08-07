@@ -1,7 +1,8 @@
 # Build-out plan
 
 What the redesign still needs to reach parity with thebucketlistdxb.com — and
-past it. Audited 6 Aug 2026 against the live site and its API.
+past it. Audited 6 Aug 2026 against the live site and its API; status updated
+7 Aug 2026.
 
 ## The headline finding
 
@@ -15,21 +16,25 @@ ticket types with prices, discount prices and remaining quantity (11 left on
 the SALT workshop as of the audit).
 
 So this is not "design a booking flow from scratch". It is "wire up the flow
-they already paid for". That reframes the biggest phase below from invention
-to integration.
+they already paid for". That reframes the biggest piece of work below from
+invention to integration.
+
+**Currently on hold.** Decision 1 keeps the site static, so none of this is
+wired yet. The map below is research held in reserve — worth keeping accurate
+because it collapses the estimate for everything downstream of it.
 
 ### Endpoints found in their bundle
 
-| Area | Endpoints |
-| --- | --- |
-| Auth | `/auth/login`, `/auth/verify-otp`, `/auth/resend-otp` |
-| Events | `/events/homepage`, `/events/event-details/:slug`, `/events/event-tickets/:id`, `/events/track-view/:id`, `/events/track-wishlist/:id` |
-| Booking | `/bookings/create-event-booking`, `/bookings/confirm-user-details`, `/bookings/booking-confirm-age`, `/bookings/apply-coupon`, `/bookings/create-payment-intent`, `/bookings/payment-process` |
-| Post-booking | `/bookings/upcoming-bookings`, `/bookings/past-bookings`, `/bookings/cancel-booking/:id`, `/bookings/invioce/:id` *(sic)*, `/bookings/ticket-download/:id` |
-| Wishlist | `/wishlist/wishlist-all`, `/wishlist/toggle-wishlist`, `/remove`, `/removeAll` |
-| Account | `/profile`, `/users/user-details/:id`, `/users/user-update/:id`, `/users/user-update-profile-image/:id`, `/users/preferences`, `/users/reminder-preferences`, `/address/address`, `/notification-setting` |
-| Content | `/about/about-us`, `/faq/faq`, `/privacypolicy/privacy-policy`, `/returnpolicy/return-policy`, `/terms/terms-condition`, `/contact-us`, `/newsletter/subscribe` |
-| Vendor | `/vendors/create-vendor-request` |
+| Area         | Endpoints                                                                                                                                                                                                 |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth         | `/auth/login`, `/auth/verify-otp`, `/auth/resend-otp`                                                                                                                                                     |
+| Events       | `/events/homepage`, `/events/event-details/:slug`, `/events/event-tickets/:id`, `/events/track-view/:id`, `/events/track-wishlist/:id`                                                                    |
+| Booking      | `/bookings/create-event-booking`, `/bookings/confirm-user-details`, `/bookings/booking-confirm-age`, `/bookings/apply-coupon`, `/bookings/create-payment-intent`, `/bookings/payment-process`             |
+| Post-booking | `/bookings/upcoming-bookings`, `/bookings/past-bookings`, `/bookings/cancel-booking/:id`, `/bookings/invioce/:id` _(sic)_, `/bookings/ticket-download/:id`                                                |
+| Wishlist     | `/wishlist/wishlist-all`, `/wishlist/toggle-wishlist`, `/remove`, `/removeAll`                                                                                                                            |
+| Account      | `/profile`, `/users/user-details/:id`, `/users/user-update/:id`, `/users/user-update-profile-image/:id`, `/users/preferences`, `/users/reminder-preferences`, `/address/address`, `/notification-setting` |
+| Content      | `/about/about-us`, `/faq/faq`, `/privacypolicy/privacy-policy`, `/returnpolicy/return-policy`, `/terms/terms-condition`, `/contact-us`, `/newsletter/subscribe`                                           |
+| Vendor       | `/vendors/create-vendor-request`                                                                                                                                                                          |
 
 `create-payment-intent` is Stripe's vocabulary — assume Stripe until confirmed.
 
@@ -51,75 +56,109 @@ not a hand-curated list. And `ageRestriction` needs a consent gate in checkout.
 with editor cruft like `data-start` and `PDq2pG_selectionAnchorContainer`
 classes). It needs sanitising and restyling, not `dangerouslySetInnerHTML`.
 
-## Inventory: live site vs. redesign
+## Decisions — settled
 
-| Page | Live | Redesign |
-| --- | --- | --- |
-| `/` Home | ✅ | ✅ |
-| `/event-details/:id` | ✅ | ✅ as `/events/[slug]` |
-| Search results | ❌ filters in place, no URL state | ✅ `/events` (added) |
-| `/about-us` | ✅ | ❌ |
-| `/bucket-list` | ✅ empty state only | ❌ |
-| `/faq` | ✅ 6-item accordion | ❌ |
-| `/contact-us` | ✅ | ❌ |
-| `/partner-with-us` | ✅ *(Lorem Ipsum in prod)* | ❌ |
-| `/refund-policy` | ✅ | ❌ |
-| `/privacy-policy` | ✅ | ❌ |
-| `/terms-conditions` | ✅ | ❌ |
-| Account / bookings | ❌ *(API exists)* | ❌ |
+Locked in on 7 Aug 2026. These shape everything below.
 
-| Modal | Live | Redesign |
-| --- | --- | --- |
-| Sign in — email | ✅ | ❌ |
-| Sign in — verify OTP | ✅ | ❌ |
-| Sign in — other details | ✅ | ❌ |
-| Logout confirm | ✅ | ❌ |
-| Age gate | ❌ *(API exists)* | ❌ |
-| Checkout | ❌ *(API exists)* | ❌ |
+1. **Content stays static.** No API wiring for now; the backend comes later.
+   The endpoint map above is research, not a live dependency.
+2. **The bucket list is out.** Page and nav link removed. That also retires
+   the open question about what replaces the tick as a save control — there is
+   nothing to save to until the feature returns.
+3. **Stripe on hold.** No keys, no payment work.
+4. **Arabic: build it.** Done — see below.
+5. **Demo listings stay.** All six, now translated too.
 
-## Phase 0 — decisions I need from you
+## Inventory
 
-These block the phases that follow; everything else I can just build.
+Redesign status against the live site.
 
-1. **Wire to the live API, or keep the content static?** Recommend wiring —
-   the backend is done and static content would need re-entering by hand
-   forever. Cost: the redesign stops being a standalone demo.
-2. **What replaces the save-to-bucket-list control?** You had me remove the
-   tick from the cards and the booking panel, but "Your Bucket List" is a core
-   feature with a working API. It needs *some* affordance. Recommend a
-   bookmark icon — it means "save", it isn't a tick, and it isn't the heart
-   every other site uses.
-3. **Stripe account owner.** Publishable key for the client, and who holds the
-   secret — their existing backend already creates the intents, so I likely
-   only need the publishable key.
-4. **Arabic.** Their toggle is decorative: it flips `lang` to `ar`, translates
-   nothing, and never sets RTL. Either commission translations or drop the
-   switcher. Recommend dropping it until the content exists.
-5. **The six sample listings.** Keep as demo content, or delete once the API
-   is wired? Four of their five categories genuinely return zero events, so
-   the rails will look empty on real data.
+| Page                     | Live site                         | Redesign                 |
+| ------------------------ | --------------------------------- | ------------------------ |
+| `/` Home                 | ✅                                | ✅ **done**              |
+| `/events/[slug]` detail  | ✅ as `/event-details/:id`        | ✅ **done**              |
+| `/events` search results | ❌ filters in place, no URL state | ✅ **done** (added)      |
+| `/about-us`              | ✅                                | ✅ **done**              |
+| `/faq`                   | ✅ 6-item accordion               | ✅ **done**              |
+| `/refund-policy`         | ✅                                | ✅ **done**              |
+| `/privacy-policy`        | ✅                                | ✅ **done**              |
+| `/terms-conditions`      | ✅                                | ✅ **done**              |
+| `404`                    | ✅ generic                        | ✅ **done**              |
+| `/contact-us`            | ✅                                | ❌ next                  |
+| `/partner-with-us`       | ✅ _(Lorem Ipsum in prod)_        | ❌ next                  |
+| `/bucket-list`           | ✅ empty state only               | ⛔ dropped by decision 2 |
+| Account / bookings       | ❌ _(API exists)_                 | ❌                       |
 
-## Phases
+| Modal                   | Live site         | Redesign |
+| ----------------------- | ----------------- | -------- |
+| Sign in — email         | ✅                | ❌       |
+| Sign in — verify OTP    | ✅                | ❌       |
+| Sign in — other details | ✅                | ❌       |
+| Logout confirm          | ✅                | ❌       |
+| Age gate                | ❌ _(API exists)_ | ❌       |
+| Checkout                | ❌ _(API exists)_ | ❌       |
 
-Estimates are working days for one developer.
+| Capability            | Live site                                                    | Redesign                               |
+| --------------------- | ------------------------------------------------------------ | -------------------------------------- |
+| Arabic + RTL          | ⚠️ switcher is decorative — flips `lang`, translates nothing | ✅ **done**, real translations and RTL |
+| Shareable search URLs | ❌                                                           | ✅ **done**                            |
+| Static prerendering   | ❌ CRA, client-rendered                                      | ✅ **done**, 17 prerendered routes     |
 
-### Phase 1 — static pages · ~2d · no blockers
+## Done so far
 
-- Shared secondary-page layout with the "Other" sidebar nav they use.
-- `/about-us`, `/faq`, `/refund-policy`, `/privacy-policy`, `/terms-conditions`.
-  Copy is already written and decent — port it verbatim.
-- FAQ as an accessible accordion (their markup is Bootstrap collapse).
-- A real `404`.
+**Secondary pages.** About, FAQs and the three policy pages, copy ported
+verbatim from the live site with punctuation normalised to the redesign's
+typography. They share a layout with a sibling-page sidebar, and a `.prose`
+scale in `@layer components` carries the long-form copy.
 
-### Phase 2 — forms · ~1d · depends on 0.1
+The FAQ accordion is built on `<details name="faq">` — exclusive open with no
+state, correct keyboard and screen-reader semantics for free, works with JS
+off, and the page stays a Server Component. It emits `FAQPage` JSON-LD.
 
-- `/contact` → `POST /contact-us`
-- `/partner-with-us` → `POST /vendors/create-vendor-request`
-- Newsletter → `POST /newsletter/subscribe` (UI already built, unwired)
-- Server Actions, field-level validation, pending and error states.
+**A real 404**, which earns its keep while the header still links to routes
+from later phases.
+
+**Arabic.** Every route lives under `app/[locale]`; that layout is the root
+layout so it can set `lang` and `dir`. English keeps its bare URLs —
+`proxy.ts` (Next 16 renamed Middleware to Proxy) _rewrites_ `/faq` to
+`/en/faq` rather than redirecting, so no existing link changed while
+`/ar/faq` appeared alongside it. The language switch preserves the current
+page in both directions.
+
+Copy lives in two dictionaries. English is the source of the `Dictionary`
+type, widened from its own `as const` literals so translations satisfy the
+shape without matching the English words; a missing or misspelled key still
+fails the build. IBM Plex Sans Arabic sits _behind_ Geist and Inter in the
+font stack rather than being swapped per locale — fallback resolves per
+glyph, so a Latin venue name still sets in Geist inside Arabic copy.
+Numerals are Latin in both locales (`ar-AE-u-nu-latn`), matching how prices
+are read in UAE commerce. Directional utilities are logical throughout.
+
+> ⚠️ **The Arabic is in-house and has not been reviewed by a native speaker.**
+> Accuracy is sound, but marketing copy lives on tone. Someone should read
+> `lib/i18n/ar.ts` and `lib/events-ar.ts` before this reaches customers. Both
+> files carry the same warning in a header comment.
+
+**Design work along the way:** event-detail cleanup (bucket-list tick removed
+from the booking panel, "What's Included" aligned to "Where You'll Be",
+single-photo listings given a centred 16/9 hero instead of a mosaic tile with
+a hole beside it); duration surfaced in the facts row; the search panel
+redesigned onto white to match the bucket-list card, dividers and guests icon
+removed, with a blush hover/focus fill replacing the old white one.
+
+## Remaining work
+
+In dependency order. Nothing here is blocked except where noted.
+
+### Forms — next up
+
+- `/contact` and `/partner-with-us`: full UI, field-level validation, pending
+  and error states.
 - Rewrite the Partner page copy — it is Lorem Ipsum in production today.
+- Both submit nowhere until decision 1 changes. The newsletter form is in the
+  same position: built, validating, unwired.
 
-### Phase 3 — live data · ~3d · depends on 0.1
+### Live data — blocked on decision 1
 
 - Typed API client + response schemas; fail loudly on shape drift.
 - Home from `/events/homepage`; detail from `/events/event-details/:slug`
@@ -128,8 +167,10 @@ Estimates are working days for one developer.
 - `next.config` `remotePatterns` for their `/uploads` host; keep `next/image`.
 - Point `/events` search at the API instead of the local array.
 - Fire `track-view` on detail mount.
+- Per-locale content: the Arabic overlay in `lib/events-ar.ts` is a stand-in
+  for what the vendor would author.
 
-### Phase 4 — auth modals · ~2d · depends on 3
+### Auth modals — needs live data
 
 - Three-step sign-in modal matching their flow: email → OTP → profile
   (full name, mobile, home base — the emirate list plus "I'm just visiting").
@@ -139,15 +180,7 @@ Estimates are working days for one developer.
 
 Fix in passing: their step-3 body copy reads "Let's get you all st up".
 
-### Phase 5 — bucket list · ~1.5d · depends on 4 and 0.2
-
-- Save control on cards and detail (whatever 0.2 lands on).
-- `/bucket-list` page against `wishlist-all`, `toggle-wishlist`, `removeAll`.
-- Optimistic toggle; signed-out taps open the sign-in modal and resume after.
-- Name it one thing — nav says "Your bucketlist", their page says
-  "Your Wishlist".
-
-### Phase 6 — booking and checkout · ~5d · depends on 4 · **the real gap**
+### Booking and checkout — needs auth and decision 3 · **the real gap**
 
 This is the flow that doesn't exist on the live site at all.
 
@@ -160,33 +193,36 @@ This is the flow that doesn't exist on the live site at all.
 - Confirmation page, invoice and ticket download.
 - Failure paths: declined card, expired intent, ticket sold out mid-checkout.
 
-### Phase 7 — account · ~2d · depends on 4
+### Account — needs auth
 
 - `/account`: profile, avatar upload, address, notification and reminder
   preferences.
 - Upcoming and past bookings; cancel with confirmation.
 
-### Phase 8 — Arabic · size depends on 0.4
+### Deferred
 
-- `next-intl`, locale routing, `dir="rtl"`, mirrored layout, Arabic numerals
-  in the price and date formatters.
-
-**Total ≈ 16–17 days** to full parity plus the booking flow they're missing.
-Phases 1–3 are the ones that make it a real site; 6 is the one that makes it
-a business.
+- **Bucket list** — dropped by decision 2. If it returns it needs a save
+  affordance (a bookmark, not a tick), the `/bucket-list` page, and the
+  `wishlist-*` endpoints.
+- **Arabic 404.** `not-found` renders below the locale segment but cannot read
+  its param, so it always renders English. Needs its own boundary; not worth a
+  route file until there is Arabic traffic.
 
 ## Bugs on the live site — do not port these
+
+Ticked items are already handled in the redesign; the rest are traps for the
+pages still to be built.
 
 - `Book Now` has no handler. The primary conversion action does nothing.
 - Contact page phone links to `tel:1-800-453-6744`, a US placeholder, while
   displaying +971509147621.
 - Footer phone number is a `mailto:` link.
 - Facebook, X and YouTube icons link to those sites' bare homepages.
-- Partner With Us opens with Lorem Ipsum.
-- "Let's get you all st up" in the sign-in modal.
-- The language switcher translates nothing and never sets RTL.
-- Search has no results page, no URL state, nothing shareable.
+- Partner With Us opens with Lorem Ipsum. _(Rewrite when the page is built.)_
+- "Let's get you all st up" in the sign-in modal. _(Fix when auth is built.)_
+- ✅ The language switcher translates nothing and never sets RTL. _(Ours does both.)_
+- ✅ Search has no results page, no URL state, nothing shareable. _(Ours has `/events`.)_
 - `Sign In` is an `<a href="/">` with a Bootstrap modal target — should be a
   button.
-- Nav "Your bucketlist" vs page heading "Your Wishlist".
+- Nav "Your bucketlist" vs page heading "Your Wishlist". _(Moot — feature dropped.)_
 - `tickets[0].startDate.fromTime` comes back as the string `"Invalid"`.
