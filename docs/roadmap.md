@@ -164,6 +164,11 @@ removed, with a blush hover/focus fill replacing the old white one.
 Phase numbers are the original ones, kept so they still mean the same thing.
 Phases 1, 2 and 8 are done; phase 5 is dropped.
 
+Phases 4 and 7 assume a backend that can hold a user. What that backend is —
+which services, which tables, which roles — is specified in
+[`accounts-and-dashboard.md`](./accounts-and-dashboard.md), along with the
+vendor dashboard, which is new work these phases never covered.
+
 ### Phase 3 — live data · blocked on decision 1 · next up
 
 - Typed API client + response schemas; fail loudly on shape drift.
@@ -176,7 +181,7 @@ Phases 1, 2 and 8 are done; phase 5 is dropped.
 - Per-locale content: the Arabic overlay in `lib/events-ar.ts` is a stand-in
   for what the vendor would author.
 
-### Phase 4 — auth modals · needs phase 3
+### Phase 4 — auth · needs a backend to authenticate against
 
 - Three-step sign-in modal matching their flow: email → OTP → profile
   (full name, mobile, home base — the emirate list plus "I'm just visiting").
@@ -185,6 +190,16 @@ Phases 1, 2 and 8 are done; phase 5 is dropped.
 - Signed-in header state.
 
 Fix in passing: their step-3 body copy reads "Let's get you all st up".
+
+Also: `/sign-in` is linked from the header today and 404s.
+
+### Phase 9 — vendor dashboard · needs phase 4 · **new**
+
+Not in the original numbering because the live site has no such thing — but
+their data model has `vendorId`, `adminCommission` and `status: Approved` on
+every event, so the business was always a marketplace. Vendors, memberships,
+the event lifecycle and the admin review queue are specified in
+[`accounts-and-dashboard.md`](./accounts-and-dashboard.md).
 
 ### Phase 6 — booking and checkout · needs phase 4 and decision 3 · **the real gap**
 
