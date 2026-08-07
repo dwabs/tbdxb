@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 
 import { LanguageMenu } from "@/components/language-menu";
 import { LogoMark, Wordmark } from "@/components/logo";
+import { SignInModal } from "@/components/sign-in-modal";
 import { Button } from "@/components/ui/button";
-import type { Dictionary } from "@/lib/i18n";
+import { fill, type Dictionary } from "@/lib/i18n";
 import {
   LOCALE_NAMES,
   LOCALES,
@@ -22,12 +23,16 @@ import { cn } from "@/lib/utils";
 export function SiteHeader({
   locale,
   t,
+  auth,
 }: {
   locale: Locale;
   t: Dictionary["nav"];
+  auth: Dictionary["auth"];
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // Static stand-in for a real session — see docs/accounts-and-dashboard.md.
+  const [signedInAs, setSignedInAs] = useState<string | null>(null);
 
   // Closing on navigation is handled in the link's own onClick, not an effect.
   // This one is a genuine external-system sync: stop the page behind scrolling.
@@ -85,9 +90,23 @@ export function SiteHeader({
             label={t.language}
             className="hidden sm:inline-flex"
           />
-          <Button size="sm" asChild>
-            <Link href={localePath(locale, "/sign-in")}>{t.signIn}</Link>
-          </Button>
+          {signedInAs ? (
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="text-[0.9375rem] font-medium text-ink">
+                {fill(auth.greeting, {
+                  name: signedInAs.split(" ")[0] ?? signedInAs,
+                })}
+              </span>
+              <Button size="sm" variant="ghost" onClick={() => setSignedInAs(null)}>
+                {auth.signOut}
+              </Button>
+            </div>
+          ) : (
+            <SignInModal
+              t={auth}
+              onSignedIn={(fullName) => setSignedInAs(fullName)}
+            />
+          )}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -154,6 +173,25 @@ export function SiteHeader({
               })}
             </ul>
           </div>
+          {signedInAs ? (
+            <div className="mt-5 flex items-center justify-between">
+              <span className="text-[0.9375rem] font-medium text-ink">
+                {fill(auth.greeting, {
+                  name: signedInAs.split(" ")[0] ?? signedInAs,
+                })}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setSignedInAs(null);
+                  setOpen(false);
+                }}
+              >
+                {auth.signOut}
+              </Button>
+            </div>
+          ) : null}
         </nav>
       ) : null}
     </header>

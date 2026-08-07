@@ -83,7 +83,7 @@ export default async function RootLayout({
         >
           {t.nav.skipToContent}
         </a>
-        <SiteHeader locale={locale} t={t.nav} />
+        <SiteHeader locale={locale} t={t.nav} auth={t.auth} />
         <main id="main" className="flex-1">
           {children}
         </main>
