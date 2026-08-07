@@ -6,14 +6,10 @@ import { cn } from "@/lib/utils";
  * A labelled control cell for the search panel. The whole cell is one hit
  * target: clicking the label focuses the input inside it.
  *
- * The panel is white, so a cell can no longer signal hover or focus by
- * filling white. It borrows the header nav's two tints instead — sand-soft
- * under the cursor, blush once the cell is live — so "hovering" and "this is
- * the live one" read the same here as they do up there.
- *
- * `focus-within:hover:` is stacked on purpose: Tailwind emits `hover` after
- * `focus-within`, so without it a focused cell would drop back to the hover
- * tint under the cursor.
+ * The panel is white, so a cell can no longer signal hover by filling white.
+ * It borrows the header nav's sand-soft tint for that. Focus gets no fill of
+ * its own — the text caret already shows it for a typed field, and adding a
+ * colour flash on top just fights that.
  */
 export function Field({
   label,
@@ -30,10 +26,9 @@ export function Field({
   icon?: React.ReactNode;
   error?: string;
   /**
-   * "fill" is the search panel's tinted cell (sand-soft hover, blush focus).
-   * "outline" swaps the focus fill for a border — for contexts like a modal,
-   * where a bordered field row already sits on its own surface and a pink
-   * flash on focus fights the rest of the chrome rather than matching it.
+   * "fill" is the search panel's tinted cell (sand-soft on hover, no fill on
+   * focus). "outline" swaps the hover fill for a border — for contexts like a
+   * modal, where a bordered field row already sits on its own surface.
    */
   variant?: "fill" | "outline";
   /**
@@ -53,8 +48,7 @@ export function Field({
     <div
       className={cn(
         "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200",
-        variant === "fill" &&
-          "hover:bg-sand-soft focus-within:bg-blush focus-within:hover:bg-blush",
+        variant === "fill" && "hover:bg-sand-soft",
         variant === "outline" &&
           "border border-line-strong focus-within:border-ink",
         errorPlacement === "inside" && className,
@@ -111,13 +105,8 @@ export function Field({
 
 export function fieldInputClass(className?: string) {
   return cn(
-    // The cell itself shows focus (the blush fill), so the input needs no
-    // ring of its own — one indicator per control, not two.
-    //
-    // Placeholders are ink-muted rather than ink-subtle: subtle clears AA on
-    // white (4.7:1) but drops to 4.2:1 once the cell fills blush, and a
-    // placeholder that fails contrast exactly when you reach for the field is
-    // the wrong trade. Muted holds 5.5:1 on blush.
+    // No ring of its own — the text caret is the focus indicator, and the
+    // "outline" cell variant shows its own border instead.
     "w-full border-0 bg-transparent p-0 text-[0.9375rem] text-ink placeholder:text-ink-muted focus:outline-none focus-visible:outline-none",
     className,
   );
