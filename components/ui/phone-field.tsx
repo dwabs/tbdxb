@@ -8,14 +8,11 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * `react-phone-number-input` (the engine behind reui's phone input) renders
- * the flag/country-select and the number input as two sibling elements
- * (`.PhoneInputCountry`, `.PhoneInputInput`) inside one flex row — matching
- * reui's look means giving each its own separate rounded-full pill rather
- * than our other fields' single shared cell, which is why this doesn't reuse
- * `Field`. `limitMaxLength` is what enforces "based on the country we should
- * limit the digits entered": it caps input at that country's real max
- * significant-number length, from libphonenumber-js's own metadata.
+ * One bordered pill, matching reui's reference: the flag sits inside the
+ * same border as the number input, not in a border of its own. `limitMaxLength`
+ * is what enforces "based on the country we should limit the digits entered":
+ * it caps input at that country's real max significant-number length, from
+ * libphonenumber-js's own metadata.
  */
 export function PhoneField({
   label,
@@ -42,35 +39,31 @@ export function PhoneField({
       >
         {label}
       </label>
-      <PhoneInput
-        id={htmlFor}
-        international
-        limitMaxLength
-        defaultCountry={defaultCountry}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${htmlFor}-error` : undefined}
-        countrySelectProps={{ "aria-label": label }}
-        style={{ "--PhoneInputCountryFlag-borderWidth": 0 } as React.CSSProperties}
-        numberInputProps={{
-          className: cn(
-            "h-11 min-w-0 flex-1 rounded-full border bg-transparent px-4 text-[0.9375rem] text-ink placeholder:text-ink-muted transition-colors duration-150 focus:outline-none",
-            error
-              ? "border-accent-soft bg-blush"
-              : "border-line-strong focus:border-ink",
-          ),
-        }}
+      <div
         className={cn(
-          "mt-1.5 gap-2",
-          "[&_.PhoneInputCountry]:m-0 [&_.PhoneInputCountry]:h-11 [&_.PhoneInputCountry]:shrink-0",
-          "[&_.PhoneInputCountry]:rounded-full [&_.PhoneInputCountry]:border [&_.PhoneInputCountry]:px-3",
-          error
-            ? "[&_.PhoneInputCountry]:border-accent-soft [&_.PhoneInputCountry]:bg-blush"
-            : "[&_.PhoneInputCountry]:border-line-strong",
+          "mt-1.5 flex h-12 items-center gap-2 rounded-full border pl-3 pr-4 transition-colors duration-150 focus-within:border-ink",
+          error ? "border-accent-soft bg-blush" : "border-line-strong",
         )}
-      />
+      >
+        <PhoneInput
+          id={htmlFor}
+          international
+          limitMaxLength
+          defaultCountry={defaultCountry}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${htmlFor}-error` : undefined}
+          countrySelectProps={{ "aria-label": label }}
+          style={{ "--PhoneInputCountryFlag-borderWidth": 0 } as React.CSSProperties}
+          numberInputProps={{
+            className:
+              "h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[0.9375rem] text-ink placeholder:text-ink-muted focus:outline-none",
+          }}
+          className="flex w-full items-center [&_.PhoneInputCountry]:m-0 [&_.PhoneInputCountry]:mr-1"
+        />
+      </div>
       {error ? (
         <p
           id={`${htmlFor}-error`}
