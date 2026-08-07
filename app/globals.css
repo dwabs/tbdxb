@@ -124,6 +124,14 @@
     border-radius: 4px;
   }
 
+  /* Chrome/Firefox don't give <button> the pointer cursor <a> gets for free,
+     so every button on the site — including Radix's Dialog/Popover triggers,
+     which render as real <button>s — read as unclickable on hover without
+     this. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
   h1,
   h2,
   h3,

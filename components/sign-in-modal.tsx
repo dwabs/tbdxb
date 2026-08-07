@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { isValidPhoneNumber, type Value } from "react-phone-number-input";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Field, fieldInputClass } from "@/components/ui/field";
+import { PhoneField } from "@/components/ui/phone-field";
 import { fill, type Dictionary } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +46,7 @@ export function SignInModal({
   const [verifying, setVerifying] = useState(false);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
+  const [mobile, setMobile] = useState<Value>();
   const [mobileError, setMobileError] = useState("");
   const [pending, setPending] = useState(false);
   const attemptedOtp = useRef<string | null>(null);
@@ -88,6 +91,7 @@ export function SignInModal({
     attemptedOtp.current = null;
     setName("");
     setNameError("");
+    setMobile(undefined);
     setMobileError("");
     setPending(false);
   }
@@ -127,11 +131,10 @@ export function SignInModal({
     event: React.FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const fullName = String(data.get("name") ?? "").trim();
-    const mobile = String(data.get("mobile") ?? "").trim();
+    const fullName = String(new FormData(event.currentTarget).get("name") ?? "").trim();
     const nextNameError = fullName.length === 0 ? t.profile.nameError : "";
-    const nextMobileError = mobile.length === 0 ? t.profile.mobileError : "";
+    const nextMobileError =
+      !mobile || !isValidPhoneNumber(mobile) ? t.profile.mobileError : "";
     setNameError(nextNameError);
     setMobileError(nextMobileError);
     if (nextNameError || nextMobileError) return;
@@ -155,7 +158,7 @@ export function SignInModal({
       </DialogTrigger>
       <DialogContent
         closeLabel={t.close}
-        className="w-[min(26rem,calc(100vw-2rem))] overflow-hidden border-transparent p-0 sm:flex sm:w-[min(46rem,calc(100vw-2rem))]"
+        className="w-[min(26rem,calc(100vw-2rem))] overflow-hidden border-0 p-0 sm:flex sm:w-[min(46rem,calc(100vw-2rem))]"
       >
         <div className="relative hidden shrink-0 sm:block sm:w-80">
           <Image
@@ -167,7 +170,7 @@ export function SignInModal({
           />
         </div>
 
-        <div className="min-w-0 flex-1 p-8 sm:max-w-sm sm:p-10">
+        <div className="min-w-0 flex-1 p-8 sm:mx-auto sm:max-w-sm sm:p-10">
           {step === "email" ? (
             <form onSubmit={handleEmailSubmit} noValidate>
               <DialogTitle className="font-display text-xl font-semibold text-ink">
@@ -179,6 +182,7 @@ export function SignInModal({
               <div className="mt-8">
                 <Field
                   variant="outline"
+                  errorPlacement="outside"
                   label={t.email.emailLabel}
                   htmlFor="signin-email"
                   error={emailError}
@@ -270,6 +274,7 @@ export function SignInModal({
               <div className="mt-8 grid gap-3">
                 <Field
                   variant="outline"
+                  errorPlacement="outside"
                   label={t.profile.nameLabel}
                   htmlFor="signin-name"
                   error={nameError}
@@ -290,23 +295,17 @@ export function SignInModal({
                     className={fieldInputClass()}
                   />
                 </Field>
-                <Field
-                  variant="outline"
+                <PhoneField
                   label={t.profile.mobileLabel}
                   htmlFor="signin-mobile"
+                  value={mobile}
+                  onChange={(next) => {
+                    setMobile(next);
+                    if (mobileError) setMobileError("");
+                  }}
+                  placeholder={t.profile.mobilePlaceholder}
                   error={mobileError}
-                >
-                  <input
-                    id="signin-mobile"
-                    name="mobile"
-                    type="tel"
-                    autoComplete="tel"
-                    onChange={() => mobileError && setMobileError("")}
-                    placeholder={t.profile.mobilePlaceholder}
-                    aria-invalid={mobileError ? true : undefined}
-                    className={fieldInputClass()}
-                  />
-                </Field>
+                />
               </div>
               <Button type="submit" size="lg" className="mt-6 w-full">
                 {pending ? t.profile.finishing : t.profile.finish}

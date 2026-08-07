@@ -21,13 +21,13 @@ export function Field({
   icon,
   error,
   variant = "fill",
+  errorPlacement = "inside",
   className,
   children,
 }: {
   label: string;
   htmlFor: string;
   icon?: React.ReactNode;
-  /** Rendered below the field, inside the same tinted cell. */
   error?: string;
   /**
    * "fill" is the search panel's tinted cell (sand-soft hover, blush focus).
@@ -36,10 +36,20 @@ export function Field({
    * flash on focus fights the rest of the chrome rather than matching it.
    */
   variant?: "fill" | "outline";
+  /**
+   * "inside" (default) keeps the error in the tinted/bordered cell, which is
+   * what every existing caller's `className` (flex-basis, col-span, shape
+   * overrides) targets — changing that root would break them.
+   * "outside" drops the error below the cell instead, in normal flow so it
+   * can't overlap a field stacked underneath. It wraps the cell in a plain
+   * div and moves `className` there, so only use it where callers don't
+   * depend on `className` landing on the cell itself (the sign-in modal).
+   */
+  errorPlacement?: "inside" | "outside";
   className?: string;
   children: React.ReactNode;
 }) {
-  return (
+  const cell = (
     <div
       className={cn(
         "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200",
@@ -47,7 +57,7 @@ export function Field({
           "hover:bg-sand-soft focus-within:bg-blush focus-within:hover:bg-blush",
         variant === "outline" &&
           "border border-line-strong focus-within:border-ink",
-        className,
+        errorPlacement === "inside" && className,
       )}
     >
       {icon ? (
@@ -66,7 +76,7 @@ export function Field({
           {label}
         </label>
         {children}
-        {error ? (
+        {errorPlacement === "inside" && error ? (
           <p
             id={`${htmlFor}-error`}
             role="alert"
@@ -78,6 +88,25 @@ export function Field({
       </span>
     </div>
   );
+
+  if (errorPlacement === "outside") {
+    return (
+      <div className={className}>
+        {cell}
+        {error ? (
+          <p
+            id={`${htmlFor}-error`}
+            role="alert"
+            className="mt-1.5 px-4 text-[0.8125rem] text-accent-deep"
+          >
+            {error}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  return cell;
 }
 
 export function fieldInputClass(className?: string) {
