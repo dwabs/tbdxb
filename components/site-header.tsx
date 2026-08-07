@@ -18,6 +18,7 @@ import {
   stripLocale,
 } from "@/lib/i18n/config";
 import { NAV_LINKS } from "@/lib/site";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 export function SiteHeader({
@@ -31,7 +32,7 @@ export function SiteHeader({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  // Static stand-in for a real session — see docs/accounts-and-dashboard.md.
+  const [supabase] = useState(() => createClient());
   const [signedInAs, setSignedInAs] = useState<string | null>(null);
 
   // Closing on navigation is handled in the link's own onClick, not an effect.
@@ -42,6 +43,38 @@ export function SiteHeader({
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  // Hydrates from an existing session on load (e.g. a page refresh), and
+  // reacts to sign-out/sign-in happening in another tab.
+  useEffect(() => {
+    let cancelled = false;
+
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (cancelled || !data.user) return;
+      const { data: profile } = await supabase
+        .from("profile")
+        .select("full_name")
+        .eq("id", data.user.id)
+        .single();
+      if (!cancelled && profile?.full_name) setSignedInAs(profile.full_name);
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event) => {
+        if (event === "SIGNED_OUT") setSignedInAs(null);
+      },
+    );
+
+    return () => {
+      cancelled = true;
+      subscription.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setSignedInAs(null);
+  }
 
   const links = NAV_LINKS.map((link) => ({
     href: localePath(locale, link.href),
@@ -95,7 +128,7 @@ export function SiteHeader({
               <AccountMenu
                 name={signedInAs}
                 t={auth}
-                onSignOut={() => setSignedInAs(null)}
+                onSignOut={handleSignOut}
               />
             </div>
           ) : (
@@ -179,7 +212,7 @@ export function SiteHeader({
                 name={signedInAs}
                 t={auth}
                 onSignOut={() => {
-                  setSignedInAs(null);
+                  handleSignOut();
                   setOpen(false);
                 }}
               />

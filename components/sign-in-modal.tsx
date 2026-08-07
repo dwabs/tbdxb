@@ -15,14 +15,9 @@ import {
 import { Field, fieldInputClass } from "@/components/ui/field";
 import { PhoneField } from "@/components/ui/phone-field";
 import { fill, type Dictionary } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
-/**
- * Real flow is Supabase `signInWithOtp` / `verifyOtp` (see
- * docs/accounts-and-dashboard.md). Static for now: any 6 digits verify
- * except this one, so the error state has something to demonstrate.
- */
-const WRONG_CODE = "000000";
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,6 +31,7 @@ export function SignInModal({
   t: Dictionary["auth"];
   onSignedIn: (name: string) => void;
 }) {
+  const [supabase] = useState(() => createClient());
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -44,10 +40,12 @@ export function SignInModal({
   const [otpError, setOtpError] = useState("");
   const [resendSeconds, setResendSeconds] = useState(RESEND_SECONDS);
   const [verifying, setVerifying] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
   const [mobile, setMobile] = useState<Value>();
   const [mobileError, setMobileError] = useState("");
+  const [saveError, setSaveError] = useState("");
   const [pending, setPending] = useState(false);
   const attemptedOtp = useRef<string | null>(null);
 
@@ -65,20 +63,38 @@ export function SignInModal({
     let cancelled = false;
     setVerifying(true);
     (async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: "email",
+      });
+      if (cancelled) return;
+      if (error || !data.user) {
+        setVerifying(false);
+        setOtpError(t.otp.codeError);
+        attemptedOtp.current = null;
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profile")
+        .select("full_name, phone")
+        .eq("id", data.user.id)
+        .single();
       if (cancelled) return;
       setVerifying(false);
-      if (otp === WRONG_CODE) {
-        setOtpError(t.otp.codeError);
+      setOtpError("");
+      setUserId(data.user.id);
+      if (profile?.full_name) {
+        onSignedIn(profile.full_name);
+        setOpen(false);
       } else {
-        setOtpError("");
         setStep("profile");
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [step, otp, t.otp.codeError]);
+  }, [step, otp, email, supabase, onSignedIn, t.otp.codeError]);
 
   function reset() {
     setStep("email");
@@ -88,12 +104,22 @@ export function SignInModal({
     setOtpError("");
     setResendSeconds(RESEND_SECONDS);
     setVerifying(false);
+    setUserId(null);
     attemptedOtp.current = null;
     setName("");
     setNameError("");
     setMobile(undefined);
     setMobileError("");
+    setSaveError("");
     setPending(false);
+  }
+
+  async function sendOtp(target: string) {
+    const { error } = await supabase.auth.signInWithOtp({
+      email: target,
+      options: { shouldCreateUser: true },
+    });
+    return !error;
   }
 
   async function handleEmailSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -105,10 +131,14 @@ export function SignInModal({
       return;
     }
     setEmailError("");
-    setEmail(trimmed);
     setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const ok = await sendOtp(trimmed);
     setPending(false);
+    if (!ok) {
+      setEmailError(t.email.sendError);
+      return;
+    }
+    setEmail(trimmed);
     setStep("otp");
   }
 
@@ -119,12 +149,13 @@ export function SignInModal({
     attemptedOtp.current = null;
   }
 
-  function handleResend() {
+  async function handleResend() {
     if (resendSeconds > 0) return;
     setOtp("");
     setOtpError("");
     attemptedOtp.current = null;
     setResendSeconds(RESEND_SECONDS);
+    await sendOtp(email);
   }
 
   async function handleProfileSubmit(
@@ -137,10 +168,18 @@ export function SignInModal({
       !mobile || !isValidPhoneNumber(mobile) ? t.profile.mobileError : "";
     setNameError(nextNameError);
     setMobileError(nextMobileError);
-    if (nextNameError || nextMobileError) return;
+    if (nextNameError || nextMobileError || !userId) return;
+    setSaveError("");
     setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const { error } = await supabase
+      .from("profile")
+      .update({ full_name: fullName, phone: mobile })
+      .eq("id", userId);
     setPending(false);
+    if (error) {
+      setSaveError(t.profile.saveError);
+      return;
+    }
     onSignedIn(fullName);
     setOpen(false);
   }
@@ -307,6 +346,11 @@ export function SignInModal({
                   error={mobileError}
                 />
               </div>
+              {saveError ? (
+                <p role="alert" className="mt-3 text-[0.8125rem] text-accent-deep">
+                  {saveError}
+                </p>
+              ) : null}
               <Button type="submit" size="lg" className="mt-6 w-full">
                 {pending ? t.profile.finishing : t.profile.finish}
               </Button>
