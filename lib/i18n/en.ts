@@ -21,7 +21,7 @@ export const en = {
     signIn: "Sign In",
     openMenu: "Open menu",
     closeMenu: "Close menu",
-    switchLanguage: "العربية",
+    language: "Language",
   },
 
   hero: {

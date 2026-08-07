@@ -28,7 +28,7 @@ export const ar: Dictionary = {
     signIn: "تسجيل الدخول",
     openMenu: "فتح القائمة",
     closeMenu: "إغلاق القائمة",
-    switchLanguage: "English",
+    language: "اللغة",
   },
 
   hero: {

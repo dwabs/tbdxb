@@ -35,13 +35,6 @@
   --color-accent-soft: #fbc9de;
   --color-blush: #fdeef5;
 
-  /* Search cells — neutral black at low alpha rather than a blush tint, so
-     the fill reads as depth on the white panel instead of as a second colour.
-     Alpha, not a flat grey, so it composites correctly over the popover and
-     over the panel's own border radius. */
-  --color-field-hover: rgb(0 0 0 / 0.05);
-  --color-field-active: rgb(0 0 0 / 0.09);
-
   /* Structure */
   --color-sand: #f0e2e9;
   --color-sand-soft: #fbf3f6;

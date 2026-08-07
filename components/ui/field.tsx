@@ -7,10 +7,13 @@ import { cn } from "@/lib/utils";
  * target: clicking the label focuses the input inside it.
  *
  * The panel is white, so a cell can no longer signal hover or focus by
- * filling white — it darkens instead, deeper when the cell is live than when
- * the cursor is merely over it. `focus-within:hover:` is stacked on
- * purpose: Tailwind emits `hover` after `focus-within`, so without it a
- * focused cell would drop back to the hover tint under the cursor.
+ * filling white. It borrows the header nav's two tints instead — sand-soft
+ * under the cursor, blush once the cell is live — so "hovering" and "this is
+ * the live one" read the same here as they do up there.
+ *
+ * `focus-within:hover:` is stacked on purpose: Tailwind emits `hover` after
+ * `focus-within`, so without it a focused cell would drop back to the hover
+ * tint under the cursor.
  */
 export function Field({
   label,
@@ -28,7 +31,7 @@ export function Field({
   return (
     <div
       className={cn(
-        "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200 hover:bg-field-hover focus-within:bg-field-active focus-within:hover:bg-field-active",
+        "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200 hover:bg-sand-soft focus-within:bg-blush focus-within:hover:bg-blush",
         className,
       )}
     >
@@ -55,13 +58,13 @@ export function Field({
 
 export function fieldInputClass(className?: string) {
   return cn(
-    // The cell itself shows focus (it darkens), so the input needs no ring of
-    // its own — one indicator per control, not two.
+    // The cell itself shows focus (the blush fill), so the input needs no
+    // ring of its own — one indicator per control, not two.
     //
     // Placeholders are ink-muted rather than ink-subtle: subtle clears AA on
-    // white (4.7:1) but drops to 4.1:1 once the cell darkens, and a
+    // white (4.7:1) but drops to 4.2:1 once the cell fills blush, and a
     // placeholder that fails contrast exactly when you reach for the field is
-    // the wrong trade. Muted holds 5.1:1 on the focus fill.
+    // the wrong trade. Muted holds 5.5:1 on blush.
     "w-full border-0 bg-transparent p-0 text-[0.9375rem] text-ink placeholder:text-ink-muted focus:outline-none focus-visible:outline-none",
     className,
   );

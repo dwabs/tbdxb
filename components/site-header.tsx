@@ -1,15 +1,17 @@
 "use client";
 
-import { Globe, Menu, X } from "lucide-react";
+import { Check, Globe, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { LanguageMenu } from "@/components/language-menu";
 import { LogoMark, Wordmark } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n";
 import {
-  DEFAULT_LOCALE,
+  LOCALE_NAMES,
+  LOCALES,
   localePath,
   type Locale,
   stripLocale,
@@ -40,10 +42,6 @@ export function SiteHeader({
     href: localePath(locale, link.href),
     label: t[link.key],
   }));
-
-  // The same page in the other language, so switching never loses your place.
-  const other: Locale = locale === DEFAULT_LOCALE ? "ar" : DEFAULT_LOCALE;
-  const otherHref = localePath(other, stripLocale(pathname));
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-canvas/85 backdrop-blur-md">
@@ -82,17 +80,11 @@ export function SiteHeader({
         </nav>
 
         <div className="ms-auto flex items-center gap-2">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
+          <LanguageMenu
+            locale={locale}
+            label={t.language}
             className="hidden sm:inline-flex"
-          >
-            <Link href={otherHref} hrefLang={other} lang={other}>
-              <Globe aria-hidden="true" />
-              {t.switchLanguage}
-            </Link>
-          </Button>
+          />
           <Button size="sm" asChild>
             <Link href={localePath(locale, "/sign-in")}>{t.signIn}</Link>
           </Button>
@@ -126,16 +118,42 @@ export function SiteHeader({
               {link.label}
             </Link>
           ))}
-          <Link
-            href={otherHref}
-            hrefLang={other}
-            lang={other}
-            onClick={() => setOpen(false)}
-            className="mt-4 inline-flex items-center gap-2 text-[0.9375rem] font-medium text-accent-deep"
-          >
-            <Globe aria-hidden="true" className="size-4" />
-            {t.switchLanguage}
-          </Link>
+          {/* Laid out flat rather than as the desktop dropdown: the sheet is
+              already a disclosure, and nesting a popover inside one to pick
+              between two options is a tap more than it needs to be. */}
+          <div className="mt-5">
+            <p className="flex items-center gap-2 text-[0.6875rem] font-semibold tracking-[0.08em] text-ink-muted uppercase">
+              <Globe aria-hidden="true" className="size-3.5" />
+              {t.language}
+            </p>
+            <ul className="mt-2 flex gap-2">
+              {LOCALES.map((option) => {
+                const current = option === locale;
+                return (
+                  <li key={option}>
+                    <Link
+                      href={localePath(option, stripLocale(pathname))}
+                      hrefLang={option}
+                      lang={option}
+                      aria-current={current ? "true" : undefined}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 py-2.5 text-[0.9375rem] transition-colors duration-150",
+                        current
+                          ? "border-accent-soft bg-blush font-medium text-accent-deep"
+                          : "border-line-strong text-ink-muted",
+                      )}
+                    >
+                      {current ? (
+                        <Check aria-hidden="true" className="size-3.5" />
+                      ) : null}
+                      {LOCALE_NAMES[option]}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </nav>
       ) : null}
     </header>

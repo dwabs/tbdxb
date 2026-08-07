@@ -13,6 +13,11 @@ export const DIRECTION: Record<Locale, "ltr" | "rtl"> = {
   ar: "rtl",
 };
 
+/**
+ * Endonyms — each language named in itself, never translated. Someone hunting
+ * for Arabic in a UI they can't read is looking for "العربية", not "Arabic",
+ * so these live here rather than in the dictionaries.
+ */
 export const LOCALE_NAMES: Record<Locale, string> = {
   en: "English",
   ar: "العربية",

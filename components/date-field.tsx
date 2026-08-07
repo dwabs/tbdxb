@@ -87,11 +87,11 @@ export function DateField({
         <PopoverTrigger
           aria-label={`${label} — ${selected ? fmt.format(selected) : anyDate}`}
           className={cn(
-            // Matches the text fields beside it: the cell darkens on hover and
-            // deeper when live, so it opts out of the default ring rather than
+            // Matches the text fields beside it: sand-soft on hover, blush
+            // once live, so it opts out of the default ring rather than
             // showing two indicators. `data-[state=open]:hover:` keeps the
             // open cell from dropping back to the hover tint.
-            "group flex min-w-0 flex-col items-start rounded-2xl px-4 py-2.5 text-start transition-colors duration-200 hover:bg-field-hover focus-visible:bg-field-active focus-visible:outline-none data-[state=open]:bg-field-active data-[state=open]:hover:bg-field-active [touch-action:manipulation]",
+            "group flex min-w-0 flex-col items-start rounded-2xl px-4 py-2.5 text-start transition-colors duration-200 hover:bg-sand-soft focus-visible:bg-blush focus-visible:outline-none data-[state=open]:bg-blush data-[state=open]:hover:bg-blush [touch-action:manipulation]",
             className,
           )}
         >
