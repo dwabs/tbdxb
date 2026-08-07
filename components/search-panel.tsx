@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus, Search, Users } from "lucide-react";
+import { Minus, Plus, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -8,6 +8,7 @@ import { DateField } from "@/components/date-field";
 import { Button } from "@/components/ui/button";
 import { Field, fieldInputClass } from "@/components/ui/field";
 import { localePath, type Dictionary, type Locale } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 const MAX_GUESTS = 16;
 
@@ -54,7 +55,7 @@ export function SearchPanel({
       onSubmit={handleSubmit}
       role="search"
       aria-label={t.label}
-      className="rounded-[1.75rem] border border-line bg-sand-soft/80 p-2 shadow-rail backdrop-blur-sm lg:rounded-full"
+      className="rounded-[1.75rem] border border-line bg-paper p-2 shadow-lift-lg lg:rounded-full"
     >
       {/* Stacked on phones, 2×2 on tablets, a single row only once it fits. */}
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2 lg:flex lg:items-center lg:gap-0">
@@ -76,8 +77,6 @@ export function SearchPanel({
           />
         </Field>
 
-        <Divider />
-
         <DateField
           name="from"
           locale={locale}
@@ -88,8 +87,6 @@ export function SearchPanel({
           onValueChange={setFrom}
           className="lg:flex-1 lg:rounded-full"
         />
-
-        <Divider />
 
         <DateField
           name="to"
@@ -102,12 +99,9 @@ export function SearchPanel({
           className="lg:flex-1 lg:rounded-full"
         />
 
-        <Divider />
-
         <Field
           label={t.guests}
           htmlFor="search-guests"
-          icon={<Users />}
           className="rounded-2xl lg:flex-1 lg:rounded-full"
         >
           <div className="flex items-center gap-2">
@@ -121,7 +115,10 @@ export function SearchPanel({
             <output
               id="search-guests"
               aria-live="polite"
-              className="tabular w-8 text-center text-[0.9375rem] font-medium text-ink"
+              className={cn(
+                "tabular w-8 text-center text-[0.9375rem] font-medium",
+                guests === 0 ? "text-ink-muted" : "text-ink",
+              )}
             >
               {guests === 0 ? t.any : guests}
             </output>
@@ -147,13 +144,6 @@ export function SearchPanel({
     </form>
   );
 }
-
-const Divider = () => (
-  <span
-    aria-hidden="true"
-    className="field-divider hidden h-8 w-px shrink-0 bg-line-strong lg:block"
-  />
-);
 
 function StepperButton({
   label,
