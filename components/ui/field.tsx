@@ -19,12 +19,15 @@ export function Field({
   label,
   htmlFor,
   icon,
+  error,
   className,
   children,
 }: {
   label: string;
   htmlFor: string;
   icon?: React.ReactNode;
+  /** Rendered below the field, inside the same tinted cell. */
+  error?: string;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -51,6 +54,15 @@ export function Field({
           {label}
         </label>
         {children}
+        {error ? (
+          <p
+            id={`${htmlFor}-error`}
+            role="alert"
+            className="mt-1 text-[0.8125rem] text-accent-deep"
+          >
+            {error}
+          </p>
+        ) : null}
       </span>
     </div>
   );

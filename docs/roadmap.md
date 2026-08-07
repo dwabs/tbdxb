@@ -84,8 +84,8 @@ Redesign status against the live site.
 | `/privacy-policy`        | ✅                                | ✅ **done**              |
 | `/terms-conditions`      | ✅                                | ✅ **done**              |
 | `404`                    | ✅ generic                        | ✅ **done**              |
-| `/contact-us`            | ✅                                | ❌ next                  |
-| `/partner-with-us`       | ✅ _(Lorem Ipsum in prod)_        | ❌ next                  |
+| `/contact-us`            | ✅                                | ✅ **done**              |
+| `/partner-with-us`       | ✅ _(Lorem Ipsum in prod)_        | ✅ **done**, real copy   |
 | `/bucket-list`           | ✅ empty state only               | ⛔ dropped by decision 2 |
 | Account / bookings       | ❌ _(API exists)_                 | ❌                       |
 
@@ -106,7 +106,7 @@ Redesign status against the live site.
 
 ## Done so far
 
-Phase 1 and phase 8 in the original numbering.
+Phases 1, 2 and 8 in the original numbering.
 
 **Secondary pages.** About, FAQs and the three policy pages, copy ported
 verbatim from the live site with punctuation normalised to the redesign's
@@ -117,8 +117,19 @@ The FAQ accordion is built on `<details name="faq">` — exclusive open with no
 state, correct keyboard and screen-reader semantics for free, works with JS
 off, and the page stays a Server Component. It emits `FAQPage` JSON-LD.
 
-**A real 404**, which earns its keep while the header still links to routes
-from later phases.
+**A real 404.**
+
+**Forms — phase 2.** `/contact` and `/partner-with-us`, both built on one
+`InquiryForm` component: field configs are plain data (label, placeholder,
+error text, a couple of validity flags) rather than callbacks, so a Server
+Component page can hand them to the client form as ordinary serialisable
+props — no function ever crosses that boundary. Validation runs on submit,
+errors clear per-field as you fix them, and the first invalid field takes
+focus. Both forms fake the round trip the way the newsletter form already
+did, since decision 1 keeps everything unwired. The `Field` cell from the
+search panel is reused as-is for the labelled rows, and gained an optional
+`error` slot in the process. Partner's copy is original — the live site's
+version is Lorem Ipsum in production; ours never was.
 
 **Arabic.** Every route lives under `app/[locale]`; that layout is the root
 layout so it can set `lang` and `dir`. English keeps its bare URLs —
@@ -151,17 +162,9 @@ removed, with a blush hover/focus fill replacing the old white one.
 ## Remaining work
 
 Phase numbers are the original ones, kept so they still mean the same thing.
-Phase 1 (static pages) and phase 8 (Arabic) are done; phase 5 is dropped.
+Phases 1, 2 and 8 are done; phase 5 is dropped.
 
-### Phase 2 — forms · next up
-
-- `/contact` and `/partner-with-us`: full UI, field-level validation, pending
-  and error states.
-- Rewrite the Partner page copy — it is Lorem Ipsum in production today.
-- Both submit nowhere until decision 1 changes. The newsletter form is in the
-  same position: built, validating, unwired.
-
-### Phase 3 — live data · blocked on decision 1
+### Phase 3 — live data · blocked on decision 1 · next up
 
 - Typed API client + response schemas; fail loudly on shape drift.
 - Home from `/events/homepage`; detail from `/events/event-details/:slug`
@@ -217,11 +220,12 @@ Ticked items are already handled in the redesign; the rest are traps for the
 pages still to be built.
 
 - `Book Now` has no handler. The primary conversion action does nothing.
-- Contact page phone links to `tel:1-800-453-6744`, a US placeholder, while
-  displaying +971509147621.
-- Footer phone number is a `mailto:` link.
+- ✅ Contact page phone links to `tel:1-800-453-6744`, a US placeholder, while
+  displaying +971509147621. _(Ours links `SITE.phoneHref` — one source, so
+  display and `tel:` can't disagree.)_
+- ✅ Footer phone number is a `mailto:` link. _(Ours is `tel:`.)_
 - Facebook, X and YouTube icons link to those sites' bare homepages.
-- Partner With Us opens with Lorem Ipsum. _(Rewrite when the page is built.)_
+- ✅ Partner With Us opens with Lorem Ipsum. _(Ours never did — written fresh.)_
 - "Let's get you all st up" in the sign-in modal. _(Fix when auth is built.)_
 - ✅ The language switcher translates nothing and never sets RTL. _(Ours does both.)_
 - ✅ Search has no results page, no URL state, nothing shareable. _(Ours has `/events`.)_

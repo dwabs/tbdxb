@@ -19,13 +19,14 @@ export const NAV_LINKS = [
 ] as const;
 
 /**
- * The sidebar on secondary pages. Only routes that exist are listed — the
- * live site's equivalent also links to its contact page, which lands in a
- * later phase. Add it here when it ships.
+ * The sidebar on secondary pages. Partner-with-us is deliberately absent —
+ * it's a vendor-facing page, not "the rest of the site" a visitor would
+ * browse from here; it still links out via the footer.
  */
 export const SECONDARY_NAV = [
   { href: "/about-us", key: "about" },
   { href: "/faq", key: "faq" },
+  { href: "/contact", key: "contact" },
   { href: "/refund-policy", key: "refund" },
   { href: "/terms-conditions", key: "terms" },
   { href: "/privacy-policy", key: "privacy" },
