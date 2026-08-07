@@ -106,6 +106,8 @@ Redesign status against the live site.
 
 ## Done so far
 
+Phase 1 and phase 8 in the original numbering.
+
 **Secondary pages.** About, FAQs and the three policy pages, copy ported
 verbatim from the live site with punctuation normalised to the redesign's
 typography. They share a layout with a sibling-page sidebar, and a `.prose`
@@ -148,9 +150,10 @@ removed, with a blush hover/focus fill replacing the old white one.
 
 ## Remaining work
 
-In dependency order. Nothing here is blocked except where noted.
+Phase numbers are the original ones, kept so they still mean the same thing.
+Phase 1 (static pages) and phase 8 (Arabic) are done; phase 5 is dropped.
 
-### Forms — next up
+### Phase 2 — forms · next up
 
 - `/contact` and `/partner-with-us`: full UI, field-level validation, pending
   and error states.
@@ -158,7 +161,7 @@ In dependency order. Nothing here is blocked except where noted.
 - Both submit nowhere until decision 1 changes. The newsletter form is in the
   same position: built, validating, unwired.
 
-### Live data — blocked on decision 1
+### Phase 3 — live data · blocked on decision 1
 
 - Typed API client + response schemas; fail loudly on shape drift.
 - Home from `/events/homepage`; detail from `/events/event-details/:slug`
@@ -170,7 +173,7 @@ In dependency order. Nothing here is blocked except where noted.
 - Per-locale content: the Arabic overlay in `lib/events-ar.ts` is a stand-in
   for what the vendor would author.
 
-### Auth modals — needs live data
+### Phase 4 — auth modals · needs phase 3
 
 - Three-step sign-in modal matching their flow: email → OTP → profile
   (full name, mobile, home base — the emirate list plus "I'm just visiting").
@@ -180,7 +183,7 @@ In dependency order. Nothing here is blocked except where noted.
 
 Fix in passing: their step-3 body copy reads "Let's get you all st up".
 
-### Booking and checkout — needs auth and decision 3 · **the real gap**
+### Phase 6 — booking and checkout · needs phase 4 and decision 3 · **the real gap**
 
 This is the flow that doesn't exist on the live site at all.
 
@@ -193,7 +196,7 @@ This is the flow that doesn't exist on the live site at all.
 - Confirmation page, invoice and ticket download.
 - Failure paths: declined card, expired intent, ticket sold out mid-checkout.
 
-### Account — needs auth
+### Phase 7 — account · needs phase 4
 
 - `/account`: profile, avatar upload, address, notification and reminder
   preferences.
@@ -201,7 +204,7 @@ This is the flow that doesn't exist on the live site at all.
 
 ### Deferred
 
-- **Bucket list** — dropped by decision 2. If it returns it needs a save
+- **Bucket list (phase 5)** — dropped by decision 2. If it returns it needs a save
   affordance (a bookmark, not a tick), the `/bucket-list` page, and the
   `wishlist-*` endpoints.
 - **Arabic 404.** `not-found` renders below the locale segment but cannot read
