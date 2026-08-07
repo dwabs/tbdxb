@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Field, fieldInputClass } from "@/components/ui/field";
 import { fill, type Dictionary } from "@/lib/i18n";
-import { HOME_BASE_OPTIONS } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 /**
@@ -24,6 +23,7 @@ import { cn } from "@/lib/utils";
 const WRONG_CODE = "000000";
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Step = "email" | "otp" | "profile";
 
@@ -96,7 +96,7 @@ export function SignInModal({
     event.preventDefault();
     const value = new FormData(event.currentTarget).get("email");
     const trimmed = String(value ?? "").trim();
-    if (!trimmed.includes("@")) {
+    if (!EMAIL_PATTERN.test(trimmed)) {
       setEmailError(t.email.emailError);
       return;
     }
@@ -155,19 +155,19 @@ export function SignInModal({
       </DialogTrigger>
       <DialogContent
         closeLabel={t.close}
-        className="w-[min(26rem,calc(100vw-2rem))] overflow-hidden p-0 sm:flex sm:w-[min(46rem,calc(100vw-2rem))]"
+        className="w-[min(26rem,calc(100vw-2rem))] overflow-hidden border-transparent p-0 sm:flex sm:w-[min(46rem,calc(100vw-2rem))]"
       >
-        <div className="relative hidden shrink-0 sm:block sm:w-64">
+        <div className="relative hidden shrink-0 sm:block sm:w-80">
           <Image
             src="/events/salt-2.jpeg"
             alt=""
             fill
-            sizes="256px"
+            sizes="320px"
             className="object-cover"
           />
         </div>
 
-        <div className="min-w-0 flex-1 p-8 sm:p-10">
+        <div className="min-w-0 flex-1 p-8 sm:max-w-sm sm:p-10">
           {step === "email" ? (
             <form onSubmit={handleEmailSubmit} noValidate>
               <DialogTitle className="font-display text-xl font-semibold text-ink">
@@ -306,24 +306,6 @@ export function SignInModal({
                     aria-invalid={mobileError ? true : undefined}
                     className={fieldInputClass()}
                   />
-                </Field>
-                <Field
-                  variant="outline"
-                  label={t.profile.homeBaseLabel}
-                  htmlFor="signin-home-base"
-                >
-                  <select
-                    id="signin-home-base"
-                    name="homeBase"
-                    defaultValue={HOME_BASE_OPTIONS[0]}
-                    className={fieldInputClass("cursor-pointer")}
-                  >
-                    {HOME_BASE_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {t.homeBase[option]}
-                      </option>
-                    ))}
-                  </select>
                 </Field>
               </div>
               <Button type="submit" size="lg" className="mt-6 w-full">

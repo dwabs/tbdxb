@@ -5,11 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AccountMenu } from "@/components/account-menu";
 import { LanguageMenu } from "@/components/language-menu";
 import { LogoMark, Wordmark } from "@/components/logo";
 import { SignInModal } from "@/components/sign-in-modal";
-import { Button } from "@/components/ui/button";
-import { fill, type Dictionary } from "@/lib/i18n";
+import type { Dictionary } from "@/lib/i18n";
 import {
   LOCALE_NAMES,
   LOCALES,
@@ -91,15 +91,12 @@ export function SiteHeader({
             className="hidden sm:inline-flex"
           />
           {signedInAs ? (
-            <div className="hidden items-center gap-2 sm:flex">
-              <span className="text-[0.9375rem] font-medium text-ink">
-                {fill(auth.greeting, {
-                  name: signedInAs.split(" ")[0] ?? signedInAs,
-                })}
-              </span>
-              <Button size="sm" variant="ghost" onClick={() => setSignedInAs(null)}>
-                {auth.signOut}
-              </Button>
+            <div className="hidden sm:flex">
+              <AccountMenu
+                name={signedInAs}
+                t={auth}
+                onSignOut={() => setSignedInAs(null)}
+              />
             </div>
           ) : (
             <SignInModal
@@ -176,20 +173,16 @@ export function SiteHeader({
           {signedInAs ? (
             <div className="mt-5 flex items-center justify-between">
               <span className="text-[0.9375rem] font-medium text-ink">
-                {fill(auth.greeting, {
-                  name: signedInAs.split(" ")[0] ?? signedInAs,
-                })}
+                {signedInAs}
               </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
+              <AccountMenu
+                name={signedInAs}
+                t={auth}
+                onSignOut={() => {
                   setSignedInAs(null);
                   setOpen(false);
                 }}
-              >
-                {auth.signOut}
-              </Button>
+              />
             </div>
           ) : null}
         </nav>

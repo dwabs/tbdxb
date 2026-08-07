@@ -32,22 +32,6 @@ export const SECONDARY_NAV = [
   { href: "/privacy-policy", key: "privacy" },
 ] as const;
 
-/**
- * Keys index `auth.homeBase` in the dictionaries — structural list, locale
- * copy lives there. "visiting" last on purpose: it's the odd one out, not an
- * emirate.
- */
-export const HOME_BASE_OPTIONS = [
-  "dubai",
-  "abuDhabi",
-  "sharjah",
-  "ajman",
-  "ummAlQuwain",
-  "rasAlKhaimah",
-  "fujairah",
-  "visiting",
-] as const;
-
 export const FOOTER_COLUMNS = [
   {
     heading: "quickLinks",
