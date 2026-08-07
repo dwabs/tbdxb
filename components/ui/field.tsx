@@ -20,6 +20,7 @@ export function Field({
   htmlFor,
   icon,
   error,
+  variant = "fill",
   className,
   children,
 }: {
@@ -28,13 +29,24 @@ export function Field({
   icon?: React.ReactNode;
   /** Rendered below the field, inside the same tinted cell. */
   error?: string;
+  /**
+   * "fill" is the search panel's tinted cell (sand-soft hover, blush focus).
+   * "outline" swaps the focus fill for a border — for contexts like a modal,
+   * where a bordered field row already sits on its own surface and a pink
+   * flash on focus fights the rest of the chrome rather than matching it.
+   */
+  variant?: "fill" | "outline";
   className?: string;
   children: React.ReactNode;
 }) {
   return (
     <div
       className={cn(
-        "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200 hover:bg-sand-soft focus-within:bg-blush focus-within:hover:bg-blush",
+        "group relative flex min-w-0 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors duration-200",
+        variant === "fill" &&
+          "hover:bg-sand-soft focus-within:bg-blush focus-within:hover:bg-blush",
+        variant === "outline" &&
+          "border border-line-strong focus-within:border-ink",
         className,
       )}
     >

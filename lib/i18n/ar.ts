@@ -47,7 +47,6 @@ export const ar: Dictionary = {
       subtitle: "أرسلنا رمزًا مكوّنًا من 6 أرقام إلى {email}.",
       codeLabel: "أدخل الرمز",
       codeError: "الرمز غير مطابق. حاول مرة أخرى.",
-      verify: "تحقق",
       verifying: "جارٍ التحقق…",
       changeEmail: "استخدام بريد إلكتروني آخر",
       resend: "إعادة إرسال الرمز",

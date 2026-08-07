@@ -40,7 +40,6 @@ export const en = {
       subtitle: "We sent a 6-digit code to {email}.",
       codeLabel: "Enter code",
       codeError: "That code didn't match. Try again.",
-      verify: "Verify",
       verifying: "Verifying…",
       changeEmail: "Use a different email",
       resend: "Resend code",

@@ -32,7 +32,7 @@ export function DialogContent({
         {children}
         <DialogPrimitive.Close
           aria-label={closeLabel}
-          className="absolute top-4 right-4 grid size-9 place-items-center rounded-full text-ink-muted transition-colors duration-150 hover:bg-sand-soft hover:text-ink [touch-action:manipulation]"
+          className="absolute top-4 end-4 z-10 grid size-9 place-items-center rounded-full bg-paper/90 text-ink-muted backdrop-blur-sm transition-colors duration-150 hover:bg-sand-soft hover:text-ink [touch-action:manipulation]"
         >
           <X aria-hidden="true" className="size-4" />
         </DialogPrimitive.Close>

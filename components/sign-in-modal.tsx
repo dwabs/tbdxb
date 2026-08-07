@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Field, fieldInputClass } from "@/components/ui/field";
 import { fill, type Dictionary } from "@/lib/i18n";
 import { HOME_BASE_OPTIONS } from "@/lib/site";
@@ -40,16 +41,41 @@ export function SignInModal({
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
   const [resendSeconds, setResendSeconds] = useState(RESEND_SECONDS);
+  const [verifying, setVerifying] = useState(false);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
   const [mobileError, setMobileError] = useState("");
   const [pending, setPending] = useState(false);
+  const attemptedOtp = useRef<string | null>(null);
 
   useEffect(() => {
     if (step !== "otp" || resendSeconds === 0) return;
     const id = setTimeout(() => setResendSeconds((s) => s - 1), 1000);
     return () => clearTimeout(id);
   }, [step, resendSeconds]);
+
+  // Auto-verify: fires once per distinct 6-digit value, not on every render.
+  useEffect(() => {
+    if (step !== "otp" || otp.length !== OTP_LENGTH) return;
+    if (attemptedOtp.current === otp) return;
+    attemptedOtp.current = otp;
+    let cancelled = false;
+    setVerifying(true);
+    (async () => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (cancelled) return;
+      setVerifying(false);
+      if (otp === WRONG_CODE) {
+        setOtpError(t.otp.codeError);
+      } else {
+        setOtpError("");
+        setStep("profile");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [step, otp, t.otp.codeError]);
 
   function reset() {
     setStep("email");
@@ -58,6 +84,8 @@ export function SignInModal({
     setOtp("");
     setOtpError("");
     setResendSeconds(RESEND_SECONDS);
+    setVerifying(false);
+    attemptedOtp.current = null;
     setName("");
     setNameError("");
     setMobileError("");
@@ -80,24 +108,18 @@ export function SignInModal({
     setStep("otp");
   }
 
-  async function handleOtpSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (otp.length !== OTP_LENGTH) return;
-    setPending(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setPending(false);
-    if (otp === WRONG_CODE) {
-      setOtpError(t.otp.codeError);
-      return;
-    }
+  function handleChangeEmail() {
+    setStep("email");
+    setOtp("");
     setOtpError("");
-    setStep("profile");
+    attemptedOtp.current = null;
   }
 
-  async function handleResend() {
+  function handleResend() {
     if (resendSeconds > 0) return;
     setOtp("");
     setOtpError("");
+    attemptedOtp.current = null;
     setResendSeconds(RESEND_SECONDS);
   }
 
@@ -131,160 +153,196 @@ export function SignInModal({
       <DialogTrigger asChild>
         <Button size="sm">{t.email.title}</Button>
       </DialogTrigger>
-      <DialogContent closeLabel={t.close}>
-        {step === "email" ? (
-          <form onSubmit={handleEmailSubmit} noValidate>
-            <DialogTitle className="font-display text-xl font-semibold text-ink">
-              {t.email.title}
-            </DialogTitle>
-            <DialogDescription className="mt-1.5 text-[0.9375rem] text-ink-muted">
-              {t.email.subtitle}
-            </DialogDescription>
-            <div className="mt-5 rounded-card border border-line bg-canvas p-2">
-              <Field label={t.email.emailLabel} htmlFor="signin-email" error={emailError}>
-                <input
-                  id="signin-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  autoFocus
-                  placeholder={t.email.emailPlaceholder}
-                  aria-invalid={emailError ? true : undefined}
-                  aria-describedby={emailError ? "signin-email-error" : undefined}
-                  className={fieldInputClass()}
-                />
-              </Field>
-            </div>
-            <Button type="submit" size="lg" className="mt-4 w-full">
-              {pending ? t.email.sending : t.email.continue}
-            </Button>
-          </form>
-        ) : null}
+      <DialogContent
+        closeLabel={t.close}
+        className="w-[min(26rem,calc(100vw-2rem))] overflow-hidden p-0 sm:flex sm:w-[min(46rem,calc(100vw-2rem))]"
+      >
+        <div className="relative hidden shrink-0 sm:block sm:w-64">
+          <Image
+            src="/events/salt-2.jpeg"
+            alt=""
+            fill
+            sizes="256px"
+            className="object-cover"
+          />
+        </div>
 
-        {step === "otp" ? (
-          <form onSubmit={handleOtpSubmit} noValidate>
-            <DialogTitle className="font-display text-xl font-semibold text-ink">
-              {t.otp.title}
-            </DialogTitle>
-            <DialogDescription className="mt-1.5 text-[0.9375rem] text-ink-muted">
-              {fill(t.otp.subtitle, { email })}
-            </DialogDescription>
-            <div className="mt-5">
-              <p className="text-[0.6875rem] font-semibold tracking-[0.08em] text-ink-muted uppercase">
-                {t.otp.codeLabel}
-              </p>
-              <div className="mt-2">
-                <OtpInput
-                  value={otp}
-                  onChange={(next) => {
-                    setOtp(next);
-                    if (otpError) setOtpError("");
-                  }}
-                  error={Boolean(otpError)}
-                />
-              </div>
-              {otpError ? (
-                <p role="alert" className="mt-2 text-[0.8125rem] text-accent-deep">
-                  {otpError}
-                </p>
-              ) : null}
-            </div>
-            <Button
-              type="submit"
-              size="lg"
-              className="mt-4 w-full"
-              disabled={otp.length !== OTP_LENGTH}
-            >
-              {pending ? t.otp.verifying : t.otp.verify}
-            </Button>
-            <div className="mt-4 flex items-center justify-between text-[0.8125rem]">
-              <button
-                type="button"
-                onClick={() => setStep("email")}
-                className="text-ink-muted underline-offset-4 hover:text-ink hover:underline"
-              >
-                {t.otp.changeEmail}
-              </button>
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resendSeconds > 0}
-                className="text-accent-deep underline-offset-4 hover:underline disabled:text-ink-subtle disabled:no-underline"
-              >
-                {resendSeconds > 0
-                  ? fill(t.otp.resendIn, { seconds: resendSeconds })
-                  : t.otp.resend}
-              </button>
-            </div>
-          </form>
-        ) : null}
-
-        {step === "profile" ? (
-          <form onSubmit={handleProfileSubmit} noValidate>
-            <DialogTitle className="font-display text-xl font-semibold text-ink">
-              {t.profile.title}
-            </DialogTitle>
-            <DialogDescription className="mt-1.5 text-[0.9375rem] text-ink-muted">
-              {t.profile.subtitle}
-            </DialogDescription>
-            <div className="mt-5 grid gap-1 rounded-card border border-line bg-canvas p-2">
-              <Field label={t.profile.nameLabel} htmlFor="signin-name" error={nameError}>
-                <input
-                  id="signin-name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  autoFocus
-                  value={name}
-                  onChange={(event) => {
-                    setName(event.target.value);
-                    if (nameError) setNameError("");
-                  }}
-                  placeholder={t.profile.namePlaceholder}
-                  aria-invalid={nameError ? true : undefined}
-                  className={fieldInputClass()}
-                />
-              </Field>
-              <Field label={t.profile.mobileLabel} htmlFor="signin-mobile" error={mobileError}>
-                <input
-                  id="signin-mobile"
-                  name="mobile"
-                  type="tel"
-                  autoComplete="tel"
-                  onChange={() => mobileError && setMobileError("")}
-                  placeholder={t.profile.mobilePlaceholder}
-                  aria-invalid={mobileError ? true : undefined}
-                  className={fieldInputClass()}
-                />
-              </Field>
-              <Field label={t.profile.homeBaseLabel} htmlFor="signin-home-base">
-                <select
-                  id="signin-home-base"
-                  name="homeBase"
-                  defaultValue={HOME_BASE_OPTIONS[0]}
-                  className={fieldInputClass("cursor-pointer")}
+        <div className="min-w-0 flex-1 p-8 sm:p-10">
+          {step === "email" ? (
+            <form onSubmit={handleEmailSubmit} noValidate>
+              <DialogTitle className="font-display text-xl font-semibold text-ink">
+                {t.email.title}
+              </DialogTitle>
+              <DialogDescription className="mt-2 text-[0.9375rem] text-ink-muted">
+                {t.email.subtitle}
+              </DialogDescription>
+              <div className="mt-8">
+                <Field
+                  variant="outline"
+                  label={t.email.emailLabel}
+                  htmlFor="signin-email"
+                  error={emailError}
                 >
-                  {HOME_BASE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {t.homeBase[option]}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+                  <input
+                    id="signin-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    autoFocus
+                    placeholder={t.email.emailPlaceholder}
+                    aria-invalid={emailError ? true : undefined}
+                    aria-describedby={
+                      emailError ? "signin-email-error" : undefined
+                    }
+                    className={fieldInputClass()}
+                  />
+                </Field>
+              </div>
+              <Button type="submit" size="lg" className="mt-6 w-full">
+                {pending ? t.email.sending : t.email.continue}
+              </Button>
+            </form>
+          ) : null}
+
+          {step === "otp" ? (
+            <div>
+              <DialogTitle className="font-display text-xl font-semibold text-ink">
+                {t.otp.title}
+              </DialogTitle>
+              <DialogDescription className="mt-2 text-[0.9375rem] text-ink-muted">
+                {fill(t.otp.subtitle, { email })}
+              </DialogDescription>
+              <div className="mt-8">
+                <p className="text-[0.6875rem] font-semibold tracking-[0.08em] text-ink-muted uppercase">
+                  {t.otp.codeLabel}
+                </p>
+                <div className="mt-3">
+                  <OtpInput
+                    value={otp}
+                    onChange={(next) => {
+                      setOtp(next);
+                      if (otpError) setOtpError("");
+                    }}
+                    error={Boolean(otpError)}
+                  />
+                </div>
+                <p
+                  aria-live="polite"
+                  className={cn(
+                    "mt-2 min-h-5 text-[0.8125rem]",
+                    otpError ? "text-accent-deep" : "text-ink-muted",
+                  )}
+                  role={otpError ? "alert" : undefined}
+                >
+                  {otpError || (verifying ? t.otp.verifying : "")}
+                </p>
+              </div>
+              <div className="mt-6 flex items-center justify-between text-[0.8125rem]">
+                <button
+                  type="button"
+                  onClick={handleChangeEmail}
+                  className="text-ink-muted underline-offset-4 hover:text-ink hover:underline"
+                >
+                  {t.otp.changeEmail}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendSeconds > 0}
+                  className="text-accent-deep underline-offset-4 hover:underline disabled:text-ink-subtle disabled:no-underline"
+                >
+                  {resendSeconds > 0
+                    ? fill(t.otp.resendIn, { seconds: resendSeconds })
+                    : t.otp.resend}
+                </button>
+              </div>
             </div>
-            <Button type="submit" size="lg" className="mt-4 w-full">
-              {pending ? t.profile.finishing : t.profile.finish}
-            </Button>
-          </form>
-        ) : null}
+          ) : null}
+
+          {step === "profile" ? (
+            <form onSubmit={handleProfileSubmit} noValidate>
+              <DialogTitle className="font-display text-xl font-semibold text-ink">
+                {t.profile.title}
+              </DialogTitle>
+              <DialogDescription className="mt-2 text-[0.9375rem] text-ink-muted">
+                {t.profile.subtitle}
+              </DialogDescription>
+              <div className="mt-8 grid gap-3">
+                <Field
+                  variant="outline"
+                  label={t.profile.nameLabel}
+                  htmlFor="signin-name"
+                  error={nameError}
+                >
+                  <input
+                    id="signin-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    autoFocus
+                    value={name}
+                    onChange={(event) => {
+                      setName(event.target.value);
+                      if (nameError) setNameError("");
+                    }}
+                    placeholder={t.profile.namePlaceholder}
+                    aria-invalid={nameError ? true : undefined}
+                    className={fieldInputClass()}
+                  />
+                </Field>
+                <Field
+                  variant="outline"
+                  label={t.profile.mobileLabel}
+                  htmlFor="signin-mobile"
+                  error={mobileError}
+                >
+                  <input
+                    id="signin-mobile"
+                    name="mobile"
+                    type="tel"
+                    autoComplete="tel"
+                    onChange={() => mobileError && setMobileError("")}
+                    placeholder={t.profile.mobilePlaceholder}
+                    aria-invalid={mobileError ? true : undefined}
+                    className={fieldInputClass()}
+                  />
+                </Field>
+                <Field
+                  variant="outline"
+                  label={t.profile.homeBaseLabel}
+                  htmlFor="signin-home-base"
+                >
+                  <select
+                    id="signin-home-base"
+                    name="homeBase"
+                    defaultValue={HOME_BASE_OPTIONS[0]}
+                    className={fieldInputClass("cursor-pointer")}
+                  >
+                    {HOME_BASE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {t.homeBase[option]}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <Button type="submit" size="lg" className="mt-6 w-full">
+                {pending ? t.profile.finishing : t.profile.finish}
+              </Button>
+            </form>
+          ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
 /**
- * Six single-digit boxes acting as one field. Typing advances focus; a paste
- * anywhere in the group (a code copied from Mail) splits across all of them.
+ * Six single-digit boxes acting as one field, stretched to the same width as
+ * the primary button below them rather than sitting at a fixed size. Typing
+ * advances focus; a paste anywhere in the group (a code copied from Mail)
+ * splits across all of them; a complete value verifies itself — there is no
+ * submit button in this step.
  */
 function OtpInput({
   value,
@@ -305,7 +363,7 @@ function OtpInput({
   }
 
   return (
-    <div className="flex gap-2" dir="ltr">
+    <div className="flex w-full gap-2" dir="ltr">
       {digits.map((digit, index) => (
         <input
           key={index}
@@ -336,11 +394,11 @@ function OtpInput({
               .slice(0, OTP_LENGTH);
             if (!pasted) return;
             event.preventDefault();
-            onChange(pasted.padEnd(OTP_LENGTH, "").slice(0, OTP_LENGTH).trimEnd());
+            onChange(pasted);
             refs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
           }}
           className={cn(
-            "h-12 w-10 rounded-xl border text-center text-lg font-semibold text-ink transition-colors duration-150 focus:outline-none focus-visible:outline-none",
+            "h-14 min-w-0 flex-1 rounded-xl border text-center text-lg font-semibold text-ink transition-colors duration-150 focus:outline-none focus-visible:outline-none",
             error
               ? "border-accent-soft bg-blush"
               : "border-line-strong bg-canvas focus:border-ink focus:bg-paper",
