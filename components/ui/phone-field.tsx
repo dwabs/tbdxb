@@ -56,7 +56,12 @@ export function PhoneField({
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${htmlFor}-error` : undefined}
           countrySelectProps={{ "aria-label": label }}
-          style={{ "--PhoneInputCountryFlag-borderWidth": 0 } as React.CSSProperties}
+          style={
+            {
+              "--PhoneInputCountryFlag-borderWidth": 0,
+              "--PhoneInputCountryFlag-height": "0.85em",
+            } as React.CSSProperties
+          }
           numberInputProps={{
             className:
               "h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[0.9375rem] text-ink placeholder:text-ink-muted focus:outline-none",
