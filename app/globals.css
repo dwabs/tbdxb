@@ -36,14 +36,9 @@
   --color-blush: #fdeef5;
 
   /* Structure */
-  --color-sand: #f0e2e9;
   --color-sand-soft: #fbf3f6;
   --color-line: #f2e4eb;
   --color-line-strong: #e6d2dc;
-
-  /* Support */
-  --color-teal: #17403d;
-  --color-amber: #b4791a;
 
   /* Type — Geist carries the titles, Inter the body.
      The Arabic face sits behind both: font fallback resolves per glyph, so

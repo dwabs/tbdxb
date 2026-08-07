@@ -46,8 +46,6 @@ export const CATEGORIES = [
   "summer-in-the-city",
 ] as const;
 
-export type CategoryId = (typeof CATEGORIES)[number];
-
 export const EXPERIENCES: Experience[] = [
   {
     // ---- Real listing, copied from the live site ----
