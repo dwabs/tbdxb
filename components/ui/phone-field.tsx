@@ -41,7 +41,7 @@ export function PhoneField({
       </label>
       <div
         className={cn(
-          "mt-1.5 flex h-12 items-center gap-2 rounded-full border pl-3 pr-4 transition-colors duration-150 focus-within:border-ink",
+          "mt-1.5 flex h-12 items-center gap-2 rounded-2xl border pl-3 pr-4 transition-colors duration-200 focus-within:border-ink",
           error ? "border-accent-soft bg-blush" : "border-line-strong",
         )}
       >
@@ -61,7 +61,7 @@ export function PhoneField({
             className:
               "h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-[0.9375rem] text-ink placeholder:text-ink-muted focus:outline-none",
           }}
-          className="flex w-full items-center [&_.PhoneInputCountry]:m-0 [&_.PhoneInputCountry]:mr-1"
+          className="flex w-full items-center [&_.PhoneInputCountry]:m-0 [&_.PhoneInputCountry]:mr-1 [&_.PhoneInputCountryIcon]:overflow-hidden [&_.PhoneInputCountryIcon]:rounded-[3px]"
         />
       </div>
       {error ? (
