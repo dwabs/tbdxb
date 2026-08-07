@@ -89,14 +89,14 @@ Redesign status against the live site.
 | `/bucket-list`           | ✅ empty state only               | ⛔ dropped by decision 2 |
 | Account / bookings       | ❌ _(API exists)_                 | ❌                       |
 
-| Modal                   | Live site         | Redesign |
-| ----------------------- | ----------------- | -------- |
-| Sign in — email         | ✅                | ❌       |
-| Sign in — verify OTP    | ✅                | ❌       |
-| Sign in — other details | ✅                | ❌       |
-| Logout confirm          | ✅                | ❌       |
-| Age gate                | ❌ _(API exists)_ | ❌       |
-| Checkout                | ❌ _(API exists)_ | ❌       |
+| Modal                   | Live site         | Redesign                                                    |
+| ----------------------- | ----------------- | ------------------------------------------------------------ |
+| Sign in — email         | ✅                | ✅ **done**, static — see below                              |
+| Sign in — verify OTP    | ✅                | ✅ **done**, static — see below                              |
+| Sign in — other details | ✅                | ✅ **done**, static — see below                              |
+| Logout confirm          | ✅                | ➖ dropped — the account menu signs out instantly, no confirm step |
+| Age gate                | ❌ _(API exists)_ | ❌                                                            |
+| Checkout                | ❌ _(API exists)_ | ❌                                                            |
 
 | Capability            | Live site                                                    | Redesign                               |
 | --------------------- | ------------------------------------------------------------ | -------------------------------------- |
@@ -157,12 +157,45 @@ from the booking panel, "What's Included" aligned to "Where You'll Be",
 single-photo listings given a centred 16/9 hero instead of a mosaic tile with
 a hole beside it); duration surfaced in the facts row; the search panel
 redesigned onto white to match the bucket-list card, dividers and guests icon
-removed, with a blush hover/focus fill replacing the old white one.
+removed. Its fields kept a sand-soft hover but later dropped the blush
+focus-fill too — the text caret already shows focus for a typed field, and a
+colour flash on top of it fought rather than helped.
+
+**Sign-in modal — phase 4's UI, static.** Email → OTP → profile, matching the
+live site's flow, but every step is faked with a `setTimeout` per decision 1
+— there is no Supabase call yet. Built on a new `Dialog` (Radix) with an
+image panel beside the form; the `Field` cell gained an `outline` variant
+(border instead of the fill) for this bordered-row context, and an
+`errorPlacement="outside"` option so the error sits below the cell instead of
+inside it, without touching how the search panel's `className` contract
+works.
+
+The OTP step is six single-digit boxes stretched to the primary button's
+width, auto-verifying once six digits are in (no Verify button) via a
+`useEffect` gated by a ref so it fires once per distinct code. The profile
+step's mobile field is `react-phone-number-input` (the engine behind reui's
+phone input) wearing this app's chrome: real country flag, auto-formatting,
+and per-country max-length + validity checks straight from
+libphonenumber-js's metadata — not a hand-rolled digit-count guess. Home Base
+was cut from that step; `HOME_BASE_OPTIONS` and its dictionary entries went
+with it.
+
+Once signed in (still just local React state — no session persistence), the
+header replaces its "Hi, Name" text with an initials avatar
+(`components/account-menu.tsx`) that opens a dropdown: Edit Profile and
+Settings (both stubbed, no destination yet) and Sign out. Used in both the
+desktop header and the mobile nav panel.
+
+Also fixed while wiring this in: a global `button:not(:disabled) { cursor:
+pointer }` rule, since Chrome/Firefox don't give `<button>` a pointer cursor
+by default the way `<a>` gets one — every button site-wide, including Radix's
+Dialog/Popover triggers, read as unclickable on hover without it.
 
 ## Remaining work
 
 Phase numbers are the original ones, kept so they still mean the same thing.
-Phases 1, 2 and 8 are done; phase 5 is dropped.
+Phases 1, 2 and 8 are done; phase 4's UI is done (static — see above); phase
+5 is dropped.
 
 Phases 4 and 7 assume a backend that can hold a user. What that backend is —
 which services, which tables, which roles — is specified in
@@ -181,17 +214,19 @@ vendor dashboard, which is new work these phases never covered.
 - Per-locale content: the Arabic overlay in `lib/events-ar.ts` is a stand-in
   for what the vendor would author.
 
-### Phase 4 — auth · needs a backend to authenticate against
+### Phase 4 — auth backend · needs a backend to authenticate against
 
-- Three-step sign-in modal matching their flow: email → OTP → profile
-  (full name, mobile, home base — the emirate list plus "I'm just visiting").
-- Resend-code timer, paste-friendly OTP input, error states.
-- Session handling and the logout confirmation modal.
-- Signed-in header state.
+The modal, OTP input, error states and signed-in header state are done (see
+"Sign-in modal" above) and don't need rebuilding — this phase is now just
+wiring them to something real:
 
-Fix in passing: their step-3 body copy reads "Let's get you all st up".
-
-Also: `/sign-in` is linked from the header today and 404s.
+- Swap the `setTimeout` fakes for actual Supabase `signInWithOtp` /
+  `verifyOtp` calls (see `accounts-and-dashboard.md` for the code-vs-magic-link
+  gotcha and the rest of the setup).
+- Persist the session (cookies via `@supabase/ssr`) instead of the in-memory
+  `useState` that resets on reload.
+- Decide whether logout should gain a confirmation step — currently dropped,
+  the account menu signs out instantly.
 
 ### Phase 9 — vendor dashboard · needs phase 4 · **new**
 
@@ -241,10 +276,10 @@ pages still to be built.
 - ✅ Footer phone number is a `mailto:` link. _(Ours is `tel:`.)_
 - Facebook, X and YouTube icons link to those sites' bare homepages.
 - ✅ Partner With Us opens with Lorem Ipsum. _(Ours never did — written fresh.)_
-- "Let's get you all st up" in the sign-in modal. _(Fix when auth is built.)_
+- ✅ "Let's get you all st up" in the sign-in modal. _(Ours is written fresh, no typo to inherit.)_
 - ✅ The language switcher translates nothing and never sets RTL. _(Ours does both.)_
 - ✅ Search has no results page, no URL state, nothing shareable. _(Ours has `/events`.)_
-- `Sign In` is an `<a href="/">` with a Bootstrap modal target — should be a
-  button.
+- ✅ `Sign In` is an `<a href="/">` with a Bootstrap modal target instead of a
+  button. _(Ours is a real `<button>` — a Radix `DialogTrigger`.)_
 - Nav "Your bucketlist" vs page heading "Your Wishlist". _(Moot — feature dropped.)_
 - `tickets[0].startDate.fromTime` comes back as the string `"Invalid"`.
