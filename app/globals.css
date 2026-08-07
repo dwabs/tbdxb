@@ -196,6 +196,21 @@
   }
 }
 
+/**
+ * Emoji get the colour emoji font named explicitly. Fallback would usually
+ * find it anyway, but only if the generic `sans-serif` on that platform
+ * happens to carry emoji — on some Linux and Android setups it does not, and
+ * the glyph lands as a monochrome box instead.
+ *
+ * `font-variant-emoji` asks for the colour presentation of codepoints that
+ * default to text, so ⛵ and ☕ render like the rest and not as glyphs.
+ */
+.emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+    sans-serif;
+  font-variant-emoji: emoji;
+}
+
 /* Numbers that sit in columns or get compared (prices, counts) */
 .tabular {
   font-variant-numeric: tabular-nums;

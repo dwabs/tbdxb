@@ -20,8 +20,13 @@ type Translatable = Pick<
   | "tags"
   | "summary"
   | "body"
-  | "includes"
->;
+> & {
+  /**
+   * Labels only — the emoji stays in `events.ts` and is paired back on in
+   * `localise`, so it is written once. Order must match the English list.
+   */
+  includes: string[];
+};
 
 export const EXPERIENCES_AR: Record<string, Translatable> = {
   "an-afternoon-at-salt-candle-making-mango-softies": {

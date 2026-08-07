@@ -18,7 +18,16 @@ export type Experience = {
   tags: string[];
   summary: string;
   body: string[];
-  includes: string[];
+  /**
+   * The emoji is part of the row, not decoration bolted on at render time:
+   * only whoever writes the line knows whether "All materials" is a paint
+   * palette or a toolbox. It carries no meaning a screen reader needs — the
+   * label says everything — so it is hidden from the accessibility tree.
+   *
+   * It also stays out of the translation overlays. An emoji is language
+   * neutral, so repeating it per locale would only invite drift.
+   */
+  includes: { emoji: string; label: string }[];
   /**
    * Real listings are copied verbatim from thebucketlistdxb.com. Sample rows
    * exist only so the redesigned category rails can be evaluated with content
@@ -83,10 +92,13 @@ export const EXPERIENCES: Experience[] = [
       "Whether you’re planning a fun date, a girls’ catch-up, or simply looking for something different to do this summer, this is one of those uniquely Dubai experiences you won’t want to miss. Trust us…this is one you’ll definitely want to tick off your bucket list.",
     ],
     includes: [
-      "A guided Mango Softie-inspired candle-making workshop",
-      "All candle-making materials and supplies",
-      "SALT’s signature Mango Softie",
-      "Your handmade candle to take home",
+      {
+        emoji: "🕯️",
+        label: "A guided Mango Softie-inspired candle-making workshop",
+      },
+      { emoji: "🧰", label: "All candle-making materials and supplies" },
+      { emoji: "🥭", label: "SALT’s signature Mango Softie" },
+      { emoji: "🎁", label: "Your handmade candle to take home" },
     ],
     isSample: false,
   },
@@ -122,9 +134,9 @@ export const EXPERIENCES: Experience[] = [
       "A slow loop of the creek on a restored wooden dhow, with a four-course Emirati supper served as the light goes.",
     ],
     includes: [
-      "Four-course Emirati supper",
-      "Soft drinks and karak",
-      "Two-hour creek cruise",
+      { emoji: "🍽️", label: "Four-course Emirati supper" },
+      { emoji: "☕", label: "Soft drinks and karak" },
+      { emoji: "⛵", label: "Two-hour creek cruise" },
     ],
     isSample: true,
   },
@@ -156,9 +168,9 @@ export const EXPERIENCES: Experience[] = [
       "Deckchairs, wireless headphones and a cult film on a warehouse roof.",
     ],
     includes: [
-      "Reserved deckchair",
-      "Wireless headphones",
-      "One drink from the kiosk",
+      { emoji: "🪑", label: "Reserved deckchair" },
+      { emoji: "🎧", label: "Wireless headphones" },
+      { emoji: "🥤", label: "One drink from the kiosk" },
     ],
     isSample: true,
   },
@@ -190,9 +202,9 @@ export const EXPERIENCES: Experience[] = [
       "Two hours of round-robin padel across four courts, then pizza on the terrace.",
     ],
     includes: [
-      "Court hire and rackets",
-      "Round-robin matches",
-      "Pizza and drinks after",
+      { emoji: "🎾", label: "Court hire and rackets" },
+      { emoji: "🏆", label: "Round-robin matches" },
+      { emoji: "🍕", label: "Pizza and drinks after" },
     ],
     isSample: true,
   },
@@ -224,9 +236,9 @@ export const EXPERIENCES: Experience[] = [
       "A long table set in the dunes, with a fire-pit menu cooked in front of you.",
     ],
     includes: [
-      "Return transfer from Dubai",
-      "Fire-pit dinner",
-      "Guided stargazing",
+      { emoji: "🚐", label: "Return transfer from Dubai" },
+      { emoji: "🔥", label: "Fire-pit dinner" },
+      { emoji: "🔭", label: "Guided stargazing" },
     ],
     isSample: true,
   },
@@ -256,9 +268,9 @@ export const EXPERIENCES: Experience[] = [
       "Gather, shape and blow your first piece at a 1,100°C furnace, under one-to-one instruction. Take it home the next week.",
     body: ["Gather, shape and blow your first piece at a 1,100°C furnace."],
     includes: [
-      "Two-hour guided session",
-      "All materials",
-      "Your finished piece, collected later",
+      { emoji: "🔥", label: "Two-hour guided session" },
+      { emoji: "🧰", label: "All materials" },
+      { emoji: "🏺", label: "Your finished piece, collected later" },
     ],
     isSample: true,
   },
@@ -288,9 +300,9 @@ export const EXPERIENCES: Experience[] = [
       "Learn to cut a reed pen and write your name in Diwani script, taught by a calligrapher in a wind-tower house.",
     body: ["Learn to cut a reed pen and write your name in Diwani script."],
     includes: [
-      "Reed pen and ink to keep",
-      "Practice sheets",
-      "Arabic coffee and dates",
+      { emoji: "🖋️", label: "Reed pen and ink to keep" },
+      { emoji: "📄", label: "Practice sheets" },
+      { emoji: "☕", label: "Arabic coffee and dates" },
     ],
     isSample: true,
   },
@@ -303,7 +315,19 @@ export const EXPERIENCES: Experience[] = [
 function localise(experience: Experience, locale: Locale): Experience {
   if (locale === "en") return experience;
   const overlay = EXPERIENCES_AR[experience.slug];
-  return overlay ? { ...experience, ...overlay } : experience;
+  if (!overlay) return experience;
+  return {
+    ...experience,
+    ...overlay,
+    // Emoji come from the English row; only the label is translated. Walking
+    // the English list rather than the overlay means a short or over-long
+    // translation can never add or drop a bullet — the worst case is one line
+    // falling back to English.
+    includes: experience.includes.map(({ emoji, label }, i) => ({
+      emoji,
+      label: overlay.includes[i] ?? label,
+    })),
+  };
 }
 
 export const allExperiences = (locale: Locale) =>

@@ -1,5 +1,4 @@
 import {
-  Check,
   ChevronRight,
   Clock,
   Hourglass,
@@ -163,17 +162,20 @@ export default async function EventPage({
             <ul className="mt-5 grid gap-3 sm:grid-cols-2">
               {experience.includes.map((item) => (
                 <li
-                  key={item}
+                  key={item.label}
                   className="flex items-start gap-3 rounded-xl border border-line bg-paper px-4 py-3.5"
                 >
+                  {/* leading-[1.15] gives the emoji the same line box as the
+                      0.9375rem/snug label beside it, so the two tops line up
+                      under items-start whether the label wraps or not. */}
                   <span
                     aria-hidden="true"
-                    className="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-blush text-accent-deep"
+                    className="emoji shrink-0 text-[1.125rem] leading-[1.15]"
                   >
-                    <Check className="size-3" />
+                    {item.emoji}
                   </span>
                   <span className="text-[0.9375rem] leading-snug text-ink">
-                    {item}
+                    {item.label}
                   </span>
                 </li>
               ))}
