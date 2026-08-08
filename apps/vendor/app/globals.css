@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Vendor dashboard — shadcn/ui default (neutral) tokens.
+   Vendor dashboard — shadcn/ui tokens, retuned to the client's brand.
 
-   Deliberately *not* the main site's maroon/pink brand. The public site sells
-   experiences and wants warmth; this is a tool people work in for an hour at a
-   time, where neutral greys keep attention on the vendor's own photography and
-   numbers rather than on our chrome. Inter throughout, per spec.
+   Still CRM-strict, not the warm consumer site: content stays on near-white
+   so tables/numbers/photography read cleanly, and the maroon/pink only shows
+   up as the primary action color plus the sidebar's gradient chrome (see
+   dashboard-sidebar.tsx) — not as page backgrounds or body text. Inter
+   throughout, per spec.
 --------------------------------------------------------------------------- */
 
 @custom-variant dark (&:is(.dark *));
@@ -14,25 +15,25 @@
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #fffafc; /* faint brand-tinted canvas, matches the main site's */
+  --foreground: #331924; /* ink */
+  --card: #ffffff; /* paper — pops against the tinted canvas */
+  --card-foreground: #331924;
+  --popover: #ffffff;
+  --popover-foreground: #331924;
+  --primary: #4a2536; /* brand maroon */
+  --primary-foreground: #ffffff;
+  --secondary: #fbf3f6; /* sand-soft */
+  --secondary-foreground: #4a2536;
+  --muted: #f2e4eb; /* line */
+  --muted-foreground: #7a5766; /* ink-muted */
+  --accent: #fbc9de; /* accent-soft, for hover/active fills */
+  --accent-foreground: #4a2536;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e6d2dc; /* line-strong */
+  --input: #e6d2dc;
+  --ring: #f47eb4; /* brand accent */
 }
 
 .dark {

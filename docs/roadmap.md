@@ -251,6 +251,36 @@ every event, so the business was always a marketplace. Vendors, memberships,
 the event lifecycle and the admin review queue are specified in
 [`accounts-and-dashboard.md`](./accounts-and-dashboard.md).
 
+### Phase 10 — cancel booking · planned · **new**, not blocking anything
+
+Spotted as a gap while reviewing phase 6/7: a customer can book but has no
+way to un-book, and neither will a vendor once phase 9's `/bookings` page
+exists. The live site's bundle already names `/bookings/cancel-booking/:id`
+(see the endpoint table above), so this was always part of the intended
+surface — it just never got scoped in phases 6/7. Doesn't block either of
+those (both already ship) or phase 9 (its bookings page can land without
+this and grow into it).
+
+- **DB.** `booking.status` is `confirmed | cancelled | completed` already
+  (`0003_bookings.sql`); no new enum value needed. Add a `cancel_booking(id)`
+  security-definer RPC rather than a raw `update` RLS policy — a policy
+  would have to be trusted to only ever move status one direction, whereas
+  an RPC can enforce the transition explicitly (only from `confirmed`, only
+  before `event_date`, and — once `checked_in_at` is set, per
+  `0007_vendor_schema.sql` — never, since the ticket's already been used).
+  Two callers: the booking's own `user_id` (customer-side) and any vendor
+  member of the event's vendor via `my_vendor_ids()` (vendor-side), same
+  pattern as `admin_publish_event`/`admin_reject_event`.
+- **No refund logic.** Payment is still the labeled stub from phase 6 — no
+  real charge exists to reverse, so cancelling only flips the row's status.
+  This needs revisiting once Stripe is wired for real.
+- **Client UI** (`/account/bookings`) — a "Cancel" action on upcoming cards,
+  confirm dialog before calling the RPC, hidden once the card is already
+  `cancelled`/`completed` or checked in.
+- **Vendor UI** (`/bookings`, phase 9, not yet built) — the same capability
+  from the vendor's side once that page exists; scope it in alongside the
+  page rather than bolting it on after.
+
 ### Phase 6 — booking and checkout · ✅ done (8 Aug 2026)
 
 `Book Now` was a dead `<button>` with no handler at all (`booking-panel.tsx`,

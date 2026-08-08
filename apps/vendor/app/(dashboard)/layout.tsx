@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { DashboardNav } from "@/components/dashboard-nav";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { createClient } from "@/lib/supabase/server";
 import type { Vendor } from "@/lib/types";
 
@@ -47,10 +47,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-svh bg-muted/40">
-      <DashboardNav vendorName={vendor.name} email={user.email ?? ""} />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        {children}
+    <div className="flex min-h-svh bg-background">
+      <DashboardSidebar vendorName={vendor.name} email={user.email ?? ""} />
+      <main className="min-w-0 flex-1 overflow-x-hidden px-6 py-8 sm:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-6xl">{children}</div>
       </main>
     </div>
   );
