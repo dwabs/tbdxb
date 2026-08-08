@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { DEFAULT_LOCALE, getDictionary, localePath } from "@/lib/i18n";
-import { SECONDARY_NAV } from "@/lib/site";
+
+// Without this, the tab title falls back to the root layout's default
+// metadata — the homepage's title — since this file doesn't otherwise
+// override it.
+export const metadata: Metadata = { title: "Not found" };
 
 /**
  * `not-found` renders below the locale segment but cannot read its param, so
@@ -33,27 +38,6 @@ export default function NotFound() {
           <Link href={localePath(locale, "/")}>{t.notFound.backHome}</Link>
         </Button>
       </div>
-
-      <nav
-        aria-label={t.notFound.otherPages}
-        className="mt-14 w-full border-t border-line pt-6"
-      >
-        <h2 className="font-display text-[0.6875rem] font-semibold tracking-[0.1em] text-ink-subtle uppercase">
-          {t.notFound.orTry}
-        </h2>
-        <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
-          {SECONDARY_NAV.map((link) => (
-            <li key={link.key}>
-              <Link
-                href={localePath(locale, link.href)}
-                className="text-[0.9375rem] text-ink-muted underline-offset-4 hover:text-accent-deep hover:underline"
-              >
-                {t.secondaryNav[link.key]}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
     </div>
   );
 }

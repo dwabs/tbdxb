@@ -139,6 +139,18 @@
     overflow-x: hidden;
   }
 
+  /* A page's own `fixed bottom-0` bar (the mobile booking CTA) sits above
+     everything, including the shared footer that comes after it in the
+     document — no amount of padding *before* the footer stops it covering
+     the footer's own bottom edge at full scroll. `:has()` reserves that
+     space only on pages that actually render the bar, and only at the
+     widths where it's visible, so pages without one are untouched. */
+  @media (max-width: 63.9375rem) {
+    body:has(.mobile-cta-bar) {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+  }
+
   /* Default focus ring. Controls that show focus another way opt out with
      `focus-visible:outline-none` — see the search fields, which light the
      whole cell instead. */

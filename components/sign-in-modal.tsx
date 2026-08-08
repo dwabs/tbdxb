@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isValidPhoneNumber, type Value } from "react-phone-number-input";
 
 import { Button } from "@/components/ui/button";
@@ -27,12 +27,32 @@ type Step = "email" | "otp" | "profile";
 export function SignInModal({
   t,
   onSignedIn,
+  open,
+  onOpenChange,
 }: {
   t: Dictionary["auth"];
-  onSignedIn: (name: string, isNewUser: boolean) => void;
+  onSignedIn: (info: {
+    userId: string;
+    fullName: string;
+    phone: string | null;
+    isNewUser: boolean;
+  }) => void;
+  /** Omit for a self-contained trigger + dialog (header usage). Pass both to
+   * let a parent open this from its own button (e.g. Book Now). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const [supabase] = useState(() => createClient());
-  const [open, setOpen] = useState(false);
+  const controlled = open !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const dialogOpen = controlled ? open : internalOpen;
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (controlled) onOpenChange!(next);
+      else setInternalOpen(next);
+    },
+    [controlled, onOpenChange],
+  );
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -85,7 +105,12 @@ export function SignInModal({
       setOtpError("");
       setUserId(data.user.id);
       if (profile?.full_name) {
-        onSignedIn(profile.full_name, false);
+        onSignedIn({
+          userId: data.user.id,
+          fullName: profile.full_name,
+          phone: profile.phone ?? null,
+          isNewUser: false,
+        });
         setOpen(false);
       } else {
         setStep("profile");
@@ -94,7 +119,7 @@ export function SignInModal({
     return () => {
       cancelled = true;
     };
-  }, [step, otp, email, supabase, onSignedIn, t.otp.codeError]);
+  }, [step, otp, email, supabase, onSignedIn, setOpen, t.otp.codeError]);
 
   function reset() {
     setStep("email");
@@ -180,21 +205,28 @@ export function SignInModal({
       setSaveError(t.profile.saveError);
       return;
     }
-    onSignedIn(fullName, true);
+    onSignedIn({
+      userId,
+      fullName,
+      phone: mobile ?? null,
+      isNewUser: true,
+    });
     setOpen(false);
   }
 
   return (
     <Dialog
-      open={open}
+      open={dialogOpen}
       onOpenChange={(next) => {
         setOpen(next);
         if (!next) reset();
       }}
     >
-      <DialogTrigger asChild>
-        <Button size="sm">{t.email.title}</Button>
-      </DialogTrigger>
+      {controlled ? null : (
+        <DialogTrigger asChild>
+          <Button size="sm">{t.email.title}</Button>
+        </DialogTrigger>
+      )}
       <DialogContent
         closeLabel={t.close}
         className="w-[min(26rem,calc(100vw-2rem))] overflow-hidden border-0 p-0 sm:flex sm:w-[min(46rem,calc(100vw-2rem))]"

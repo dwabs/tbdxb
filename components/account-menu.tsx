@@ -1,66 +1,76 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
+import { Avatar } from "@/components/avatar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { fill, type Dictionary } from "@/lib/i18n";
+import { localePath, type Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
-
-function initials(fullName: string) {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  const first = parts[0]?.[0] ?? "";
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
-  return (first + last).toUpperCase();
-}
 
 export function AccountMenu({
   name,
+  avatarUrl,
+  locale,
   t,
   onSignOut,
   className,
 }: {
   name: string;
+  avatarUrl?: string | null;
+  locale: Locale;
   t: Dictionary["auth"];
   onSignOut: () => void;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const accountHref = localePath(locale, "/account");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={fill(t.menu.accountAria, { name })}
         className={cn(
-          "inline-flex size-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white transition-transform duration-150 data-[state=open]:scale-95 [touch-action:manipulation]",
+          "inline-flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full transition-transform duration-150 data-[state=open]:scale-95 [touch-action:manipulation]",
           className,
         )}
       >
-        {initials(name)}
+        <Avatar name={name} avatarUrl={avatarUrl} className="size-9 text-sm" />
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-48 p-1.5">
         <ul>
           <li>
-            <a
-              href="#"
-              onClick={(event) => event.preventDefault()}
+            <Link
+              href={accountHref}
+              onClick={() => setOpen(false)}
               className="block rounded-xl px-3 py-2.5 text-[0.9375rem] text-ink-muted transition-colors duration-150 hover:bg-sand-soft hover:text-ink"
             >
               {t.menu.editProfile}
-            </a>
+            </Link>
           </li>
           <li>
-            <a
-              href="#"
-              onClick={(event) => event.preventDefault()}
+            <Link
+              href={localePath(locale, "/account/bookings")}
+              onClick={() => setOpen(false)}
+              className="block rounded-xl px-3 py-2.5 text-[0.9375rem] text-ink-muted transition-colors duration-150 hover:bg-sand-soft hover:text-ink"
+            >
+              {t.menu.yourBookings}
+            </Link>
+          </li>
+          <li>
+            <Link
+              href={`${accountHref}#notifications`}
+              onClick={() => setOpen(false)}
               className="block rounded-xl px-3 py-2.5 text-[0.9375rem] text-ink-muted transition-colors duration-150 hover:bg-sand-soft hover:text-ink"
             >
               {t.menu.settings}
-            </a>
+            </Link>
           </li>
           <li>
             <button

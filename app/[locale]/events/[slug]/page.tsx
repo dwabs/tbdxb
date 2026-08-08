@@ -26,6 +26,7 @@ import {
   LOCALES,
   type Locale,
 } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/server";
 import { formatDateLong, formatTimeRange } from "@/lib/utils";
 
 export const generateStaticParams = () =>
@@ -63,6 +64,20 @@ export default async function EventPage({
   const t = dict.detail;
   const categoryId = CATEGORIES.find((entry) => entry === experience.category);
   const related = relatedExperiences(experience, lang);
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const profile = user
+    ? (
+        await supabase
+          .from("profile")
+          .select("full_name, phone")
+          .eq("id", user.id)
+          .single()
+      ).data
+    : null;
 
   const facts = [
     {
@@ -211,7 +226,16 @@ export default async function EventPage({
         </div>
 
         <aside aria-label={t.booking} className="lg:sticky lg:top-28">
-          <BookingPanel experience={experience} locale={lang} t={t} />
+          <BookingPanel
+            experience={experience}
+            locale={lang}
+            t={t}
+            checkoutT={dict.checkout}
+            authT={dict.auth}
+            userId={user?.id ?? null}
+            fullName={profile?.full_name ?? ""}
+            phone={profile?.phone ?? null}
+          />
         </aside>
       </div>
 

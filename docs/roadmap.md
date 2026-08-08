@@ -2,7 +2,7 @@
 
 What the redesign still needs to reach parity with thebucketlistdxb.com — and
 past it. Audited 6 Aug 2026 against the live site and its API; status updated
-7 Aug 2026.
+8 Aug 2026.
 
 ## The headline finding
 
@@ -65,7 +65,9 @@ Locked in on 7 Aug 2026. These shape everything below.
 2. **The bucket list is out.** Page and nav link removed. That also retires
    the open question about what replaces the tick as a save control — there is
    nothing to save to until the feature returns.
-3. **Stripe on hold.** No keys, no payment work.
+3. **Stripe on hold, checkout built anyway.** No keys, so phase 6 shipped
+   against our own Supabase `booking` table instead of Stripe or the live
+   API — see phase 6 below for what that traded off.
 4. **Arabic: build it.** Done — see below.
 5. **Demo listings stay.** All six, now translated too.
 
@@ -87,7 +89,7 @@ Redesign status against the live site.
 | `/contact-us`            | ✅                                | ✅ **done**              |
 | `/partner-with-us`       | ✅ _(Lorem Ipsum in prod)_        | ✅ **done**, real copy   |
 | `/bucket-list`           | ✅ empty state only               | ⛔ dropped by decision 2 |
-| Account / bookings       | ❌ _(API exists)_                 | ❌                       |
+| Account / bookings       | ❌ _(API exists)_                 | ✅ **done** (bookings seeded with demo data) |
 
 | Modal                   | Live site         | Redesign                                                    |
 | ----------------------- | ----------------- | ------------------------------------------------------------ |
@@ -95,8 +97,8 @@ Redesign status against the live site.
 | Sign in — verify OTP    | ✅                | ✅ **done**, static — see below                              |
 | Sign in — other details | ✅                | ✅ **done**, static — see below                              |
 | Logout confirm          | ✅                | ➖ dropped — the account menu signs out instantly, no confirm step |
-| Age gate                | ❌ _(API exists)_ | ❌                                                            |
-| Checkout                | ❌ _(API exists)_ | ❌                                                            |
+| Age gate                | ❌ _(API exists)_ | ➖ not modeled — no listing has an age restriction to gate    |
+| Checkout                | ❌ _(API exists)_ | ✅ **done**, against our own backend, as a modal — see phase 6 |
 
 | Capability            | Live site                                                    | Redesign                               |
 | --------------------- | ------------------------------------------------------------ | -------------------------------------- |
@@ -194,13 +196,14 @@ Dialog/Popover triggers, read as unclickable on hover without it.
 ## Remaining work
 
 Phase numbers are the original ones, kept so they still mean the same thing.
-Phases 1, 2 and 8 are done; phase 4's UI is done (static — see above); phase
-5 is dropped.
+Phases 1, 2, 4, 6, 7 and 8 are done; phase 5 is dropped. Phase 7's bookings
+list now gets real rows from phase 6, alongside the seeded demo ones.
 
-Phases 4 and 7 assume a backend that can hold a user. What that backend is —
-which services, which tables, which roles — is specified in
-[`accounts-and-dashboard.md`](./accounts-and-dashboard.md), along with the
-vendor dashboard, which is new work these phases never covered.
+Phases 4 and 7 assume a backend that can hold a user — Supabase, now live for
+both. What that backend is — which services, which tables, which roles — is
+specified in [`accounts-and-dashboard.md`](./accounts-and-dashboard.md),
+along with the vendor dashboard, which is new work these phases never
+covered. Phase 9 is unblocked now that phase 4 is done.
 
 ### Phase 3 — live data · blocked on decision 1 · next up
 
@@ -214,21 +217,33 @@ vendor dashboard, which is new work these phases never covered.
 - Per-locale content: the Arabic overlay in `lib/events-ar.ts` is a stand-in
   for what the vendor would author.
 
-### Phase 4 — auth backend · needs a backend to authenticate against
+### Phase 4 — auth backend · ✅ done (7 Aug 2026)
 
-The modal, OTP input, error states and signed-in header state are done (see
-"Sign-in modal" above) and don't need rebuilding — this phase is now just
-wiring them to something real:
+The modal, OTP input, error states and signed-in header state were already
+done as static UI (see "Sign-in modal" above); this phase wired them to a
+real backend:
 
-- Swap the `setTimeout` fakes for actual Supabase `signInWithOtp` /
-  `verifyOtp` calls (see `accounts-and-dashboard.md` for the code-vs-magic-link
-  gotcha and the rest of the setup).
-- Persist the session (cookies via `@supabase/ssr`) instead of the in-memory
-  `useState` that resets on reload.
-- Decide whether logout should gain a confirmation step — currently dropped,
-  the account menu signs out instantly.
+- Real Supabase `signInWithOtp` / `verifyOtp` calls replace the `setTimeout`
+  fakes, including the returning-vs-new-user branch (existing `profile.full_name`
+  skips straight to signed-in; a null one shows the profile-completion step).
+- Session persists via `@supabase/ssr` cookies, refreshed on every request by
+  `proxy.ts`, instead of the in-memory `useState` that reset on reload.
+- Both the Magic Link/OTP and Confirm-signup auth email templates are
+  restyled to match the site's brand and both use `{{ .Token }}`, so new and
+  returning users get the same 6-digit code experience.
+- A "Welcome, {name}" / "Welcome back, {name}" toast confirms sign-in.
+- Logout confirmation was decided against — the account menu still signs out
+  instantly, no confirm step.
 
-### Phase 9 — vendor dashboard · needs phase 4 · **new**
+**Known gap, not part of this phase:** Resend's sending domain isn't verified
+yet, so auth emails only deliver to the Resend account's own address. Real
+users can't receive sign-in codes until DNS access to a real domain (e.g.
+`thebucketlistdxb.com`) is available to add the SPF/DKIM records and verify it.
+(Separately, cosmetic: the sender display name in Supabase's SMTP settings
+now reads `TheBucketListDXB` to match the brand — doesn't touch the
+verification gap above.)
+
+### Phase 9 — vendor dashboard · unblocked · **new**
 
 Not in the original numbering because the live site has no such thing — but
 their data model has `vendorId`, `adminCommission` and `status: Approved` on
@@ -236,24 +251,137 @@ every event, so the business was always a marketplace. Vendors, memberships,
 the event lifecycle and the admin review queue are specified in
 [`accounts-and-dashboard.md`](./accounts-and-dashboard.md).
 
-### Phase 6 — booking and checkout · needs phase 4 and decision 3 · **the real gap**
+### Phase 6 — booking and checkout · ✅ done (8 Aug 2026)
 
-This is the flow that doesn't exist on the live site at all.
+`Book Now` was a dead `<button>` with no handler at all (`booking-panel.tsx`,
+both the desktop panel and the mobile sticky bar) — this is the flow that
+doesn't exist on the live site either, so there was no working reference to
+copy pixel-for-pixel, only the endpoint names their bundle revealed
+(`confirm-user-details`, `create-payment-intent`, `payment-process`, …) to
+build a faithful shape from.
 
-- Ticket picker: type, price vs `discountPrice`, remaining `quantity`,
-  sold-out state.
-- Age gate modal when `ageRestriction.enabled`, using their own consent copy.
-- Attendee details → `confirm-user-details`.
-- Coupon field → `apply-coupon`.
-- Stripe: `create-payment-intent` → Payment Element → `payment-process`.
-- Confirmation page, invoice and ticket download.
-- Failure paths: declined card, expired intent, ticket sold out mid-checkout.
+Two real deviations from that shape, both forced by decision 3 (no Stripe
+keys) and confirmed with the user before building:
 
-### Phase 7 — account · needs phase 4
+- **Backend is our own Supabase, not the live API.** Booking through
+  `api.thebucketlistdxb.com` would have created real rows in their
+  production database and, at the payment step, could have charged a real
+  card through their live Stripe account — there's no sandbox there. Every
+  booking now lands in the same `public.booking` table phase 7 already
+  reads from (`0005_booking_checkout.sql` adds the RLS insert policy — own
+  rows only, `is_sample = false` — plus an auto-generated `reference`
+  default; `0006_booking_attendee_details.sql` adds `attendee_name` /
+  `attendee_phone`, since who a booking is for isn't always the account
+  holder and doesn't belong on `profile`).
+- **Payment is a labeled stub, not Stripe.** No test keys were available.
+  The step looks and behaves like a real payment step — same layout, same
+  position in the flow — but says outright that it's a demo and no card is
+  charged, rather than showing fake card fields that would imply one was.
+  Confirming it does a real, unfaked `insert` into `booking`. Swapping in
+  Stripe later only touches this one step (`components/checkout/checkout-flow.tsx`).
 
-- `/account`: profile, avatar upload, address, notification and reminder
-  preferences.
-- Upcoming and past bookings; cancel with confirmation.
+Scope also came in narrower than the endpoint list implied, because our own
+data doesn't support what it assumed:
+
+- **No ticket-type picker.** There's only one ticket type — the VIP/Standard
+  split briefly modeled in phase 7's `booking.ticket_type` was wrong and got
+  dropped (`0004_drop_ticket_type.sql`) once that became clear. Checkout
+  only ever sells the one type at `experience.priceAED`.
+- **No age gate.** `ageRestriction` was never added to the `Experience` type
+  (`lib/events.ts`) — no listing needs one, so there's nothing to gate.
+- **No coupon field.** Nothing generates or validates a coupon code, so a
+  field for one would just be decoration with no backend behind it.
+- **No sold-out / declined-card failure paths.** `Experience` has no
+  inventory cap to run out of, and there's no real payment processor to
+  decline a card. The only failure handled is the insert itself failing
+  (network, RLS) — shown inline on the payment step with a retry, no
+  progress lost.
+
+**The flow — revised same day, moved from a page into a modal.** It first
+shipped as `/[locale]/checkout/[slug]`, a real route so a confirmation had a
+URL of its own, with a signed-out visitor landing on a small "sign in to
+book" page (`components/checkout/checkout-sign-in-gate.tsx`) before the flow
+could start. User feedback cut that: Profile and Bookings are already
+separate pages by design (see phase 7), and a checkout confirmation isn't
+something anyone links to or bookmarks, so the extra route and the extra
+click weren't pulling their weight. The route is gone; `CheckoutModal`
+(`components/checkout/checkout-modal.tsx`) now opens a `Dialog` straight from
+the event page's `BookingPanel`.
+
+Signed out, clicking `Book Now` skips the "sign in to book" middle step
+entirely and opens `SignInModal` directly — `SignInModal` gained an optional
+controlled `open`/`onOpenChange` pair for this, since the header already
+holds its own uncontrolled instance of the same component. Sign-in success
+hands off straight into the checkout modal, no page refresh. Signed in
+already: `Book Now` opens the checkout modal immediately. Either way:
+**Details** (name/mobile, prefilled from `profile`) → **Review** (event
+summary, guest count carried over from the panel's stepper) → **Payment**
+(the stub above) → **Confirmation** (the booking's `reference`, QR-encoded
+with `qrcode.react` the same way phase 7's ticket modal already does it,
+plus links to `/account/bookings` and back to browsing). A step pill row at
+the top marks progress; going back and forth is free until the booking is
+actually inserted.
+
+### Phase 7 — account · ✅ done (8 Aug 2026)
+
+Split across two pages once it became clear they serve opposite visit
+patterns — profile settings are rare, bookings are frequent — and kept as
+genuinely separate pages, with no cross-links between them beyond the
+header nav and account menu (no shared sub-nav pinning them together).
+Both gated by a real session — signed-out visitors redirect to the
+locale-aware home.
+
+**`/[locale]/account` — profile settings.** `profile` gained `avatar_url`,
+`address_line1/2`, `city`, `country`, `notify_marketing`,
+`notify_reminders` (`0002_account_fields.sql`) and `birthday`
+(`0003_bookings.sql`), all covered by the existing `profile` RLS policies
+with no new ones needed.
+
+- **Profile** — name, phone, birthday, avatar. Uploads go straight from the
+  browser to an `avatars` Storage bucket (public read, write scoped to the
+  caller's own `${user_id}/` folder), then `profile.avatar_url` updates. A
+  `profile-updated` `CustomEvent` (`lib/profile-events.ts`) tells the header
+  to pick up the new name/photo immediately, since it hydrated once on mount
+  and has no other way to hear about an edit made later on `/account`.
+  Birthday is a native `<input type="date">` rather than the `Calendar`/
+  `Popover` picker `date-field.tsx` uses for search — that component's month
+  range is tuned for picking a near-future event date, wrong shape for
+  decades back.
+- **Address** — line 1/2, city, country. All optional, no fake validation.
+- **Notifications** — two toggles (product updates, booking reminders),
+  built as a plain `role="switch"` button rather than pulling in a
+  dependency for two checkboxes. Positioned with logical `start-*`
+  utilities, so it flips correctly under `dir="rtl"` for free.
+
+**`/[locale]/account/bookings` — bookings, `0003_bookings.sql` +
+`0004_drop_ticket_type.sql`.** Upcoming and Past tabs, matching the live
+site's own structure and card layout (title, location, total, status,
+Location/Ticket/Invoice actions) confirmed against saved copies of its
+`/upcoming` and `/past` pages. `0003` originally added a `ticket_type`
+column with a VIP/Standard badge on the card, mirroring what the saved
+reference pages showed — `0004` dropped it once it was clear this business
+only has one ticket type, no such distinction. A `booking` table backs the
+page — `select`-only RLS (`auth.uid() = user_id`) plus, since phase 6, an
+`insert` policy scoped the same way (own rows, `is_sample = false`), so real
+rows land here as soon as checkout writes them. Clicking "Ticket" opens a QR
+code (`qrcode.react`'s `QRCodeSVG`, encodes the booking's `reference`
+client-side as inline SVG — no canvas, no network call, no external QR
+service) — a reasonable reconstruction of the live site's ticket detail,
+not a confirmed copy of it; that view wasn't in the saved reference pages,
+only the list was. "Invoice Download" renders but stays disabled — there's
+no real invoice to produce yet, and faking a PDF download would be
+actively misleading rather than a harmless placeholder. Seeded with two
+demo bookings against real events from `lib/events.ts` (`is_sample = true`,
+trivial to strip now that phase 6 writes real ones alongside them), the same
+call already made for demo listings.
+
+The account menu's "Edit Profile" / "Settings" links, dead since the
+sign-in modal shipped, now point at `/account` and `/account#notifications`,
+plus a new "Your Bookings" item. Signed-in visitors also get a persistent
+"Bookings" link in the main header nav (`components/site-header.tsx`) —
+`lib/site.ts`'s `NAV_LINKS` stays untouched since it renders for everyone;
+this is appended conditionally so signed-out visitors never see a link that
+would just redirect them away.
 
 ### Deferred
 

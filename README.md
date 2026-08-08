@@ -1,17 +1,23 @@
 # thebucketlistdxb — redesign
 
-A rebuild of the [thebucketlistdxb.com](https://thebucketlistdxb.com) **home page** and **event detail page**, restyled as an Airbnb × shadcn hybrid.
+A rebuild of [thebucketlistdxb.com](https://thebucketlistdxb.com), restyled as an Airbnb × shadcn hybrid — home page, event detail, search, secondary pages, and a working account/booking flow against our own Supabase backend. English and Arabic (RTL), both fully translated.
 
 ```bash
 npm install
 npm run dev
 ```
 
+Every route below lives under both `/en` and `/ar`.
+
 | Route | What it is |
 | --- | --- |
 | `/` | Home — hero, search, five category rails, why-us |
-| `/events/[slug]` | Event detail — gallery, facts, booking panel, related |
+| `/events/[slug]` | Event detail — gallery, facts, booking panel. `Book Now` opens checkout in a modal right on the page |
 | `/events` | Search results (added: the home page's search and every "See All" needed a destination) |
+| `/about-us`, `/faq`, `/contact`, `/partner-with-us` | Secondary pages — FAQ accordion, contact and vendor-inquiry forms |
+| `/refund-policy`, `/privacy-policy`, `/terms-conditions` | Policy pages |
+| `/account` | Profile, address and notification settings — signed in only |
+| `/account/bookings` | Upcoming/past bookings, QR ticket per booking — signed in only |
 
 ---
 
@@ -37,7 +43,7 @@ Shadows are tinted with the maroon rather than neutral grey, so elevation stays 
 
 **Type** — Geist for titles, Inter for body and UI, both loaded as variable fonts via `next/font`.
 
-**The signature** is the hero: the headline sits on a faintly ruled ground, like the sheet you'd write a bucket list on, with a half-ticked list card beside it. Checkmarks were removed from the event cards — as a save affordance a tick was ambiguous, and the cards read better as pure Airbnb: photo, venue, title, date, price. The save control still exists on the detail page's booking panel; say the word if that should go too.
+**The signature** is the hero: the headline sits on a faintly ruled ground, like the sheet you'd write a bucket list on, with a half-ticked list card beside it — decorative only. The bucket-list *feature* itself (a save/wishlist affordance) was dropped from scope entirely, cards and booking panel both; there is currently nothing to save to.
 
 ## Content: what is real vs. placeholder
 
@@ -56,15 +62,24 @@ The live site shows "No Event Found" in four of five rails. Rather than reproduc
 
 - **Anthropic frontend-design** — committed to one direction, spent the boldness in a single signature element, avoided the templated defaults. (Its guidance and Bencium's both name Inter as a font to avoid; you asked for it specifically, so Inter it is — paired with Geist it reads clean rather than generic.)
 - **Vercel Web Interface Guidelines** — audited against the full rule list. Curly apostrophes, `…` not `...`, tabular numerals on prices and dates, `Intl` for all dates/currency (fixed `en-AE` + `Asia/Dubai` so server and client can't disagree), `text-wrap: balance` headings, `min-w-0` on truncating flex children, explicit image `width`/`height`, lazy below the fold, `touch-action: manipulation`, `overscroll-contain` on the drawer, `env(safe-area-inset-bottom)` on the mobile booking bar, search state in the URL, skip link, `:focus-visible` rings, `prefers-reduced-motion`, Title Case buttons and headings.
-- **Vercel React best practices** — pages are Server Components; only the four genuinely interactive leaves are client (`search-panel`, `booking-panel`, `bucket-list-toggle`, `newsletter-form`, `site-header`). Uncontrolled inputs read via `FormData`. `Intl` formatters hoisted to module scope. `useSearchParams` wrapped in `Suspense` so the shell still prerenders. Drawer close moved from an effect into the click handler (`rerender-move-effect-to-event`). All 12 routes prerender static.
+- **Vercel React best practices** — pages are Server Components; interactivity (`search-panel`, `booking-panel`, `newsletter-form`, `site-header`, the sign-in and checkout modals, the account forms) is pushed to the leaves rather than lifted into layouts. Uncontrolled inputs read via `FormData`. `Intl` formatters hoisted to module scope. `useSearchParams` wrapped in `Suspense` so the shell still prerenders. Drawer close moved from an effect into the click handler (`rerender-move-effect-to-event`). Static pages prerender; account/booking pages are dynamic since they read the session.
 - **Bencium UX designer** — a chosen tone committed to fully, characterful type, atmosphere over flat fills, 44×44 hit targets, WCAG AA verified by measurement.
 
 ## Accessibility
 
-Measured in-browser, not assumed: every text pairing clears WCAG AA, verified against the live DOM after the palette change (primary button 5.28:1, dark button 13.05:1, pink eyebrow 5.09:1); every icon-only control has an `aria-label` and a 44×44 hit area via the `.tap-target` utility (visual size unchanged); the tick reports `aria-pressed` and swaps its label; guest count and running total are `aria-live`; no horizontal overflow at 375px.
+Measured in-browser, not assumed: every text pairing clears WCAG AA, verified against the live DOM after the palette change (primary button 5.28:1, dark button 13.05:1, pink eyebrow 5.09:1); every icon-only control has an `aria-label` and a 44×44 hit area via the `.tap-target` utility (visual size unchanged); guest count and running total are `aria-live`; no horizontal overflow at 375px.
+
+## Backend
+
+Sign-in, profile, and bookings run against **our own Supabase project** — not the client's live API (`api.thebucketlistdxb.com`), which has a working backend for all of this but no sandbox to build safely against. Auth is email OTP (`signInWithOtp` / `verifyOtp`, no password), sent through Resend as Supabase's SMTP provider. Confirming a checkout does a real `insert` into `public.booking`; there's no Stripe integration yet, so the payment step is a labeled demo that charges nothing. `supabase/migrations/*.sql` has the schema; `docs/roadmap.md` and `docs/accounts-and-dashboard.md` have the reasoning.
+
+Event/listing content (`lib/events.ts`) is still static — the client's real event data isn't wired in yet (see `docs/roadmap.md` phase 3).
 
 ## Known gaps
 
-- `Book Now`, `Sign In`, and the newsletter are UI-only — no backend is wired.
-- Nav routes other than the three above (`/about-us`, `/faq`, `/contact`, …) are not built.
+- Event and listing content is static (`lib/events.ts`), not the client's live data — six of the seven listings are placeholder copy/photos, flagged above.
+- No Stripe: checkout's payment step is an honest demo, no card is charged.
+- Auth emails only deliver to the Resend account's own address until a verified sending domain is added — real users can't receive sign-in codes yet.
+- No vendor dashboard — planning only, see `docs/accounts-and-dashboard.md`.
+- The 404 page always renders in English, even under `/ar`.
 - Date fields are native `<input type="date">`, so the placeholder format follows the visitor's browser locale.

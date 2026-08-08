@@ -3,6 +3,8 @@
 import { Minus, Plus, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
+import { CheckoutModal } from "@/components/checkout/checkout-modal";
+import { SignInModal } from "@/components/sign-in-modal";
 import { Button } from "@/components/ui/button";
 import type { Experience } from "@/lib/events";
 import { fill, type Dictionary, type Locale } from "@/lib/i18n";
@@ -12,13 +14,34 @@ export function BookingPanel({
   experience,
   locale,
   t,
+  checkoutT,
+  authT,
+  userId: initialUserId,
+  fullName: initialFullName,
+  phone: initialPhone,
 }: {
   experience: Experience;
   locale: Locale;
   t: Dictionary["detail"];
+  checkoutT: Dictionary["checkout"];
+  authT: Dictionary["auth"];
+  userId: string | null;
+  fullName: string;
+  phone: string | null;
 }) {
   const [guests, setGuests] = useState(1);
   const total = experience.priceAED * guests;
+
+  const [userId, setUserId] = useState(initialUserId);
+  const [fullName, setFullName] = useState(initialFullName);
+  const [phone, setPhone] = useState(initialPhone);
+  const [signInOpen, setSignInOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  function handleBookNow() {
+    if (userId) setCheckoutOpen(true);
+    else setSignInOpen(true);
+  }
 
   return (
     <>
@@ -84,7 +107,7 @@ export function BookingPanel({
           </div>
         </dl>
 
-        <Button size="lg" className="mt-5 w-full">
+        <Button size="lg" className="mt-5 w-full" onClick={handleBookNow}>
           {t.bookNow}
         </Button>
 
@@ -113,17 +136,44 @@ export function BookingPanel({
       </div>
 
       {/* Mobile: the price and the action stay reachable without scrolling back. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-line bg-canvas/95 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
+      <div className="mobile-cta-bar fixed inset-x-0 bottom-0 z-40 flex items-center justify-between gap-4 border-t border-line bg-canvas/95 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
         <p className="tabular min-w-0 text-[1.0625rem] leading-tight font-bold text-ink">
           {formatPrice(experience.priceAED, locale)}
           <span className="block text-[0.8125rem] font-normal text-ink-muted">
             {t.perPerson}
           </span>
         </p>
-        <Button size="lg" className="shrink-0">
+        <Button size="lg" className="shrink-0" onClick={handleBookNow}>
           {t.bookNow}
         </Button>
       </div>
+
+      <SignInModal
+        t={authT}
+        open={signInOpen}
+        onOpenChange={setSignInOpen}
+        onSignedIn={({ userId: id, fullName: name, phone: nextPhone }) => {
+          setUserId(id);
+          setFullName(name);
+          setPhone(nextPhone);
+          setSignInOpen(false);
+          setCheckoutOpen(true);
+        }}
+      />
+
+      {userId ? (
+        <CheckoutModal
+          t={checkoutT}
+          locale={locale}
+          userId={userId}
+          experience={experience}
+          guests={guests}
+          fullName={fullName}
+          phone={phone}
+          open={checkoutOpen}
+          onOpenChange={setCheckoutOpen}
+        />
+      ) : null}
     </>
   );
 }

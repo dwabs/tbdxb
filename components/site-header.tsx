@@ -18,6 +18,10 @@ import {
   type Locale,
   stripLocale,
 } from "@/lib/i18n/config";
+import {
+  PROFILE_UPDATED_EVENT,
+  type ProfileUpdatedDetail,
+} from "@/lib/profile-events";
 import { NAV_LINKS } from "@/lib/site";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -35,6 +39,7 @@ export function SiteHeader({
   const [open, setOpen] = useState(false);
   const [supabase] = useState(() => createClient());
   const [signedInAs, setSignedInAs] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [welcome, setWelcome] = useState<{
     name: string;
     isNewUser: boolean;
@@ -50,39 +55,70 @@ export function SiteHeader({
   }, [open]);
 
   // Hydrates from an existing session on load (e.g. a page refresh), and
-  // reacts to sign-out/sign-in happening in another tab.
+  // reacts to sign-out/sign-in happening elsewhere — another tab, or a
+  // SignInModal instance other than this header's own (checkout mounts one
+  // too), which has no direct handle on this component's state.
   useEffect(() => {
     let cancelled = false;
 
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (cancelled || !data.user) return;
+    async function loadProfile(userId: string) {
       const { data: profile } = await supabase
         .from("profile")
-        .select("full_name")
-        .eq("id", data.user.id)
+        .select("full_name, avatar_url")
+        .eq("id", userId)
         .single();
-      if (!cancelled && profile?.full_name) setSignedInAs(profile.full_name);
+      if (cancelled) return;
+      if (profile?.full_name) setSignedInAs(profile.full_name);
+      setAvatarUrl(profile?.avatar_url ?? null);
+    }
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (cancelled || !data.user) return;
+      loadProfile(data.user.id);
     });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") setSignedInAs(null);
-    });
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_OUT") {
+          setSignedInAs(null);
+          setAvatarUrl(null);
+        } else if (event === "SIGNED_IN" && session?.user) {
+          loadProfile(session.user.id);
+        }
+      },
+    );
+
+    function handleProfileUpdated(event: Event) {
+      const { fullName, avatarUrl: nextAvatarUrl } = (
+        event as CustomEvent<ProfileUpdatedDetail>
+      ).detail;
+      if (fullName) setSignedInAs(fullName);
+      if (nextAvatarUrl !== undefined) setAvatarUrl(nextAvatarUrl);
+    }
+    window.addEventListener(PROFILE_UPDATED_EVENT, handleProfileUpdated);
 
     return () => {
       cancelled = true;
       subscription.subscription.unsubscribe();
+      window.removeEventListener(PROFILE_UPDATED_EVENT, handleProfileUpdated);
     };
   }, [supabase]);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     setSignedInAs(null);
+    setAvatarUrl(null);
   }
 
-  const links = NAV_LINKS.map((link) => ({
-    href: localePath(locale, link.href),
-    label: t[link.key],
-  }));
+  const links = [
+    ...NAV_LINKS.map((link) => ({
+      href: localePath(locale, link.href),
+      label: t[link.key],
+    })),
+    ...(signedInAs
+      ? [{ href: localePath(locale, "/account/bookings"), label: t.bookings }]
+      : []),
+  ];
 
   return (
     <>
@@ -139,6 +175,8 @@ export function SiteHeader({
               <div className="hidden sm:flex">
                 <AccountMenu
                   name={signedInAs}
+                  avatarUrl={avatarUrl}
+                  locale={locale}
                   t={auth}
                   onSignOut={handleSignOut}
                 />
@@ -146,7 +184,7 @@ export function SiteHeader({
             ) : (
               <SignInModal
                 t={auth}
-                onSignedIn={(fullName, isNewUser) => {
+                onSignedIn={({ fullName, isNewUser }) => {
                   setSignedInAs(fullName);
                   setWelcome({ name: fullName, isNewUser });
                 }}
@@ -225,6 +263,8 @@ export function SiteHeader({
                 </span>
                 <AccountMenu
                   name={signedInAs}
+                  avatarUrl={avatarUrl}
+                  locale={locale}
                   t={auth}
                   onSignOut={() => {
                     handleSignOut();
