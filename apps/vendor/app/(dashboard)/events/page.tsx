@@ -1,10 +1,11 @@
 import Link from "next/link";
 
+import { EventsFilterBar } from "@/components/events/events-filter-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import { STATUS_META, type EventRow } from "@/lib/types";
+import { STATUS_META, type EventRow, type EventStatus } from "@/lib/types";
 
 const DATE = new Intl.DateTimeFormat("en-AE", {
   day: "numeric",
@@ -12,18 +13,49 @@ const DATE = new Intl.DateTimeFormat("en-AE", {
   year: "numeric",
 });
 
-export default async function EventsPage() {
+const STATUSES = Object.keys(STATUS_META) as EventStatus[];
+
+export default async function EventsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const first = (value: string | string[] | undefined) =>
+    (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+
+  const q = first(params.q);
+  const status = STATUSES.includes(first(params.status) as EventStatus)
+    ? (first(params.status) as EventStatus)
+    : null;
+  const when = first(params.when) || "upcoming";
+
   const supabase = await createClient();
 
-  const { data } = await supabase
+  let query = supabase
     .from("event")
-    .select("id, slug, title, status, starts_at, venue, area, view_count")
-    .order("starts_at", { ascending: true, nullsFirst: false });
+    .select("id, slug, title, status, starts_at, venue, area, view_count");
+
+  // Stripped rather than escaped: these characters are structural in
+  // PostgREST's .or() filter syntax (condition/group separators), and a
+  // search box has no real need for them.
+  const qSafe = q.replace(/[,()]/g, "");
+
+  if (status) query = query.eq("status", status);
+  if (qSafe) query = query.or(`title.ilike.%${qSafe}%,venue.ilike.%${qSafe}%`);
+  if (when === "upcoming") query = query.gte("starts_at", new Date().toISOString());
+  if (when === "past") query = query.lt("starts_at", new Date().toISOString());
+
+  const { data } = await query.order("starts_at", {
+    ascending: when !== "past",
+    nullsFirst: false,
+  });
 
   const events = (data ?? []) as Pick<
     EventRow,
     "id" | "slug" | "title" | "status" | "starts_at" | "venue" | "area" | "view_count"
   >[];
+  const hasFilters = Boolean(q || status || (when && when !== "upcoming"));
 
   return (
     <div className="grid gap-6">
@@ -34,11 +66,15 @@ export default async function EventsPage() {
         </Button>
       </div>
 
+      <EventsFilterBar />
+
       <Card>
         <CardContent>
           {events.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
-              No events yet.
+              {hasFilters
+                ? "No events match these filters."
+                : "No events yet."}
             </p>
           ) : (
             <ul className="divide-y">
