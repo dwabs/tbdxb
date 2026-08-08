@@ -62,10 +62,10 @@ export function DashboardSidebar({
               key={link.href}
               href={link.href}
               className={cn(
-                "flex items-center gap-3 rounded-md border-l-2 py-2 pr-3 pl-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "border-[#F47EB4] bg-white/10 text-white"
-                  : "border-transparent text-white/60 hover:bg-white/5 hover:text-white",
+                  ? "bg-white/15 text-white"
+                  : "text-white/60 hover:bg-white/5 hover:text-white",
               )}
             >
               <Icon className="size-4" />
