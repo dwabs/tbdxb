@@ -1,8 +1,8 @@
 "use client";
 
-import { Minus, Plus, Search } from "lucide-react";
+import { Minus, Plus, Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { DateField } from "@/components/date-field";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,20 @@ export function SearchPanel({
 
   // "From" bounds "To", so the range can never be inverted.
   const [from, setFrom] = useState(() => params.get("from") ?? "");
+
+  // The keyword field is uncontrolled (defaultValue, not value), so the
+  // clear button's visibility needs its own bit of state rather than reading
+  // the input directly.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [hasQuery, setHasQuery] = useState(() => Boolean(params.get("q")));
+
+  function clearQuery() {
+    if (searchInputRef.current) {
+      searchInputRef.current.value = "";
+      searchInputRef.current.focus();
+    }
+    setHasQuery(false);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,6 +80,7 @@ export function SearchPanel({
           className="rounded-2xl sm:col-span-2 lg:flex-[1.4] lg:rounded-full"
         >
           <input
+            ref={searchInputRef}
             id="search-q"
             name="q"
             type="search"
@@ -73,8 +88,21 @@ export function SearchPanel({
             placeholder={t.keywordPlaceholder}
             autoComplete="off"
             spellCheck={false}
-            className={fieldInputClass()}
+            onChange={(event) => setHasQuery(event.target.value.length > 0)}
+            className={fieldInputClass(
+              "pr-6 [&::-webkit-search-cancel-button]:appearance-none",
+            )}
           />
+          {hasQuery ? (
+            <button
+              type="button"
+              onClick={clearQuery}
+              aria-label={t.clear}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink"
+            >
+              <X className="size-4" />
+            </button>
+          ) : null}
         </Field>
 
         <DateField

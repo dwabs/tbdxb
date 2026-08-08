@@ -2,7 +2,7 @@
 
 import { Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import {
   Select,
@@ -26,6 +26,65 @@ const WHEN_OPTIONS = [
   { value: "past", label: "Past" },
   { value: "all", label: "All dates" },
 ] as const;
+
+/**
+ * Its own component, keyed by `q` where it's rendered — that's what lets an
+ * external URL change (the "Clear" button, a back-nav) reset both the input
+ * and the clear-button's visibility together, since remounting the whole
+ * component resets its hooks, where remounting just the `<input>` wouldn't.
+ */
+function SearchField({
+  initialValue,
+  onSubmit,
+}: {
+  initialValue: string;
+  onSubmit: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [hasValue, setHasValue] = useState(() => Boolean(initialValue));
+
+  function clear() {
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.focus();
+    }
+    setHasValue(false);
+  }
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        const value = String(
+          new FormData(event.currentTarget).get("q") ?? "",
+        ).trim();
+        onSubmit(value);
+      }}
+      className="relative flex-1 min-w-48"
+    >
+      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+      <input
+        ref={inputRef}
+        name="q"
+        type="search"
+        defaultValue={initialValue}
+        placeholder="Search events…"
+        onChange={(event) => setHasValue(event.target.value.length > 0)}
+        className="h-9 w-full rounded-md border border-input bg-transparent py-2 pr-8 pl-8 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-search-cancel-button]:appearance-none"
+      />
+      {hasValue ? (
+        <button
+          type="button"
+          onClick={clear}
+          aria-label="Clear search"
+          className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        >
+          <X className="size-4" />
+        </button>
+      ) : null}
+    </form>
+  );
+}
 
 export function EventsFilterBar() {
   const router = useRouter();
@@ -53,25 +112,9 @@ export function EventsFilterBar() {
     });
   }
 
-  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const value = String(new FormData(event.currentTarget).get("q") ?? "").trim();
-    apply({ q: value });
-  }
-
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-48">
-        <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          key={q}
-          name="q"
-          type="search"
-          defaultValue={q}
-          placeholder="Search events…"
-          className="h-9 w-full rounded-md border border-input bg-transparent py-2 pr-3 pl-8 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-        />
-      </form>
+      <SearchField key={q} initialValue={q} onSubmit={(value) => apply({ q: value })} />
 
       <Select value={status} onValueChange={(value) => apply({ status: value })}>
         <SelectTrigger size="sm" className="w-40">
