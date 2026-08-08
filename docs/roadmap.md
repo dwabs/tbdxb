@@ -251,6 +251,34 @@ every event, so the business was always a marketplace. Vendors, memberships,
 the event lifecycle and the admin review queue are specified in
 [`accounts-and-dashboard.md`](./accounts-and-dashboard.md).
 
+`apps/vendor` scaffold, auth gate, overview/events pages and event filters
+are done (8 Aug 2026). Split into sub-phases so each lands independently:
+
+- **9a — Event editor** · next up. `/events/new` + `/events/[id]`: the core
+  fields (title, summary, body, category, venue/area, dates, duration, group
+  size, tags, age min), ticket types, image upload to the `event-images`
+  bucket, and submit-for-review (`draft` → `submitted`). This is the gap that
+  matters most against the standing directive — a vendor can't create an
+  event at all yet.
+- **9b — Public site reads from the database.** Swaps `lib/events.ts` for
+  querying `event`/`ticket_type`/`event_image` where `status = 'published'`.
+  This is what actually closes the loop on "events added in the dashboard
+  get posted on the main site" — 9a alone doesn't, since the site still
+  reads the static array until this lands. Sequenced after 9a so there's a
+  real vendor-authored event to prove it against, not just the seed data.
+- **9c — Vendor bookings.** `/bookings`: list bookings against the vendor's
+  own events (RLS policy already exists — `0007_vendor_schema.sql`'s
+  "vendors read bookings for own events"). Bundles in backfilling
+  `booking.event_id`/`ticket_type_id` on the two demo rows so the stats
+  tiles and this page both show non-zero data, and phase 10 (cancel
+  booking)'s vendor-side UI.
+- **9d — Vendor settings.** `/settings`: vendor profile — name, contact,
+  logo, bio.
+- **9e — Admin review queue.** Approve/reject `submitted` events through
+  `admin_publish_event`/`admin_reject_event` (both already exist as
+  security-definer RPCs, gated on `is_admin()`). No UI calls them yet — 9a's
+  submit-for-review has nothing on the other end until this lands.
+
 ### Phase 10 — cancel booking · planned · **new**, not blocking anything
 
 Spotted as a gap while reviewing phase 6/7: a customer can book but has no
