@@ -254,12 +254,23 @@ the event lifecycle and the admin review queue are specified in
 `apps/vendor` scaffold, auth gate, overview/events pages and event filters
 are done (8 Aug 2026). Split into sub-phases so each lands independently:
 
-- **9a — Event editor** · next up. `/events/new` + `/events/[id]`: the core
-  fields (title, summary, body, category, venue/area, dates, duration, group
-  size, tags, age min), ticket types, image upload to the `event-images`
-  bucket, and submit-for-review (`draft` → `submitted`). This is the gap that
-  matters most against the standing directive — a vendor can't create an
-  event at all yet.
+- **9a — Event editor** · ✅ done (8 Aug 2026). `/events/new` + `/events/[id]`:
+  the core fields (title, summary, body, category, venue/area, dates,
+  duration, group size, tags, age min), ticket types, image upload to the
+  `event-images` bucket, and submit-for-review (`draft` → `submitted`).
+  `/events/new` only collects the core fields and creates a `draft` row;
+  ticket types and photos need a real `event_id` (the RLS policies scope
+  them by `event_id`), so it redirects straight to `/events/[id]` — the full
+  editor — once the row exists, rather than duplicating that UI on the
+  create route. Verified end-to-end against production: create → draft →
+  edit core fields → add a ticket type → submit for review, each step
+  reloaded to confirm it persisted server-side rather than trusting local
+  state. Image upload follows the same client-side pattern already proven
+  for avatar uploads (phase 7) — read dimensions from the file via an
+  `Image()` object before uploading, since `event_image.width`/`height`
+  are `not null` — but wasn't verified in-browser since the available
+  browser automation has no file-picker control; worth a manual check
+  before depending on it.
 - **9b — Public site reads from the database.** Swaps `lib/events.ts` for
   querying `event`/`ticket_type`/`event_image` where `status = 'published'`.
   This is what actually closes the loop on "events added in the dashboard
