@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Toast, useToast } from "@/components/ui/toast";
 import { CATEGORIES } from "@/lib/categories";
 import { dubaiDateTimeToISO, slugify } from "@/lib/slug";
 import { createClient } from "@/lib/supabase/client";
@@ -123,6 +124,7 @@ export function EventForm(
 ) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const { toast, show: showToast, dismiss: dismissToast } = useToast();
 
   const [fields, setFields] = useState<CoreFields>(() =>
     props.mode === "edit" ? fieldsFromEvent(props.event) : emptyFields(),
@@ -194,6 +196,7 @@ export function EventForm(
         setError(updateError.message);
         return;
       }
+      showToast("Changes saved.");
       router.refresh();
       return;
     }
@@ -235,6 +238,7 @@ export function EventForm(
       setError(statusError.message);
       return;
     }
+    showToast(status === "submitted" ? "Submitted for review." : "Event archived.");
     router.refresh();
   }
 
@@ -279,7 +283,11 @@ export function EventForm(
         .from("ticket_type")
         .update(payload)
         .eq("id", row.id);
-      if (updateError) setError(updateError.message);
+      if (updateError) {
+        setError(updateError.message);
+      } else {
+        showToast("Ticket type saved.");
+      }
     } else {
       const { data, error: insertError } = await supabase
         .from("ticket_type")
@@ -292,6 +300,7 @@ export function EventForm(
         setTicketTypes((prev) =>
           prev.map((r) => (r._localId === localId ? { ...r, id: data.id } : r)),
         );
+        showToast("Ticket type saved.");
       }
     }
   }
@@ -309,12 +318,14 @@ export function EventForm(
       }
     }
     setTicketTypes((prev) => prev.filter((r) => r._localId !== localId));
+    showToast("Ticket type removed.");
   }
 
   async function handleImageUpload(fileList: FileList | null) {
     if (props.mode !== "edit" || !fileList || fileList.length === 0) return;
     setUploading(true);
     setImageError("");
+    let uploaded = 0;
 
     for (const file of Array.from(fileList)) {
       const dimensions = await new Promise<{ width: number; height: number } | null>(
@@ -368,9 +379,13 @@ export function EventForm(
         setImageError(insertError.message);
       } else if (imageRow) {
         setImages((prev) => [...prev, imageRow as EventImage]);
+        uploaded += 1;
       }
     }
     setUploading(false);
+    if (uploaded > 0) {
+      showToast(uploaded === 1 ? "Photo uploaded." : `${uploaded} photos uploaded.`);
+    }
   }
 
   async function removeImage(image: EventImage) {
@@ -385,6 +400,7 @@ export function EventForm(
       return;
     }
     setImages((prev) => prev.filter((i) => i.id !== image.id));
+    showToast("Photo removed.");
   }
 
   async function saveImageAlt(imageId: string, alt: string) {
@@ -393,6 +409,8 @@ export function EventForm(
 
   return (
     <div className="grid gap-6">
+      <Toast toast={toast} onDone={dismissToast} />
+
       {props.mode === "edit" ? (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -430,11 +448,15 @@ export function EventForm(
                 Archive
               </Button>
             ) : null}
+            <Button type="submit" form="event-form" disabled={saving}>
+              {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+              Save changes
+            </Button>
           </div>
         </div>
       ) : null}
 
-      <form onSubmit={handleSave} className="grid gap-6">
+      <form id="event-form" onSubmit={handleSave} className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Details</CardTitle>
@@ -582,12 +604,14 @@ export function EventForm(
 
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-            <div>
-              <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-                {props.mode === "create" ? "Create draft" : "Save changes"}
-              </Button>
-            </div>
+            {props.mode === "create" ? (
+              <div>
+                <Button type="submit" disabled={saving}>
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+                  Create draft
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </form>
