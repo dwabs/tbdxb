@@ -101,6 +101,25 @@ export const BOOKING_STATUS_META: Record<
   cancelled: { label: "Cancelled", className: "bg-red-100 text-red-900" },
 };
 
+/** Badge styling per vendor lifecycle state, same shape as STATUS_META. */
+export const VENDOR_STATUS_META: Record<
+  VendorStatus,
+  { label: string; className: string }
+> = {
+  pending: { label: "Pending", className: "bg-amber-100 text-amber-900" },
+  approved: { label: "Approved", className: "bg-emerald-100 text-emerald-900" },
+  suspended: { label: "Suspended", className: "bg-red-100 text-red-900" },
+};
+
+/** admin_list_admins()'s return shape — email comes from a live auth.users
+ *  join, not a column on profile (see 0011's migration comment). */
+export type AdminProfile = {
+  id: string;
+  full_name: string | null;
+  email: string;
+  created_at: string;
+};
+
 export type VendorSummaryStats = {
   vendor_id: string;
   tickets_sold: number;

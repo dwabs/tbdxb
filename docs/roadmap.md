@@ -361,7 +361,7 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     click-through next time the dashboard is open in a normal browser.
 - **9d — Vendor settings.** `/settings`: vendor profile — name, contact,
   logo, bio.
-- **9e — Admin surface.** · planned, scoped 9 Aug 2026. Originally just the
+- **9e — Admin surface.** · ✅ done (9 Aug 2026). Originally just the
   review queue; broadened once the question came up of how an admin
   actually gets *made* an admin today (raw SQL Editor, forever) and how
   they'd see vendors at all. Three pages bolted onto `apps/vendor`, visible
@@ -400,6 +400,28 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
   - **Out of scope on purpose:** vendor onboarding/creation UI, and
     `vendor_member` role management (assigning staff, transfer ownership) —
     neither was asked for; both are natural later admin-surface work.
+  - **Bug caught applying the migration:** `admin_list_admins()` failed
+    every call with "structure of query does not match function result
+    type" — `auth.users.email` is `varchar`, not `text`, and `RETURN QUERY`
+    requires an exact type match against the declared `RETURNS TABLE`
+    shape, not just an assignable one. Fixed with an explicit
+    `u.email::text` cast. Caught immediately because the admins page logs
+    the RPC's error instead of silently rendering an empty list (same
+    `console.error`-on-failure pattern 9b already committed to) — worth
+    remembering for any future function returning an `auth.users` column.
+  - **Verified live**, signed in as the one real admin account: sidebar
+    shows the Admin link group; Review queue listed a genuinely `submitted`
+    event with its vendor name, Approve called the RPC and the event went
+    `published` (confirmed on its own edit page, badge now "Live"); Vendors
+    page's status/commission editor saved and persisted across a reload
+    (tested a real change, then restored the original value); Admins page
+    lists the signed-in account with its Revoke button correctly hidden for
+    self, and granting a nonexistent email surfaced the RPC's friendly
+    error text. Not exercised: Reject-with-reason (nothing left in the
+    queue to reject after approving the one submitted event) and Revoke
+    (no second admin account to test against) — both call the same proven
+    RPC pattern as Approve/Grant, so treated as low-risk, not skipped
+    carelessly.
 - **9f — Responsive layout.** Flagged 9 Aug 2026: the whole app was built
   and verified at desktop width only, and it breaks on mobile/tablet — the
   sidebar is a fixed 256px column with no collapse or off-canvas pattern, so
