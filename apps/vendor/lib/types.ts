@@ -75,6 +75,32 @@ export type EventImage = {
   position: number;
 };
 
+export type BookingStatus = "confirmed" | "cancelled" | "completed";
+
+export type Booking = {
+  id: string;
+  reference: string;
+  event_id: string | null;
+  event_title: string;
+  event_slug: string;
+  quantity: number;
+  total_aed: number;
+  event_date: string;
+  status: BookingStatus;
+  attendee_name: string;
+  attendee_phone: string;
+  created_at: string;
+};
+
+export const BOOKING_STATUS_META: Record<
+  BookingStatus,
+  { label: string; className: string }
+> = {
+  confirmed: { label: "Confirmed", className: "bg-emerald-100 text-emerald-900" },
+  completed: { label: "Completed", className: "bg-sky-100 text-sky-900" },
+  cancelled: { label: "Cancelled", className: "bg-red-100 text-red-900" },
+};
+
 export type VendorSummaryStats = {
   vendor_id: string;
   tickets_sold: number;

@@ -324,12 +324,41 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
       automated attempt, not a save failure — confirmed by a clean retest
       verifying the selection before submit, then checking the persisted
       value from a fresh tab.
-- **9c — Vendor bookings.** `/bookings`: list bookings against the vendor's
-  own events (RLS policy already exists — `0007_vendor_schema.sql`'s
-  "vendors read bookings for own events"). Bundles in backfilling
-  `booking.event_id`/`ticket_type_id` on the two demo rows so the stats
-  tiles and this page both show non-zero data, and phase 10 (cancel
-  booking)'s vendor-side UI.
+- **9c — Vendor bookings.** · ✅ done (9 Aug 2026). `/bookings`: list
+  bookings against the vendor's own events (RLS policy already exists —
+  `0007_vendor_schema.sql`'s "vendors read bookings for own events"),
+  scoped explicitly by fetching the vendor's own event ids first rather
+  than trusting RLS alone — the vendor read policy is additive to
+  booking's own "users read own bookings" policy, so an operator account
+  that has also booked as a customer would otherwise see those personal
+  rows mixed into the vendor list too. Filters (search, status, when)
+  mirror the events page's own URL-param pattern.
+  - **Bug caught along the way:** `0007` added `booking.event_id`/
+    `ticket_type_id` but nothing had ever populated them — the 0003 demo
+    seed predates those columns, and checkout's insert (`checkout-flow.tsx`)
+    was written before the vendor schema existed and never set them either.
+    Every booking ever made, real or demo, was unlinked from its event,
+    which is why `vendor_event_stats` read zero tickets/revenue even after
+    a real checkout. Fixed two ways: `checkout-flow.tsx` now sets both
+    columns on insert (needs `Experience.id`/`ticketTypeId`, added to
+    `lib/events.ts`'s `mapEventRow` off the same cheapest-ticket-type row
+    `priceAED` already used); `0010_backfill_booking_links.sql` backfills
+    every existing row by its `event_slug`. Verified live: all 8 booking
+    rows now carry `event_id`, and the Overview tiles went from 0 to
+    "Tickets sold: 8 / Net revenue: AED 1,484" — exactly the sum of the 6
+    real (non-sample) bookings, correctly excluding the 2 demo rows the
+    stats view already filters out via `not b.is_sample`.
+  - Not re-verified by an actual click-through checkout this session: the
+    browser tool's synthetic clicks stopped reaching the Book Now button's
+    React handler (Radix dialog state stayed `closed` despite the DOM
+    confirming the button itself was the top hit-tested element at the
+    click point — a tool-level issue, not app code, matching the same
+    class of automation flakiness flagged inconclusive in 9b's QA pass).
+    The insert change itself is low-risk — two additional nullable FK
+    columns added to an already-working insert, no RLS/grant restriction
+    on either (checked `0007`/`0009`) — and checkout was fully verified
+    end-to-end in 9b's QA pass before this change. Worth one real
+    click-through next time the dashboard is open in a normal browser.
 - **9d — Vendor settings.** `/settings`: vendor profile — name, contact,
   logo, bio.
 - **9e — Admin review queue.** Approve/reject `submitted` events through

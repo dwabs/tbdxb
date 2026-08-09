@@ -2,6 +2,10 @@ import { createPublicClient } from "./supabase/public";
 import type { Locale } from "./i18n/config";
 
 export type Experience = {
+  id: string;
+  /** The ticket type charged at checkout — the same row `priceAED` below
+   *  came from. Null only if a published event somehow has no ticket types. */
+  ticketTypeId: string | null;
   slug: string;
   title: string;
   shortTitle: string;
@@ -54,6 +58,7 @@ type DbTranslation = {
 };
 
 type DbEventRow = {
+  id: string;
   slug: string;
   title: string;
   short_title: string;
@@ -68,7 +73,7 @@ type DbEventRow = {
   group_size: string;
   tags: string[];
   includes: { emoji: string; label: string }[];
-  ticket_type: { price_aed: number; position: number }[];
+  ticket_type: { id: string; price_aed: number; position: number }[];
   event_image: {
     url: string;
     alt: string;
@@ -80,9 +85,9 @@ type DbEventRow = {
 };
 
 const SELECT_EVENT = `
-  slug, title, short_title, summary, body, venue, area, category,
+  id, slug, title, short_title, summary, body, venue, area, category,
   starts_at, ends_at, duration_label, group_size, tags, includes,
-  ticket_type ( price_aed, position ),
+  ticket_type ( id, price_aed, position ),
   event_image ( url, alt, width, height, position ),
   event_translation ( locale, title, short_title, summary, body, venue, area, duration_label, group_size, tags, includes )
 `;
@@ -103,8 +108,9 @@ function mapEventRow(row: DbEventRow, locale: Locale): Experience {
       ? row.event_translation.find((t) => t.locale === locale)
       : undefined;
 
-  const price = [...row.ticket_type].sort((a, b) => a.position - b.position)[0]
-    ?.price_aed;
+  const cheapestTicketType = [...row.ticket_type].sort(
+    (a, b) => a.position - b.position,
+  )[0];
   const images = [...row.event_image]
     .sort((a, b) => a.position - b.position)
     .map(({ url, alt, width, height }) => ({ src: url, alt, width, height }));
@@ -122,13 +128,15 @@ function mapEventRow(row: DbEventRow, locale: Locale): Experience {
   }));
 
   return {
+    id: row.id,
+    ticketTypeId: cheapestTicketType?.id ?? null,
     slug: row.slug,
     title: translation?.title ?? row.title,
     shortTitle: translation?.short_title ?? row.short_title,
     venue: translation?.venue ?? row.venue,
     area: translation?.area ?? row.area,
     category: row.category,
-    priceAED: Number(price ?? 0),
+    priceAED: Number(cheapestTicketType?.price_aed ?? 0),
     date: starts?.date ?? "",
     startTime: starts?.time ?? "",
     endTime: ends?.time ?? "",

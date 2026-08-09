@@ -75,6 +75,8 @@ export function CheckoutFlow({
       .from("booking")
       .insert({
         user_id: userId,
+        event_id: experience.id,
+        ticket_type_id: experience.ticketTypeId,
         event_slug: experience.slug,
         event_title: experience.title,
         event_image: experience.images[0]?.src ?? "",
