@@ -44,14 +44,14 @@ export function OverviewCharts({
   const hasBookings = weeklySeries.some((w) => w.tickets > 0 || w.revenue > 0);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-3">
       <Card>
         <CardHeader>
-          <CardTitle>Tickets sold, last 12 weeks</CardTitle>
+          <CardTitle className="text-sm">Tickets sold, last 12 weeks</CardTitle>
         </CardHeader>
         <CardContent>
           {hasBookings ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={160}>
               <LineChart data={weeklySeries} margin={{ left: -16, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="week" tick={tickStyle} tickLine={false} axisLine={false} />
@@ -68,7 +68,7 @@ export function OverviewCharts({
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <p className="py-16 text-center text-sm text-muted-foreground">
+            <p className="py-10 text-center text-sm text-muted-foreground">
               No bookings in the last 12 weeks yet.
             </p>
           )}
@@ -77,11 +77,11 @@ export function OverviewCharts({
 
       <Card>
         <CardHeader>
-          <CardTitle>Net revenue, last 12 weeks</CardTitle>
+          <CardTitle className="text-sm">Net revenue, last 12 weeks</CardTitle>
         </CardHeader>
         <CardContent>
           {hasBookings ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={160}>
               <LineChart data={weeklySeries} margin={{ left: 4, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="week" tick={tickStyle} tickLine={false} axisLine={false} />
@@ -107,24 +107,24 @@ export function OverviewCharts({
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <p className="py-16 text-center text-sm text-muted-foreground">
+            <p className="py-10 text-center text-sm text-muted-foreground">
               No bookings in the last 12 weeks yet.
             </p>
           )}
         </CardContent>
       </Card>
 
-      <Card className="sm:col-span-2">
+      <Card>
         <CardHeader>
-          <CardTitle>Views → bookings conversion</CardTitle>
+          <CardTitle className="text-sm">Views → bookings conversion</CardTitle>
         </CardHeader>
         <CardContent>
           {conversionData.length === 0 ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">
+            <p className="py-10 text-center text-sm text-muted-foreground">
               No viewed events yet.
             </p>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={160}>
               <BarChart data={conversionData} margin={{ left: -16, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis
