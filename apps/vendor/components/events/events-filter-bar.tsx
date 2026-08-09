@@ -100,7 +100,7 @@ export function EventsFilterBar() {
   function apply(next: Record<string, string>) {
     const merged = new URLSearchParams(params.toString());
     for (const [key, value] of Object.entries(next)) {
-      if (!value || value === "all" || (key === "when" && value === "upcoming")) {
+      if (!value || (key === "status" && value === "all") || (key === "when" && value === "upcoming")) {
         merged.delete(key);
       } else {
         merged.set(key, value);

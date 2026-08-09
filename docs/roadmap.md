@@ -710,6 +710,59 @@ also turned up two small, safe fixes, done same-day:
   query already selected `attendee_phone`, the table just never rendered
   it. Now shown as a muted line under the attendee's name.
 
+### Phase 12 — Vendor Dashboard UI/UX QA · ✅ done (10 Aug 2026)
+
+Live browser walkthrough of every vendor flow (sign-in, overview, events
+list/create/edit/delete, bookings, settings, admin surfaces), at desktop/
+tablet/mobile widths, not just a code read. Two real bugs found and fixed;
+one real bug found and left for a deliberate go/no-go (see below).
+
+- **Fixed: the "All dates" / "All statuses" filter dropdowns silently reset
+  instead of applying**, in both `events-filter-bar.tsx` and
+  `bookings-filter-bar.tsx`. Root cause: `apply()`'s URL-builder treated
+  *any* `value === "all"` as "delete this param" — correct for the status
+  filter (where `"all"` means "use the default"), wrong for the `when`
+  filter (where `"all"` is a real, distinct choice from the default
+  `"upcoming"`, not the same thing). Selecting "All dates" deleted the
+  `when` param entirely, which silently fell back to `upcoming` — so the
+  dropdown visibly snapped back to "Upcoming" and archived/past events with
+  no visible connection to "why." Fixed by scoping the blanket check to
+  `key === "status"` only. Verified live: "All dates" now correctly shows
+  the archived/dateless event on Events and past bookings on Bookings, on
+  both filter bars, repeatably.
+- **Fixed: cards clipped instead of stacking on mobile.** At 375px, the
+  Overview tiles/charts and the event form's cards were ~470px wide —
+  visibly cut off, not wrapped — while `document.scrollWidth` stayed at
+  375px, meaning an ancestor's `overflow-x-hidden` was silently clipping
+  content instead of the layout actually being responsive. Root cause: CSS
+  Grid/flex items don't shrink below their content's intrinsic min-width
+  unless told to; the shared `<Card>` component had no `min-w-0`. Added it
+  once, at the source (`components/ui/card.tsx`), fixing every card
+  (Overview tiles, charts, event form, settings, admin pages) in one place.
+  Verified at 375/768/1280 — mobile now stacks cleanly full-width, tablet
+  and desktop unaffected.
+- **Found, not fixed — needs a decision, not a design call:** all 6 seed
+  events' photos (`event_image.url`) are relative paths (`/events/foo.jpg`)
+  left over from the `lib/events.ts` → Supabase migration (phase 9b). They
+  render fine on the public site (same origin serves `/public/events/*`)
+  but are broken in the vendor dashboard, which resolves them against its
+  own origin (`vendor-tbdxb.vercel.app/events/foo.jpg` — 404). Fix is a
+  one-line `UPDATE` prefixing those 9 rows with the main site's origin;
+  intentionally **not applied** — it's a production data write outside
+  this pass's explicit scope, not a code fix, so it needs the vendor's own
+  go-ahead rather than being made unilaterally.
+- **Not a bug, but confusing without context:** signed out once mid-QA
+  after a couple of minutes, well under the visible "log out after 30
+  minutes" setting. Given the session-timeout feature (`0016`) is fairly
+  new, worth a closer look at whether the idle-timer's clock starts from
+  the right event, but only reproduced once — logged here, not chased
+  further.
+- **Verified clean, no issues found:** sign-in (valid + invalid credential
+  states), sidebar nav + active states, events search, ticket-type add/
+  remove, delete-event's draft/rejected-only gating, settings save
+  feedback, and all three admin pages (review queue empty state, vendor
+  status/commission editor, admin grant/revoke with the self-revoke guard).
+
 ### Phase 6 — booking and checkout · ✅ done (8 Aug 2026)
 
 `Book Now` was a dead `<button>` with no handler at all (`booking-panel.tsx`,
