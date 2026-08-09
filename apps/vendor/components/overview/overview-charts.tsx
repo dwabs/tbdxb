@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -28,10 +30,16 @@ const tooltipStyle = {
   fontSize: 13,
 };
 
+function truncate(label: string, max = 10) {
+  return label.length > max ? `${label.slice(0, max - 1)}…` : label;
+}
+
 export function OverviewCharts({
   weeklySeries,
+  conversionData,
 }: {
   weeklySeries: { week: string; tickets: number; revenue: number }[];
+  conversionData: { title: string; views: number; tickets: number; rate: number }[];
 }) {
   const hasBookings = weeklySeries.some((w) => w.tickets > 0 || w.revenue > 0);
 
@@ -102,6 +110,41 @@ export function OverviewCharts({
             <p className="py-16 text-center text-sm text-muted-foreground">
               No bookings in the last 12 weeks yet.
             </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="sm:col-span-2">
+        <CardHeader>
+          <CardTitle>Views → bookings conversion</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {conversionData.length === 0 ? (
+            <p className="py-16 text-center text-sm text-muted-foreground">
+              No viewed events yet.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={conversionData} margin={{ left: -16, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis
+                  dataKey="title"
+                  tick={tickStyle}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v: string) => truncate(v)}
+                />
+                <YAxis tick={tickStyle} tickLine={false} axisLine={false} unit="%" />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(value, _name, item) => [
+                    `${value}% (${item.payload.tickets}/${item.payload.views})`,
+                    "Conversion",
+                  ]}
+                />
+                <Bar dataKey="rate" name="Conversion" fill={PINK} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           )}
         </CardContent>
       </Card>

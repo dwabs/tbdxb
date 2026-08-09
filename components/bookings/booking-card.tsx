@@ -1,10 +1,15 @@
-import { MapPin, Ticket } from "lucide-react";
+"use client";
+
+import { Loader2, MapPin, Ticket } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import type { Booking } from "@/lib/bookings";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
+import { createClient } from "@/lib/supabase/client";
 import { formatPrice } from "@/lib/utils";
 
 import { TicketModal } from "./ticket-modal";
@@ -24,6 +29,12 @@ export function BookingCard({
   locale: Locale;
   t: Dictionary["account"]["bookingsPage"];
 }) {
+  const router = useRouter();
+  const [supabase] = useState(() => createClient());
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+
   const statusLabel = {
     confirmed: t.statusConfirmed,
     completed: t.statusCompleted,
@@ -33,6 +44,23 @@ export function BookingCard({
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     booking.location,
   )}`;
+
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const canCancel = booking.status === "confirmed" && booking.eventDate >= todayISO;
+
+  async function cancelBooking() {
+    setPending(true);
+    setError("");
+    const { error: rpcError } = await supabase.rpc("cancel_booking", {
+      p_booking_id: booking.id,
+    });
+    setPending(false);
+    if (rpcError) {
+      setError(rpcError.message || t.cancelError);
+      return;
+    }
+    router.refresh();
+  }
 
   return (
     <article className="flex flex-col gap-4 rounded-card border border-line bg-paper p-4 sm:flex-row">
@@ -97,6 +125,16 @@ export function BookingCard({
             }
           />
 
+          {canCancel && !confirming ? (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="text-ink-muted hover:text-ink hover:underline [touch-action:manipulation]"
+            >
+              {t.cancelAction}
+            </button>
+          ) : null}
+
           <span
             aria-disabled="true"
             title={t.invoiceAction}
@@ -105,6 +143,40 @@ export function BookingCard({
             {t.invoiceAction}
           </span>
         </div>
+
+        {canCancel && confirming ? (
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-[0.8125rem]">
+            <span className="text-ink-muted">{t.cancelPrompt}</span>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                setConfirming(false);
+                setError("");
+              }}
+              className="font-medium text-ink-muted hover:text-ink hover:underline"
+            >
+              {t.cancelKeep}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={cancelBooking}
+              className="flex items-center gap-1.5 font-medium text-accent-deep hover:underline"
+            >
+              {pending ? (
+                <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+              ) : null}
+              {t.cancelConfirm}
+            </button>
+          </div>
+        ) : null}
+
+        {error ? (
+          <p role="alert" className="mt-2 text-[0.8125rem] text-accent-deep">
+            {error}
+          </p>
+        ) : null}
       </div>
     </article>
   );

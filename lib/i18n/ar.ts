@@ -135,6 +135,11 @@ export const ar: Dictionary = {
       statusConfirmed: "مؤكد",
       statusCancelled: "ملغى",
       statusCompleted: "مكتمل",
+      cancelAction: "إلغاء الحجز",
+      cancelPrompt: "هل تريد إلغاء هذا الحجز؟",
+      cancelKeep: "الاحتفاظ به",
+      cancelConfirm: "نعم، إلغاء",
+      cancelError: "تعذّر إلغاء هذا الحجز.",
       ticketModal: {
         title: "تذكرتك",
         referenceLabel: "رقم الحجز المرجعي",

@@ -205,17 +205,24 @@ specified in [`accounts-and-dashboard.md`](./accounts-and-dashboard.md),
 along with the vendor dashboard, which is new work these phases never
 covered. Phase 9 is unblocked now that phase 4 is done.
 
-### Phase 3 — live data · blocked on decision 1 · next up
+### Phase 3 — live data · superseded by 9b (10 Aug 2026)
 
-- Typed API client + response schemas; fail loudly on shape drift.
-- Home from `/events/homepage`; detail from `/events/event-details/:slug`
-  plus `/events/event-tickets/:id`.
-- Sanitise the HTML `description` and restyle it to the type scale.
-- `next.config` `remotePatterns` for their `/uploads` host; keep `next/image`.
-- Point `/events` search at the API instead of the local array.
-- Fire `track-view` on detail mount.
-- Per-locale content: the Arabic overlay in `lib/events-ar.ts` is a stand-in
-  for what the vendor would author.
+Originally scoped as a typed client against the client's own live backend,
+`api.thebucketlistdxb.com` — their separate production system, complete with
+its own Stripe integration. Phase 9b shipped a different route to the same
+end goal first: the public site now reads live data from **our own
+Supabase**, which the vendor dashboard publishes to directly. That closes
+"the public site shows real, current data" without ever touching a
+third-party production API we don't control — which matters, since decision
+3 already flagged the risk in that system specifically (a real Stripe
+account with no sandbox).
+
+Nothing here builds a client against `api.thebucketlistdxb.com`. If a real
+need to import listings/inventory from that system shows up later, it's new
+scope, not a resumption of this phase — the event shape and per-locale
+content already have a home via 9b's `event`/`event_translation` tables
+instead of the API shape originally sketched at the top of this doc, and
+`track-view` is picked up separately below.
 
 ### Phase 4 — auth backend · ✅ done (7 Aug 2026)
 
@@ -593,36 +600,70 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     compile, 11 routes) all clean; browser-verified at desktop, tablet and
     mobile widths against live data (6 events, 8 tickets sold, AED 1,484 net
     — the same real numbers the existing tiles already showed).
+  - **Trimmed same day (9 Aug 2026, `25e4ffb`):** top-events, category and
+    conversion charts dropped per feedback — too much for the overview at
+    that stage. The dual-axis tickets/revenue chart also split into two
+    separate line charts. `vendor_event_stats`/category queries came out
+    with them.
+  - **Views → bookings conversion restored (10 Aug 2026),** once `track-view`
+    (below, `0018_track_event_view.sql`) gave it real data to show instead of
+    a permanent "no viewed events yet." Top-events and the category donut
+    stay dropped — only conversion was asked for back.
+  - **`track-view` closed (10 Aug 2026), `0018_track_event_view.sql`.**
+    `event.view_count` had existed since 0007 but nothing ever incremented
+    it. `increment_event_view(p_event_id)` is a security-definer RPC —
+    signed-out visitors have no `UPDATE` grant on `public.event` at all, so
+    an anonymous page view needs a narrow purpose-built door rather than a
+    broader grant — scoped to `status = 'published'` only. Called from
+    `app/[locale]/events/[slug]/page.tsx` via Next's `after()` (`next/server`)
+    so the RPC call happens after the response is sent, not on the request's
+    critical path; failures are swallowed since a missed view count is
+    harmless. Verified live: loading a real event page took its
+    `view_count` 0 → 1 through the actual `after()` code path (not just a
+    direct RPC call), then reset to 0 to avoid a phantom view in real stats.
 
-### Phase 10 — cancel booking · planned · **new**, not blocking anything
+### Phase 10 — cancel booking · ✅ done (10 Aug 2026)
 
-Spotted as a gap while reviewing phase 6/7: a customer can book but has no
-way to un-book, and neither will a vendor once phase 9's `/bookings` page
-exists. The live site's bundle already names `/bookings/cancel-booking/:id`
-(see the endpoint table above), so this was always part of the intended
-surface — it just never got scoped in phases 6/7. Doesn't block either of
-those (both already ship) or phase 9 (its bookings page can land without
-this and grow into it).
+Spotted as a gap while reviewing phase 6/7: a customer could book but had no
+way to un-book, and neither could a vendor from phase 9's `/bookings` page.
+The live site's bundle already names `/bookings/cancel-booking/:id` (see the
+endpoint table above), so this was always part of the intended surface — it
+just never got scoped in phases 6/7.
 
-- **DB.** `booking.status` is `confirmed | cancelled | completed` already
-  (`0003_bookings.sql`); no new enum value needed. Add a `cancel_booking(id)`
+- **DB**, `0017_cancel_booking.sql`. A `cancel_booking(p_booking_id)`
   security-definer RPC rather than a raw `update` RLS policy — a policy
   would have to be trusted to only ever move status one direction, whereas
-  an RPC can enforce the transition explicitly (only from `confirmed`, only
-  before `event_date`, and — once `checked_in_at` is set, per
-  `0007_vendor_schema.sql` — never, since the ticket's already been used).
-  Two callers: the booking's own `user_id` (customer-side) and any vendor
-  member of the event's vendor via `my_vendor_ids()` (vendor-side), same
-  pattern as `admin_publish_event`/`admin_reject_event`.
+  the RPC enforces the transition explicitly in one `EXISTS`: only from
+  `confirmed`, only while `event_date >= current_date`, and never once
+  `checked_in_at` is set (per `0007_vendor_schema.sql` — the ticket's
+  already been used). Two callers, same check: the booking's own `user_id`
+  (customer-side) or any vendor member of the event's vendor via
+  `my_vendor_ids()` (vendor-side) — same pattern as
+  `admin_publish_event`/`vendor_submit_event`.
 - **No refund logic.** Payment is still the labeled stub from phase 6 — no
   real charge exists to reverse, so cancelling only flips the row's status.
   This needs revisiting once Stripe is wired for real.
-- **Client UI** (`/account/bookings`) — a "Cancel" action on upcoming cards,
-  confirm dialog before calling the RPC, hidden once the card is already
-  `cancelled`/`completed` or checked in.
-- **Vendor UI** (`/bookings`, phase 9, not yet built) — the same capability
-  from the vendor's side once that page exists; scope it in alongside the
-  page rather than bolting it on after.
+- **Client UI** (`/account/bookings`) — a "Cancel booking" text action on
+  upcoming cards (`components/bookings/booking-card.tsx`), shown only while
+  `status === 'confirmed'` and the event date hasn't passed. Clicking it
+  reveals an inline confirm row (prompt + "Keep it" / "Yes, cancel") rather
+  than a modal dialog — this codebase already avoids confirm dialogs for
+  destructive actions (see phase 4's logout decision) in favor of an inline
+  reveal, the same shape the vendor admin's reject-event flow already uses.
+- **Vendor UI** (`/bookings`) — a new Actions column
+  (`apps/vendor/components/bookings/cancel-booking-button.tsx`), same
+  inline-confirm shape as the admin review queue's Reject flow, shown only
+  when `canCancel` (confirmed, upcoming, not checked in).
+- **Verified**: DB-level via `set local role authenticated` +
+  `request.jwt.claims` to simulate both the owner and an unrelated caller
+  against cloned test rows (owner cancels ✓, re-cancelling an already-
+  cancelled row is rejected ✓, an unrelated user is rejected ✓, test rows
+  cleaned up after) — the only practical way to exercise the customer path
+  without OTP inbox access in this environment. Vendor path verified
+  end-to-end through the real UI: signed in with the password-auth test
+  account, clicked Cancel → confirmed inline → row flipped to Cancelled,
+  then restored via SQL since it was a real (non-sample) booking on the
+  shared test account, not a throwaway row.
 
 ### Phase 6 — booking and checkout · ✅ done (8 Aug 2026)
 
@@ -761,9 +802,23 @@ would just redirect them away.
 - **Bucket list (phase 5)** — dropped by decision 2. If it returns it needs a save
   affordance (a bookmark, not a tick), the `/bucket-list` page, and the
   `wishlist-*` endpoints.
-- **Arabic 404.** `not-found` renders below the locale segment but cannot read
-  its param, so it always renders English. Needs its own boundary; not worth a
-  route file until there is Arabic traffic.
+- ~~**Arabic 404.**~~ ✅ done (10 Aug 2026). `app/[locale]/not-found.tsx`
+  renders below the locale segment and never received `params`, so an
+  explicit `notFound()` call from inside the tree (a bad event slug, say)
+  always rendered English even under `/ar/...`. Fixed by moving the content
+  into a new client component, `components/not-found-content.tsx`, which
+  reads the locale off `usePathname()` instead of a route param —
+  `usePathname()` reflects the real matched URL (untouched by `proxy.ts`'s
+  rewrite of default-locale routes), so the leading `/ar` segment is still
+  there to detect even though `params` isn't. `app/[locale]/not-found.tsx`
+  itself stays a thin server shell that only carries the `metadata` export
+  (English-only — metadata runs server-side, same missing-param problem).
+  Verified: `/ar/events/<bad-slug>` renders Arabic copy with `dir="rtl"`;
+  `/events/<bad-slug>` (English) unchanged. Doesn't touch
+  `app/global-not-found.tsx` (task 41's fix for genuinely unmatched
+  routes) — that file bypasses the `[locale]` tree entirely by Next's own
+  design (see its header comment), so it stays hardcoded to English; there
+  is no locale param to read there because no route ever matched.
 
 ## Bugs on the live site — do not port these
 

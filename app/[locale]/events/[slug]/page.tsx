@@ -8,6 +8,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 
 import { BookingPanel } from "@/components/booking-panel";
 import { ExperienceCard } from "@/components/experience-card";
@@ -26,6 +27,7 @@ import {
   LOCALES,
   type Locale,
 } from "@/lib/i18n";
+import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 import { formatDateLong, formatTimeRange } from "@/lib/utils";
 
@@ -59,6 +61,20 @@ export default async function EventPage({
   const lang = locale as Locale;
   const experience = await getExperience(slug, lang);
   if (!experience) notFound();
+
+  // Fired after the response is sent — a view shouldn't cost the visitor
+  // an extra round trip. Failures are swallowed: a missed view count is
+  // harmless, unlike the read path's own "fail loudly" rule for real
+  // listing data (see lib/events.ts).
+  after(async () => {
+    try {
+      await createPublicClient().rpc("increment_event_view", {
+        p_event_id: experience.id,
+      });
+    } catch {
+      // best-effort — see comment above
+    }
+  });
 
   const dict = getDictionary(locale);
   const t = dict.detail;

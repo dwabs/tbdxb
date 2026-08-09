@@ -89,6 +89,7 @@ export type Booking = {
   status: BookingStatus;
   attendee_name: string;
   attendee_phone: string;
+  checked_in_at: string | null;
   created_at: string;
 };
 

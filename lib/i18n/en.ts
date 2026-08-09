@@ -127,6 +127,11 @@ export const en = {
       statusConfirmed: "Confirmed",
       statusCancelled: "Cancelled",
       statusCompleted: "Completed",
+      cancelAction: "Cancel booking",
+      cancelPrompt: "Cancel this booking?",
+      cancelKeep: "Keep it",
+      cancelConfirm: "Yes, cancel",
+      cancelError: "This booking couldn't be cancelled.",
       ticketModal: {
         title: "Your ticket",
         referenceLabel: "Booking reference",

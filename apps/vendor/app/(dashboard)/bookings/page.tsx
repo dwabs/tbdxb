@@ -1,4 +1,5 @@
 import { BookingsFilterBar } from "@/components/bookings/bookings-filter-bar";
+import { CancelBookingButton } from "@/components/bookings/cancel-booking-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -55,7 +56,7 @@ export default async function BookingsPage({
     let query = supabase
       .from("booking")
       .select(
-        "id, reference, event_id, event_title, event_slug, quantity, total_aed, event_date, status, attendee_name, attendee_phone, created_at",
+        "id, reference, event_id, event_title, event_slug, quantity, total_aed, event_date, status, attendee_name, attendee_phone, checked_in_at, created_at",
       )
       .in("event_id", eventIds);
 
@@ -76,6 +77,7 @@ export default async function BookingsPage({
   }
 
   const hasFilters = Boolean(q || status || (when && when !== "upcoming"));
+  const todayISO = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="grid gap-6">
@@ -104,33 +106,43 @@ export default async function BookingsPage({
                   <TableHead>Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell className="font-medium">{booking.attendee_name}</TableCell>
-                    <TableCell className="max-w-56 truncate">{booking.event_title}</TableCell>
-                    <TableCell className="tabular-nums text-muted-foreground">
-                      {booking.reference}
-                    </TableCell>
-                    <TableCell className="tabular-nums">{booking.quantity}</TableCell>
-                    <TableCell className="tabular-nums">
-                      {DATE.format(new Date(booking.event_date))}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={BOOKING_STATUS_META[booking.status].className}
-                      >
-                        {BOOKING_STATUS_META[booking.status].label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {AED.format(booking.total_aed)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {bookings.map((booking) => {
+                  const canCancel =
+                    booking.status === "confirmed" &&
+                    booking.event_date >= todayISO &&
+                    !booking.checked_in_at;
+                  return (
+                    <TableRow key={booking.id}>
+                      <TableCell className="font-medium">{booking.attendee_name}</TableCell>
+                      <TableCell className="max-w-56 truncate">{booking.event_title}</TableCell>
+                      <TableCell className="tabular-nums text-muted-foreground">
+                        {booking.reference}
+                      </TableCell>
+                      <TableCell className="tabular-nums">{booking.quantity}</TableCell>
+                      <TableCell className="tabular-nums">
+                        {DATE.format(new Date(booking.event_date))}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={BOOKING_STATUS_META[booking.status].className}
+                        >
+                          {BOOKING_STATUS_META[booking.status].label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-medium tabular-nums">
+                        {AED.format(booking.total_aed)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {canCancel ? <CancelBookingButton bookingId={booking.id} /> : null}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
