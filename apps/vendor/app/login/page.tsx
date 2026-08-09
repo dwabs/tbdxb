@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LogoMark, Wordmark } from "@/components/logo";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -49,7 +50,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-muted/40 p-6">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted/40 p-6">
+      <div className="flex items-center gap-2.5">
+        <LogoMark className="size-9" />
+        <Wordmark className="text-lg" />
+      </div>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-xl">Vendor sign in</CardTitle>

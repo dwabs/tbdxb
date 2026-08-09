@@ -289,6 +289,16 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
   `admin_publish_event`/`admin_reject_event` (both already exist as
   security-definer RPCs, gated on `is_admin()`). No UI calls them yet — 9a's
   submit-for-review has nothing on the other end until this lands.
+- **9f — Responsive layout.** Flagged 9 Aug 2026: the whole app was built
+  and verified at desktop width only, and it breaks on mobile/tablet — the
+  sidebar is a fixed 256px column with no collapse or off-canvas pattern, so
+  narrow viewports lose most of the content width to it, and none of the
+  forms, tables, or the event editor's multi-column rows have been checked
+  below desktop. Sequenced last on purpose: 9a–9e are still adding pages,
+  and reworking layout before that surface exists would mean redoing it.
+  Once 9a–9e are done, this pass covers the sidebar (collapsible/off-canvas
+  below some breakpoint), the stat tiles and event list (already `sm:`
+  responsive in places, unverified), and the event editor's field grids.
 
 ### Phase 10 — cancel booking · planned · **new**, not blocking anything
 
