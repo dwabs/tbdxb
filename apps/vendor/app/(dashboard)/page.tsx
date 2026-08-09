@@ -1,10 +1,17 @@
 import Link from "next/link";
 
+import { OverviewCharts } from "@/components/overview/overview-charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CATEGORIES } from "@/lib/categories";
 import { createClient } from "@/lib/supabase/server";
-import { STATUS_META, type EventRow, type VendorSummaryStats } from "@/lib/types";
+import {
+  STATUS_META,
+  type EventRow,
+  type VendorEventStats,
+  type VendorSummaryStats,
+} from "@/lib/types";
 
 const AED = new Intl.NumberFormat("en-AE", {
   style: "currency",
@@ -12,29 +19,114 @@ const AED = new Intl.NumberFormat("en-AE", {
   maximumFractionDigits: 0,
 });
 
+const WEEK_LABEL = new Intl.DateTimeFormat("en-AE", { day: "numeric", month: "short" });
+
+/** Sunday-start week buckets for the last 12 weeks, oldest first. Simpler
+ *  than ISO weeks and good enough for a trend chart, not an invoice. */
+function lastTwelveWeeks(): { start: Date; end: Date; label: string }[] {
+  const weeks: { start: Date; end: Date; label: string }[] = [];
+  const now = new Date();
+  const currentWeekStart = new Date(now);
+  currentWeekStart.setHours(0, 0, 0, 0);
+  currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+
+  for (let i = 11; i >= 0; i--) {
+    const start = new Date(currentWeekStart);
+    start.setDate(start.getDate() - i * 7);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    weeks.push({ start, end, label: WEEK_LABEL.format(start) });
+  }
+  return weeks;
+}
+
 export default async function OverviewPage() {
   const supabase = await createClient();
 
-  const [{ data: stats }, { data: events }] = await Promise.all([
-    supabase.from("vendor_summary_stats").select("*").maybeSingle(),
-    supabase
-      .from("event")
-      .select("id, slug, title, status, starts_at, updated_at")
-      .order("updated_at", { ascending: false })
-      .limit(5),
-  ]);
+  const [{ data: stats }, { data: events }, { data: eventStats }, { data: ownEvents }] =
+    await Promise.all([
+      supabase.from("vendor_summary_stats").select("*").maybeSingle(),
+      supabase
+        .from("event")
+        .select("id, slug, title, status, starts_at, updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(5),
+      supabase.from("vendor_event_stats").select("*"),
+      supabase.from("event").select("id, category"),
+    ]);
 
   const summary = stats as VendorSummaryStats | null;
   const recent = (events ?? []) as Pick<
     EventRow,
     "id" | "slug" | "title" | "status" | "starts_at" | "updated_at"
   >[];
+  const perEvent = (eventStats ?? []) as VendorEventStats[];
 
   const tiles = [
     { label: "Upcoming events", value: String(summary?.upcoming_events ?? 0) },
     { label: "Tickets sold", value: String(summary?.tickets_sold ?? 0) },
     { label: "Net revenue", value: AED.format(summary?.net_aed ?? 0) },
   ];
+
+  // Tickets/revenue over time — booking rows for this vendor's own events,
+  // scoped explicitly the same way bookings/page.tsx does (the vendor read
+  // policy is additive to "users read own bookings", so an operator account
+  // that's also booked as a customer would otherwise leak those rows in).
+  const eventIds = (ownEvents ?? []).map((e) => e.id as string);
+  const weeks = lastTwelveWeeks();
+  const weeklySeries = weeks.map((w) => ({ week: w.label, tickets: 0, revenue: 0 }));
+
+  if (eventIds.length > 0) {
+    const { data: bookingRows } = await supabase
+      .from("booking")
+      .select("created_at, quantity, total_aed")
+      .in("event_id", eventIds)
+      .neq("status", "cancelled")
+      .eq("is_sample", false)
+      .gte("created_at", weeks[0].start.toISOString());
+
+    for (const row of bookingRows ?? []) {
+      const createdAt = new Date(row.created_at as string);
+      const bucket = weeks.findIndex((w) => createdAt >= w.start && createdAt < w.end);
+      if (bucket === -1) continue;
+      weeklySeries[bucket].tickets += row.quantity as number;
+      weeklySeries[bucket].revenue += row.total_aed as number;
+    }
+  }
+
+  // Top events by tickets sold — straight off vendor_event_stats, no new
+  // query shape.
+  const topEvents = [...perEvent]
+    .sort((a, b) => b.tickets_sold - a.tickets_sold)
+    .slice(0, 5)
+    .map((e) => ({ title: e.title, tickets: e.tickets_sold }));
+
+  // Events by category — cheap portfolio-mix view.
+  const categoryLabel = (id: string) =>
+    CATEGORIES.find((c) => c.id === id)?.label ?? id;
+  const categoryCounts = new Map<string, number>();
+  for (const e of ownEvents ?? []) {
+    const category = categoryLabel((e.category as string) || "Uncategorized");
+    categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1);
+  }
+  const categoryData = [...categoryCounts.entries()].map(([category, count]) => ({
+    category,
+    count,
+  }));
+
+  // Views → bookings conversion — view_count is tracked on every event but
+  // surfaced nowhere else in the vendor UI. Only events with at least one
+  // view are worth showing a rate for.
+  const conversionData = [...perEvent]
+    .filter((e) => e.view_count > 0)
+    .sort((a, b) => b.view_count - a.view_count)
+    .slice(0, 6)
+    .map((e) => ({
+      title: e.title,
+      views: e.view_count,
+      tickets: e.tickets_sold,
+      rate: Math.round((e.tickets_sold / e.view_count) * 1000) / 10,
+    }));
 
   return (
     <div className="grid gap-6">
@@ -59,6 +151,13 @@ export default async function OverviewPage() {
           </Card>
         ))}
       </div>
+
+      <OverviewCharts
+        weeklySeries={weeklySeries}
+        topEvents={topEvents}
+        categoryData={categoryData}
+        conversionData={conversionData}
+      />
 
       <Card>
         <CardHeader>

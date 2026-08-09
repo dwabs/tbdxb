@@ -19,6 +19,18 @@ Every route below lives under both `/en` and `/ar`.
 | `/account` | Profile, address and notification settings — signed in only |
 | `/account/bookings` | Upcoming/past bookings, QR ticket per booking — signed in only |
 
+### Vendor dashboard
+
+A second app, `apps/vendor` (own `package.json`, deployed separately at
+`vendor-tbdxb.vercel.app`), where vendors create and manage events against
+the same Supabase project — this is what the main site's `/events` now reads
+from instead of a static array. Overview, event editor (with ticket types and
+photo upload), bookings, and self-service settings for vendors; `is_admin`
+accounts additionally get a review queue, vendor management, and admin
+account management under `/admin`. See
+[`docs/vendor-dashboard.md`](./docs/vendor-dashboard.md) and the "Phase 9"
+section of [`docs/roadmap.md`](./docs/roadmap.md) for the full build history.
+
 ---
 
 ## Design direction
@@ -71,15 +83,15 @@ Measured in-browser, not assumed: every text pairing clears WCAG AA, verified ag
 
 ## Backend
 
-Sign-in, profile, and bookings run against **our own Supabase project** — not the client's live API (`api.thebucketlistdxb.com`), which has a working backend for all of this but no sandbox to build safely against. Auth is email OTP (`signInWithOtp` / `verifyOtp`, no password), sent through Resend as Supabase's SMTP provider. Confirming a checkout does a real `insert` into `public.booking`; there's no Stripe integration yet, so the payment step is a labeled demo that charges nothing. `supabase/migrations/*.sql` has the schema; `docs/roadmap.md` and `docs/accounts-and-dashboard.md` have the reasoning.
+Sign-in, profile, and bookings run against **our own Supabase project** — not the client's live API (`api.thebucketlistdxb.com`), which has a working backend for all of this but no sandbox to build safely against. Auth is email OTP (`signInWithOtp` / `verifyOtp`, no password) for customers, email + password for vendors, sent through Resend as Supabase's SMTP provider. Confirming a checkout does a real `insert` into `public.booking`; there's no Stripe integration yet, so the payment step is a labeled demo that charges nothing. `supabase/migrations/*.sql` has the schema; `docs/roadmap.md`, `docs/accounts-and-dashboard.md` and `docs/vendor-dashboard.md` have the reasoning.
 
-Event/listing content (`lib/events.ts`) is still static — the client's real event data isn't wired in yet (see `docs/roadmap.md` phase 3).
+Event/listing content (`lib/events.ts` on the public site) now reads from the database — vendors author it in `apps/vendor`, and an admin approves it before it's `published`. Every public table is RLS-scoped; writes to sensitive columns (`profile.is_admin`, `vendor.status`/`commission_rate`, `event.status`) are additionally column-revoked from direct client writes and only reachable through gated `security definer` RPCs.
 
 ## Known gaps
 
-- Event and listing content is static (`lib/events.ts`), not the client's live data — six of the seven listings are placeholder copy/photos, flagged above.
 - No Stripe: checkout's payment step is an honest demo, no card is charged.
 - Auth emails only deliver to the Resend account's own address until a verified sending domain is added — real users can't receive sign-in codes yet.
-- No vendor dashboard — planning only, see `docs/accounts-and-dashboard.md`.
 - The 404 page always renders in English, even under `/ar`.
 - Date fields are native `<input type="date">`, so the placeholder format follows the visitor's browser locale.
+- Vendor dashboard (`apps/vendor`) has no i18n — English only, by design (see `docs/vendor-dashboard.md`).
+- Six of the seven seeded event listings are still placeholder copy/photos (flagged in the vendor's own event rows) — real vendors replace these by editing/creating their own events.

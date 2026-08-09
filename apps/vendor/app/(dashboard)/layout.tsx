@@ -56,13 +56,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-svh bg-background">
+    <div className="flex min-h-svh flex-col bg-background lg:flex-row">
       <DashboardSidebar
         vendorName={vendor.name}
         email={user.email ?? ""}
         isAdmin={profile?.is_admin ?? false}
       />
-      <main className="min-w-0 flex-1 overflow-x-hidden px-6 py-8 sm:px-8 lg:px-10">
+      <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
         <div className="mx-auto w-full max-w-6xl">{children}</div>
       </main>
     </div>

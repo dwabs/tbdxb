@@ -477,38 +477,72 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     (no second admin account to test against) — both call the same proven
     RPC pattern as Approve/Grant, so treated as low-risk, not skipped
     carelessly.
-- **9f — Responsive layout.** Flagged 9 Aug 2026: the whole app was built
-  and verified at desktop width only, and it breaks on mobile/tablet — the
-  sidebar is a fixed 256px column with no collapse or off-canvas pattern, so
-  narrow viewports lose most of the content width to it, and none of the
-  forms, tables, or the event editor's multi-column rows have been checked
-  below desktop. Sequenced last on purpose: 9a–9e are still adding pages,
-  and reworking layout before that surface exists would mean redoing it.
-  Once 9a–9e are done, this pass covers the sidebar (collapsible/off-canvas
-  below some breakpoint), the stat tiles and event list (already `sm:`
-  responsive in places, unverified), and the event editor's field grids.
-
-- **9g — Overview charts.** The stat tiles are single numbers with no trend;
-  the review call flagged this. All the underlying fields already exist —
-  no new migration needed:
-  - **Tickets sold & net revenue over time** (line, last 12 weeks or by
-    month) — `booking.created_at`/`quantity`/`total_aed` joined to the
-    vendor's own events via `event_id`, same scoping `vendor_event_stats`
-    already uses. The headline chart; ties directly to the two existing
-    tiles.
-  - **Top events by tickets sold** (bar, top 5) — straight off
-    `vendor_event_stats`, no new query shape.
-  - **Events by category** (donut) — `event.category` across the vendor's
-    events; cheap to compute, shows portfolio mix at a glance.
-  - **Views → bookings conversion** — `event.view_count` (tracked on every
-    event, currently surfaced nowhere in the vendor UI) against tickets
-    sold per event. The one genuinely new metric; worth it because
-    `view_count` is otherwise dead data.
-  Needs a charting library — `recharts` is the natural pick since shadcn's
-  own chart blocks are built on it, keeping the dependency inside what 9's
-  "shadcn/ui, CRM style" direction already committed to. Sequenced after
-  9b/9c: before then there's no real vendor-authored trend data to chart,
-  only the two seeded demo bookings.
+- **9f — Responsive layout.** · ✅ done (9 Aug 2026). The sidebar was a fixed
+  256px column with no collapse or off-canvas pattern, so narrow viewports
+  lost most of the content width to it. Fixed with a new
+  `components/ui/sheet.tsx` (Radix `Dialog` under the hood, same primitive
+  as the main site's own `dialog.tsx`, just slid in from the left instead of
+  centered) and a rework of `dashboard-sidebar.tsx`: the brand mark, nav
+  list and account footer moved into shared render functions used by both
+  the desktop `<aside>` (`hidden lg:flex`, unchanged behavior) and a new
+  mobile top bar (`lg:hidden`) whose hamburger opens the same nav in the
+  sheet. `layout.tsx` switched from `flex` to `flex-col lg:flex-row` so the
+  bar stacks above the content on mobile instead of squeezing beside it.
+  Clicking a nav link inside the sheet closes it via the same `open` state
+  the hamburger sets, so navigating doesn't leave it hanging open on the
+  next page. No new animation dependency — matching keyframes
+  (`sheet-overlay-in`/`sheet-content-in`) added to `apps/vendor/app/globals.css`
+  alongside the existing token block, same pattern as the main site's own
+  `dialog-overlay-in`/`dialog-content-in`, just a slide instead of a
+  scale-fade since this app has no RTL to account for (English-only, see
+  `AGENTS.md`).
+  - The stat tiles, event list, filter bars and the event editor's field
+    grids turned out to already be responsive (`sm:grid-cols-*`, `flex-wrap`,
+    `min-w-0` + `truncate`) from how they were originally built — verified
+    rather than assumed, at 375/768/1280px in the browser preview (event
+    editor's ticket-type row, settings form, admin vendors table, events
+    list all checked). The only real gap was the sidebar.
+- **9g — Overview charts.** · ✅ done (9 Aug 2026). The stat tiles were single
+  numbers with no trend. Added `recharts` (the shadcn chart blocks' own
+  dependency, keeping this inside 9's "shadcn/ui, CRM style" direction) and
+  a new `components/overview/overview-charts.tsx`, wired into
+  `app/(dashboard)/page.tsx` below the existing tiles:
+  - **Tickets sold & net revenue over time** — a dual-axis line chart, last
+    12 weeks, Sunday-start buckets computed in the page component (simpler
+    than ISO weeks, good enough for a trend line). Queries `booking`
+    directly — `created_at`/`quantity`/`total_aed` — scoped to the vendor's
+    own event ids fetched up front, the same explicit-scoping pattern 9c's
+    bookings page already uses (the vendor read policy is additive to
+    "users read own bookings", so an operator account that's also booked as
+    a customer would otherwise leak into this too), plus `status <>
+    'cancelled'` and `is_sample = false` to match `vendor_event_stats`'s own
+    filtering.
+  - **Top events by tickets sold** and **views → bookings conversion** —
+    both read straight off `vendor_event_stats` (already returns
+    `tickets_sold`, `view_count`, `gross_aed`/`net_aed` per event under
+    `security_invoker`), no new query shape, sorted/sliced client-side in
+    the page component. Conversion rate is `tickets_sold / view_count`,
+    filtered to events with at least one view so a freshly-created listing
+    doesn't show a misleading 0%.
+  - **Events by category** — a donut over `event.category`, counted from a
+    plain `select id, category` (RLS already scopes it to the vendor's own
+    rows). Labelled through the existing `lib/categories.ts` `CATEGORIES`
+    map rather than showing raw slugs (`best-this-month` → "Best Things to
+    Do This Month") — that map already existed for the event editor's
+    category `<Select>` and was just sitting unused everywhere else.
+  - **Honest empty states, not fake data:** with only one seeded
+    house-vendor account and `event.view_count` never actually incremented
+    anywhere (the public site has no `track-view` call — a pre-existing gap
+    from phase 3/9b, not introduced here), "Views → bookings conversion"
+    correctly renders "No viewed events yet" rather than a chart of zeros.
+    Same for the revenue chart outside the one real week of bookings.
+    `view_count` staying at 0 for every event is a known, separate gap —
+    worth wiring up `track-view` from the public site's event-detail page
+    if this chart is going to be worth looking at.
+  - Verified: `tsc --noEmit`, `eslint`, `npm run build` (production
+    compile, 11 routes) all clean; browser-verified at desktop, tablet and
+    mobile widths against live data (6 events, 8 tickets sold, AED 1,484 net
+    — the same real numbers the existing tiles already showed).
 
 ### Phase 10 — cancel booking · planned · **new**, not blocking anything
 
