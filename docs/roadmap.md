@@ -361,10 +361,45 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     click-through next time the dashboard is open in a normal browser.
 - **9d — Vendor settings.** `/settings`: vendor profile — name, contact,
   logo, bio.
-- **9e — Admin review queue.** Approve/reject `submitted` events through
-  `admin_publish_event`/`admin_reject_event` (both already exist as
-  security-definer RPCs, gated on `is_admin()`). No UI calls them yet — 9a's
-  submit-for-review has nothing on the other end until this lands.
+- **9e — Admin surface.** · planned, scoped 9 Aug 2026. Originally just the
+  review queue; broadened once the question came up of how an admin
+  actually gets *made* an admin today (raw SQL Editor, forever) and how
+  they'd see vendors at all. Three pages bolted onto `apps/vendor`, visible
+  only to `is_admin` accounts via a second sidebar link group — no new app,
+  no new deployment:
+  - **`/admin/review`** — approve/reject `submitted` events across every
+    vendor, through `admin_publish_event`/`admin_reject_event` (both already
+    exist as security-definer RPCs, gated on `is_admin()`). No UI calls them
+    yet — 9a's submit-for-review has nothing on the other end until this
+    lands, so this is the highest-leverage piece: right now a submitted
+    event is a dead end. Reject needs a reason first (shown back to the
+    vendor verbatim on their edit page) — an inline textarea, not a bare
+    button.
+  - **`/admin/vendors`** — list every vendor with status/commission_rate,
+    editable inline. No new RPC: `"admins manage vendors"` (0007) already
+    permits an admin to `UPDATE` any vendor row directly from the client.
+  - **`/admin/admins`** — list current admins, grant by email, revoke (with
+    a self-revoke guard — there's exactly one admin account today, so
+    accidental lockout is a real risk, not theoretical). Needs three new
+    security-definer RPCs (`admin_list_admins`/`admin_grant_admin`/
+    `admin_revoke_admin`, migration `0011`) following the exact
+    `admin_publish_event` pattern. Deliberately does **not** denormalize
+    `email` onto `profile` — email is auth-owned and `handle_new_user()`
+    only fires on insert, so a copied column would silently go stale on any
+    email change with nothing to catch it; `admin_list_admins()` joins
+    `auth.users` live instead. No new RLS policy needed anywhere — vendor/
+    event admin-read access already exists, and profile access goes through
+    the RPCs, scoped narrower than a general "admins read all profiles"
+    policy would be.
+  - **Known limitation, not solved here:** `layout.tsx`'s auth gate treats
+    "not a member of any vendor" as a hard block before anything renders,
+    so a pure-admin account with no vendor membership would be locked out
+    of the admin pages too, not just missing the sidebar link. Today's one
+    admin account is also a vendor member. Splitting the vendor-membership
+    check from the admin check is separate scope.
+  - **Out of scope on purpose:** vendor onboarding/creation UI, and
+    `vendor_member` role management (assigning staff, transfer ownership) —
+    neither was asked for; both are natural later admin-surface work.
 - **9f — Responsive layout.** Flagged 9 Aug 2026: the whole app was built
   and verified at desktop width only, and it breaks on mobile/tablet — the
   sidebar is a fixed 256px column with no collapse or off-canvas pattern, so
