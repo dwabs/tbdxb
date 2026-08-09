@@ -299,6 +299,31 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     request, same as `/account` and `/events` are already dynamic for the
     same reason. Not a regression — the prior "static" build was 14 blank
     404 pages that happened to never reach the dynamic code path.
+  - **QA pass (9 Aug 2026), full walkthrough before starting 9c** — sign-in
+    state, checkout end-to-end (real booking, QR ticket), account
+    profile/address/notifications, events search/filters, vendor
+    login/overview/events/create/edit/ticket-types, static pages, 404,
+    mobile layout, Arabic RTL. One real bug found and fixed:
+    - **Admin's own profile page 403'd on every save.** `0001`'s
+      self-update policy required `is_admin = false` in its `WITH CHECK`
+      (blocking self-promotion), but that check reads the row's *current*
+      `is_admin`, and `0007` had granted the operator account admin rights
+      for the vendor review queue — so every save by that account failed,
+      not just an attempted `is_admin` change. Fixed in
+      `0009_fix_profile_self_update.sql`: revoke column-level `UPDATE` on
+      `is_admin` from `authenticated` instead (no client payload can touch
+      it regardless of RLS), drop the now-redundant check. Applied live and
+      re-verified — profile, address, and notification saves all confirmed
+      working again.
+    - Two apparent bugs during vendor-side testing turned out to be
+      testing artifacts, not product bugs, after isolating them: a ticket
+      type that looked unsaved was a false read (`get_page_text` doesn't
+      surface `<input>` values, only `read_page`/screenshots do); a
+      category that showed blank was traced to an imprecise
+      coordinate-based click missing the dropdown item in the first
+      automated attempt, not a save failure — confirmed by a clean retest
+      verifying the selection before submit, then checking the persisted
+      value from a fresh tab.
 - **9c — Vendor bookings.** `/bookings`: list bookings against the vendor's
   own events (RLS policy already exists — `0007_vendor_schema.sql`'s
   "vendors read bookings for own events"). Bundles in backfilling
