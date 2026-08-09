@@ -359,8 +359,44 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     on either (checked `0007`/`0009`) — and checkout was fully verified
     end-to-end in 9b's QA pass before this change. Worth one real
     click-through next time the dashboard is open in a normal browser.
-- **9d — Vendor settings.** `/settings`: vendor profile — name, contact,
-  logo, bio.
+- **9d — Vendor settings.** · ✅ done (9 Aug 2026). `/settings`: vendor
+  profile — name, contact email/phone, bio, logo (upsert-in-place upload,
+  same trick as the main site's avatar upload — fixed path,
+  `upsert: true`, cache-busted public URL, so there's never an orphaned
+  file to separately clean up).
+  - **Real RLS gap found while scoping this:** `vendor` had no self-update
+    policy at all — only "admins manage vendors" (0007). Fixed with a new
+    "vendors update own row" policy, `0012_vendor_self_service.sql`.
+    Because that policy can't itself carve out "these columns only,"
+    `status`/`commission_rate` needed to stay unreachable from a vendor's
+    own client regardless of payload — the same problem 0009 solved for
+    `profile.is_admin` — so the admin vendor-status editor (9e) moved
+    behind a new `admin_set_vendor_status` RPC, same pattern as
+    `admin_publish_event`.
+  - **Security bug found verifying that fix, more serious than the gap it
+    was fixing:** `revoke update (col) on table from authenticated` — the
+    technique both 0009 and the first version of 0012 used — is a no-op.
+    Supabase grants `authenticated` blanket table-level `UPDATE` by
+    default, and Postgres column privileges are strictly additive on top
+    of table-level ones; revoking a column-level grant does nothing to a
+    still-standing table-level grant that already covers it. Confirmed
+    live via `select relacl from pg_class where relname = 'vendor'` —
+    table-wide `UPDATE` for `authenticated` was still present after 0012
+    ran. Concretely, this meant **any signed-in user could set their own
+    `profile.is_admin = true`** via a direct client update — 0009 never
+    actually closed that door, from the moment it shipped earlier this
+    session until this was caught. Fixed in
+    `0013_fix_ineffective_column_revokes.sql`: revoke the blanket
+    table-level `UPDATE` entirely on both `profile` and `vendor`, then
+    grant `UPDATE` back scoped to only the columns that should be
+    client-writable. Verified live with `has_column_privilege()` for both
+    tables — `is_admin`/`status`/`commission_rate` all correctly `false`,
+    ordinary columns correctly `true` — then re-verified end-to-end in the
+    app that vendor self-updates (settings save) and admin RPCs (vendor
+    status editor) both still work under the corrected grants.
+  - Not verified: logo upload itself — the available browser automation
+    has no file-picker control, same pre-existing limitation noted for
+    9a's event-photo upload. Worth a manual check.
 - **9e — Admin surface.** · ✅ done (9 Aug 2026). Originally just the
   review queue; broadened once the question came up of how an admin
   actually gets *made* an admin today (raw SQL Editor, forever) and how

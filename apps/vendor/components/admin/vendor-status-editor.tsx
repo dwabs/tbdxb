@@ -36,20 +36,18 @@ export function VendorStatusEditor({ vendor }: { vendor: Vendor }) {
   async function save() {
     setSaving(true);
     setError("");
-    // Built explicitly, not spread from broader state — "admins manage
-    // vendors" has no `with check`, so this call can write any column on
-    // any vendor row; keeping the payload to exactly these two keys is what
-    // keeps it safe from ever clobbering name/slug/contact_email.
-    const { error: updateError } = await supabase
-      .from("vendor")
-      .update({
-        status,
-        commission_rate: Number(commissionPct) / 100,
-      })
-      .eq("id", vendor.id);
+    // Goes through an RPC, not a direct .update(): status/commission_rate
+    // are column-revoked from `authenticated` entirely (0012), now that
+    // vendors can self-update their own row's other fields — a controlled
+    // path was the only way to keep both true at once.
+    const { error: rpcError } = await supabase.rpc("admin_set_vendor_status", {
+      p_vendor_id: vendor.id,
+      p_status: status,
+      p_commission_rate: Number(commissionPct) / 100,
+    });
     setSaving(false);
-    if (updateError) {
-      setError(updateError.message);
+    if (rpcError) {
+      setError(rpcError.message);
       return;
     }
     router.refresh();
