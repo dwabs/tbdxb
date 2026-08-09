@@ -271,12 +271,34 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
   are `not null` — but wasn't verified in-browser since the available
   browser automation has no file-picker control; worth a manual check
   before depending on it.
-- **9b — Public site reads from the database.** Swaps `lib/events.ts` for
-  querying `event`/`ticket_type`/`event_image` where `status = 'published'`.
-  This is what actually closes the loop on "events added in the dashboard
-  get posted on the main site" — 9a alone doesn't, since the site still
-  reads the static array until this lands. Sequenced after 9a so there's a
-  real vendor-authored event to prove it against, not just the seed data.
+- **9b — Public site reads from the database.** · ✅ done (9 Aug 2026).
+  `lib/events.ts` swapped from the static `EXPERIENCES` array to querying
+  `event`/`ticket_type`/`event_image`/`event_translation` where
+  `status = 'published'`, via a new cookie-free `lib/supabase/public.ts`
+  client (safe to call from `generateStaticParams` at build time, where
+  `next/headers`' `cookies()` has no request to attach to). This is what
+  actually closes the loop on "events added in the dashboard get posted on
+  the main site". `lib/events-ar.ts` (the static Arabic overlay) is deleted
+  — its content lives in `event_translation` now.
+  - **Bug caught along the way:** `0007_vendor_schema.sql`'s
+    `event_translation` table only carried `title`/`short_title`/`summary`/
+    `body`, but the static overlay it replaces also translated venue, area,
+    duration, group size, tags and includes — moving over without those
+    columns would have silently regressed the Arabic listings. Added
+    `0008_event_translation_extra_fields.sql` (nullable columns, backfilled
+    for the 7 seeded listings) before wiring the read path.
+  - Read functions log Supabase errors to the console on failure now
+    (`allExperiences`/`getExperience`/`allEventSlugs`) instead of silently
+    falling back to empty — matches phase 3's "fail loudly on shape drift"
+    intent. Caught the 0008-not-yet-applied state immediately rather than
+    presenting an empty homepage with no clue why.
+  - `/[locale]/events/[slug]` moved from prerendered (SSG) to on-demand
+    (dynamic) as a side effect: once `getExperience` returns real data
+    instead of 404ing, the page reaches its per-request auth check
+    (`cookies()`, for the booking panel's signed-in prefill) on every
+    request, same as `/account` and `/events` are already dynamic for the
+    same reason. Not a regression — the prior "static" build was 14 blank
+    404 pages that happened to never reach the dynamic code path.
 - **9c — Vendor bookings.** `/bookings`: list bookings against the vendor's
   own events (RLS policy already exists — `0007_vendor_schema.sql`'s
   "vendors read bookings for own events"). Bundles in backfilling
@@ -299,6 +321,28 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
   Once 9a–9e are done, this pass covers the sidebar (collapsible/off-canvas
   below some breakpoint), the stat tiles and event list (already `sm:`
   responsive in places, unverified), and the event editor's field grids.
+
+- **9g — Overview charts.** The stat tiles are single numbers with no trend;
+  the review call flagged this. All the underlying fields already exist —
+  no new migration needed:
+  - **Tickets sold & net revenue over time** (line, last 12 weeks or by
+    month) — `booking.created_at`/`quantity`/`total_aed` joined to the
+    vendor's own events via `event_id`, same scoping `vendor_event_stats`
+    already uses. The headline chart; ties directly to the two existing
+    tiles.
+  - **Top events by tickets sold** (bar, top 5) — straight off
+    `vendor_event_stats`, no new query shape.
+  - **Events by category** (donut) — `event.category` across the vendor's
+    events; cheap to compute, shows portfolio mix at a glance.
+  - **Views → bookings conversion** — `event.view_count` (tracked on every
+    event, currently surfaced nowhere in the vendor UI) against tickets
+    sold per event. The one genuinely new metric; worth it because
+    `view_count` is otherwise dead data.
+  Needs a charting library — `recharts` is the natural pick since shadcn's
+  own chart blocks are built on it, keeping the dependency inside what 9's
+  "shadcn/ui, CRM style" direction already committed to. Sequenced after
+  9b/9c: before then there's no real vendor-authored trend data to chart,
+  only the two seeded demo bookings.
 
 ### Phase 10 — cancel booking · planned · **new**, not blocking anything
 

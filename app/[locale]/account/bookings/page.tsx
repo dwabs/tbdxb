@@ -41,23 +41,25 @@ export default async function BookingsPage({
   // frozen in whatever locale was active at booking time, so a booking made
   // in Arabic would otherwise show Arabic text forever on the English page.
   // The snapshot only serves as a fallback for a listing that's gone.
-  const bookings: Booking[] = (rows ?? []).map((row) => {
-    const experience = getExperience(row.event_slug, locale as Locale);
-    return {
-      id: row.id,
-      reference: row.reference,
-      eventSlug: row.event_slug,
-      eventTitle: experience?.title ?? row.event_title,
-      eventImage: experience?.images[0]?.src ?? row.event_image,
-      location: experience
-        ? `${experience.venue}, ${experience.area}`
-        : row.location,
-      quantity: row.quantity,
-      totalAed: Number(row.total_aed),
-      eventDate: row.event_date,
-      status: row.status,
-    };
-  });
+  const bookings: Booking[] = await Promise.all(
+    (rows ?? []).map(async (row) => {
+      const experience = await getExperience(row.event_slug, locale as Locale);
+      return {
+        id: row.id,
+        reference: row.reference,
+        eventSlug: row.event_slug,
+        eventTitle: experience?.title ?? row.event_title,
+        eventImage: experience?.images[0]?.src ?? row.event_image,
+        location: experience
+          ? `${experience.venue}, ${experience.area}`
+          : row.location,
+        quantity: row.quantity,
+        totalAed: Number(row.total_aed),
+        eventDate: row.event_date,
+        status: row.status,
+      };
+    }),
+  );
 
   const { upcoming, past } = splitBookings(bookings);
 

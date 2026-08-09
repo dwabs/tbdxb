@@ -14,8 +14,8 @@ import { ExperienceCard } from "@/components/experience-card";
 import { ExperienceGallery } from "@/components/experience-gallery";
 import { Badge } from "@/components/ui/badge";
 import {
+  allEventSlugs,
   CATEGORIES,
-  EXPERIENCES,
   getExperience,
   relatedExperiences,
 } from "@/lib/events";
@@ -29,16 +29,16 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { formatDateLong, formatTimeRange } from "@/lib/utils";
 
-export const generateStaticParams = () =>
-  LOCALES.flatMap((locale) =>
-    EXPERIENCES.map((experience) => ({ locale, slug: experience.slug })),
-  );
+export async function generateStaticParams() {
+  const slugs = await allEventSlugs();
+  return LOCALES.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
+}
 
 export async function generateMetadata({
   params,
 }: PageProps<"/[locale]/events/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
-  const experience = getExperience(slug, locale as Locale);
+  const experience = await getExperience(slug, locale as Locale);
   if (!experience) return {};
 
   return {
@@ -57,13 +57,13 @@ export default async function EventPage({
 }: PageProps<"/[locale]/events/[slug]">) {
   const { locale, slug } = await params;
   const lang = locale as Locale;
-  const experience = getExperience(slug, lang);
+  const experience = await getExperience(slug, lang);
   if (!experience) notFound();
 
   const dict = getDictionary(locale);
   const t = dict.detail;
   const categoryId = CATEGORIES.find((entry) => entry === experience.category);
-  const related = relatedExperiences(experience, lang);
+  const related = await relatedExperiences(experience, lang);
 
   const supabase = await createClient();
   const {

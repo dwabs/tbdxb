@@ -4,13 +4,14 @@ import { Suspense } from "react";
 import { CategorySection } from "@/components/category-section";
 import { SearchPanel } from "@/components/search-panel";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES, experiencesByCategory } from "@/lib/events";
+import { allExperiences, CATEGORIES } from "@/lib/events";
 import { getDictionary, type Dictionary, type Locale } from "@/lib/i18n";
 import { SITE } from "@/lib/site";
 
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   const t = getDictionary(locale);
+  const experiences = await allExperiences(locale as Locale);
 
   return (
     <>
@@ -24,7 +25,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             locale={locale as Locale}
             label={t.categories[category]}
             eyebrow={index === 0 ? t.home.eyebrowFirst : undefined}
-            experiences={experiencesByCategory(category, locale as Locale)}
+            experiences={experiences.filter((e) => e.category === category)}
             priority={index === 0}
             t={t.home}
           />

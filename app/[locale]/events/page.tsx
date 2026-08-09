@@ -72,7 +72,10 @@ export default async function EventsPage({
   const [{ locale }, params] = await Promise.all([routeParams, searchParams]);
   const dict = getDictionary(locale);
   const t = dict.events;
-  const results = filterExperiences(allExperiences(locale as Locale), params);
+  const results = filterExperiences(
+    await allExperiences(locale as Locale),
+    params,
+  );
   const categoryId = CATEGORIES.find(
     (entry) => entry === first(params.category),
   );
