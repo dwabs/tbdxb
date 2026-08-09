@@ -4,14 +4,8 @@ import { OverviewCharts } from "@/components/overview/overview-charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CATEGORIES } from "@/lib/categories";
 import { createClient } from "@/lib/supabase/server";
-import {
-  STATUS_META,
-  type EventRow,
-  type VendorEventStats,
-  type VendorSummaryStats,
-} from "@/lib/types";
+import { STATUS_META, type EventRow, type VendorSummaryStats } from "@/lib/types";
 
 const AED = new Intl.NumberFormat("en-AE", {
   style: "currency",
@@ -43,24 +37,21 @@ function lastTwelveWeeks(): { start: Date; end: Date; label: string }[] {
 export default async function OverviewPage() {
   const supabase = await createClient();
 
-  const [{ data: stats }, { data: events }, { data: eventStats }, { data: ownEvents }] =
-    await Promise.all([
-      supabase.from("vendor_summary_stats").select("*").maybeSingle(),
-      supabase
-        .from("event")
-        .select("id, slug, title, status, starts_at, updated_at")
-        .order("updated_at", { ascending: false })
-        .limit(5),
-      supabase.from("vendor_event_stats").select("*"),
-      supabase.from("event").select("id, category"),
-    ]);
+  const [{ data: stats }, { data: events }, { data: ownEvents }] = await Promise.all([
+    supabase.from("vendor_summary_stats").select("*").maybeSingle(),
+    supabase
+      .from("event")
+      .select("id, slug, title, status, starts_at, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(5),
+    supabase.from("event").select("id"),
+  ]);
 
   const summary = stats as VendorSummaryStats | null;
   const recent = (events ?? []) as Pick<
     EventRow,
     "id" | "slug" | "title" | "status" | "starts_at" | "updated_at"
   >[];
-  const perEvent = (eventStats ?? []) as VendorEventStats[];
 
   const tiles = [
     { label: "Upcoming events", value: String(summary?.upcoming_events ?? 0) },
@@ -94,40 +85,6 @@ export default async function OverviewPage() {
     }
   }
 
-  // Top events by tickets sold — straight off vendor_event_stats, no new
-  // query shape.
-  const topEvents = [...perEvent]
-    .sort((a, b) => b.tickets_sold - a.tickets_sold)
-    .slice(0, 5)
-    .map((e) => ({ title: e.title, tickets: e.tickets_sold }));
-
-  // Events by category — cheap portfolio-mix view.
-  const categoryLabel = (id: string) =>
-    CATEGORIES.find((c) => c.id === id)?.label ?? id;
-  const categoryCounts = new Map<string, number>();
-  for (const e of ownEvents ?? []) {
-    const category = categoryLabel((e.category as string) || "Uncategorized");
-    categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1);
-  }
-  const categoryData = [...categoryCounts.entries()].map(([category, count]) => ({
-    category,
-    count,
-  }));
-
-  // Views → bookings conversion — view_count is tracked on every event but
-  // surfaced nowhere else in the vendor UI. Only events with at least one
-  // view are worth showing a rate for.
-  const conversionData = [...perEvent]
-    .filter((e) => e.view_count > 0)
-    .sort((a, b) => b.view_count - a.view_count)
-    .slice(0, 6)
-    .map((e) => ({
-      title: e.title,
-      views: e.view_count,
-      tickets: e.tickets_sold,
-      rate: Math.round((e.tickets_sold / e.view_count) * 1000) / 10,
-    }));
-
   return (
     <div className="grid gap-6">
       <div className="flex items-center justify-between">
@@ -152,12 +109,7 @@ export default async function OverviewPage() {
         ))}
       </div>
 
-      <OverviewCharts
-        weeklySeries={weeklySeries}
-        topEvents={topEvents}
-        categoryData={categoryData}
-        conversionData={conversionData}
-      />
+      <OverviewCharts weeklySeries={weeklySeries} />
 
       <Card>
         <CardHeader>
