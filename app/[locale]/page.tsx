@@ -8,6 +8,23 @@ import { allExperiences, CATEGORIES } from "@/lib/events";
 import { getDictionary, type Dictionary, type Locale } from "@/lib/i18n";
 import { SITE } from "@/lib/site";
 
+/**
+ * The home page reads published events from the database (phase 9b), but it
+ * prerenders — so without this it was baked once at build time and never
+ * looked at the database again. A vendor could publish an event, or an admin
+ * archive one, and the home page would keep showing whatever was true at the
+ * last `git push`: archiving one listing left its card on the home page
+ * linking to a detail route that had already started 404ing. `/events` and
+ * `/events/[slug]` were never affected — both are dynamic, since they read
+ * the session.
+ *
+ * Five minutes is the trade: a vendor sees their listing go live within one
+ * revalidation window instead of on the next deploy, and the page still
+ * serves as static HTML. The precise fix is on-demand revalidation from the
+ * publish/archive RPCs, which would make it instant — see the roadmap.
+ */
+export const revalidate = 300;
+
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   const t = getDictionary(locale);

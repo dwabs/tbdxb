@@ -486,11 +486,34 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     just a data one; and **check the right Vercel project** — "deployed"
     was reported several times this session on the strength of the vendor
     app alone.
-  - **Still open** (needs a decision, see the note in phase 3's area):
-    nothing stops an event with no `starts_at` from being published in the
-    first place — `admin_publish_event` doesn't check it. The code no
-    longer crashes on such a row, but a dateless listing is still live and
-    bookable on the public site.
+  - **Closed at the source**, `0015_require_start_date_to_publish.sql`:
+    `admin_publish_event` now refuses an event whose `starts_at` is null
+    ("This event has no start date. Send it back to the vendor to add one
+    before publishing."), so the row can't reach the public site at all.
+    Enforced in the RPC rather than the UI because that's the one
+    chokepoint every publish goes through and it already runs security
+    definer — a client-side guard could be skipped by calling PostgREST
+    directly. Deliberately *not* added to `vendor_submit_event`: a vendor
+    filling a draft in over several sittings should still be able to hand
+    it to review. Applied live and verified with `pg_get_functiondef`.
+    The offending event was archived through the vendor UI (which also
+    confirmed the new "Event archived." toast on production).
+  - **Second bug the same incident exposed — the home page never saw the
+    database again after build.** Archiving that event took it off
+    `/events/[slug]` immediately (dynamic, reads the session) but left its
+    card on the home page pointing at a route that now 404s. `/[locale]`
+    prerenders and had no `revalidate`, so since 9b it had been baked at
+    build time and frozen: **every vendor publish or admin archive was
+    invisible on the home page until the next `git push`** — which
+    quietly undercut the whole point of 9b ("events added in the dashboard
+    get posted on the main site"). Fixed with `export const revalidate =
+    300` on `app/[locale]/page.tsx`; confirmed in
+    `.next/prerender-manifest.json` (`/en` and `/ar` →
+    `initialRevalidateSeconds: 300`, while genuinely static pages like
+    `/faq` stay `false`). Five minutes is a stopgap: the precise fix is
+    on-demand revalidation triggered by the publish/archive RPCs, which
+    would make it instant instead of eventually-consistent — worth doing
+    when there's a real vendor publishing to a real audience.
   - **Verified live**, signed in as the one real admin account: sidebar
     shows the Admin link group; Review queue listed a genuinely `submitted`
     event with its vendor name, Approve called the RPC and the event went
