@@ -91,11 +91,16 @@ export default async function EventPage({
     {
       icon: Clock,
       label: t.when,
-      value: `${formatDateLong(experience.date, lang)} · ${formatTimeRange(experience.startTime, experience.endTime, lang)}`,
+      value: [
+        formatDateLong(experience.date, lang),
+        formatTimeRange(experience.startTime, experience.endTime, lang),
+      ]
+        .filter(Boolean)
+        .join(" · "),
     },
     { icon: Hourglass, label: t.duration, value: experience.durationLabel },
     { icon: Users, label: t.groupSize, value: experience.groupSize },
-  ];
+  ].filter((fact) => fact.value);
 
   return (
     <div className="mx-auto max-w-[86rem] px-5 pt-6 pb-28 lg:px-8 lg:pb-8">

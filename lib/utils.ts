@@ -69,15 +69,36 @@ const dateShortFormatter = (locale: Locale) =>
 export const formatPrice = (aed: number, locale: Locale) =>
   priceFormatter(locale).format(aed);
 
-export const formatDateLong = (iso: string, locale: Locale) =>
-  dateLongFormatter(locale).format(new Date(`${iso}T00:00:00Z`));
+/**
+ * An event can be published before its schedule is filled in, so
+ * `Experience.date`/`startTime` can legitimately arrive empty (see
+ * `lib/events.ts` — a null `starts_at` maps to ""). `Intl` throws a
+ * RangeError on an invalid Date, and inside a prerender that aborts the
+ * *entire* production build rather than the one card at fault — which is
+ * exactly what happened once a dateless event went live. Every formatter
+ * below returns "" for anything unparseable instead; call sites drop the
+ * line when it comes back empty.
+ */
+function parseISODate(iso: string): Date | null {
+  if (!iso) return null;
+  const date = new Date(`${iso}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
-export const formatDateShort = (iso: string, locale: Locale) =>
-  dateShortFormatter(locale).format(new Date(`${iso}T00:00:00Z`));
+export const formatDateLong = (iso: string, locale: Locale) => {
+  const date = parseISODate(iso);
+  return date ? dateLongFormatter(locale).format(date) : "";
+};
+
+export const formatDateShort = (iso: string, locale: Locale) => {
+  const date = parseISODate(iso);
+  return date ? dateShortFormatter(locale).format(date) : "";
+};
 
 /** "16:00" → "4:00 PM" / "٤:٠٠ م" without pulling in a date library. */
 export function formatTime(time: string, locale: Locale) {
   const [hours, minutes] = time.split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return "";
   if (locale === "ar") {
     const suffix = hours >= 12 ? "م" : "ص";
     const hour12 = hours % 12 === 0 ? 12 : hours % 12;
@@ -88,5 +109,9 @@ export function formatTime(time: string, locale: Locale) {
   return `${hour12}:${String(minutes).padStart(2, "0")} ${suffix}`;
 }
 
-export const formatTimeRange = (start: string, end: string, locale: Locale) =>
-  `${formatTime(start, locale)} – ${formatTime(end, locale)}`;
+export const formatTimeRange = (start: string, end: string, locale: Locale) => {
+  const from = formatTime(start, locale);
+  const to = formatTime(end, locale);
+  if (!from) return "";
+  return to ? `${from} – ${to}` : from;
+};

@@ -32,6 +32,15 @@ export function BookingPanel({
   const [guests, setGuests] = useState(1);
   const total = experience.priceAED * guests;
 
+  // Empty for an event published before its schedule was set — the row is
+  // dropped rather than showing a blank value against a label.
+  const dateLabel = formatDateLong(experience.date, locale);
+  const timeLabel = formatTimeRange(
+    experience.startTime,
+    experience.endTime,
+    locale,
+  );
+
   const [userId, setUserId] = useState(initialUserId);
   const [fullName, setFullName] = useState(initialFullName);
   const [phone, setPhone] = useState(initialPhone);
@@ -54,26 +63,26 @@ export function BookingPanel({
         </p>
 
         <dl className="mt-6 divide-y divide-line rounded-xl border border-line">
-          <div className="flex items-baseline justify-between gap-4 px-4 py-3">
-            <dt className="text-[0.8125rem] font-medium text-ink-muted">
-              {t.date}
-            </dt>
-            <dd className="text-end text-[0.9375rem] font-medium text-ink">
-              {formatDateLong(experience.date, locale)}
-            </dd>
-          </div>
-          <div className="flex items-baseline justify-between gap-4 px-4 py-3">
-            <dt className="text-[0.8125rem] font-medium text-ink-muted">
-              {t.time}
-            </dt>
-            <dd className="tabular text-end text-[0.9375rem] font-medium text-ink">
-              {formatTimeRange(
-                experience.startTime,
-                experience.endTime,
-                locale,
-              )}
-            </dd>
-          </div>
+          {dateLabel ? (
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+              <dt className="text-[0.8125rem] font-medium text-ink-muted">
+                {t.date}
+              </dt>
+              <dd className="text-end text-[0.9375rem] font-medium text-ink">
+                {dateLabel}
+              </dd>
+            </div>
+          ) : null}
+          {timeLabel ? (
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+              <dt className="text-[0.8125rem] font-medium text-ink-muted">
+                {t.time}
+              </dt>
+              <dd className="tabular text-end text-[0.9375rem] font-medium text-ink">
+                {timeLabel}
+              </dd>
+            </div>
+          ) : null}
           <div className="flex items-center justify-between gap-4 px-4 py-2.5">
             <dt
               id="guest-label"

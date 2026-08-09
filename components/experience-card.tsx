@@ -19,6 +19,14 @@ export function ExperienceCard({
   // A Server Component, so it reads the dictionary rather than having one
   // string drilled through every list that renders a card.
   const t = getDictionary(locale);
+  // Either half can be empty for an event published before its schedule was
+  // set, so the separator is only earned when both sides are there.
+  const schedule = [
+    formatDateShort(experience.date, locale),
+    formatTime(experience.startTime, locale),
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <article className="group relative flex min-w-0 flex-col">
       <div className="relative aspect-[4/3] overflow-hidden rounded-card bg-sand-soft">
@@ -55,10 +63,9 @@ export function ExperienceCard({
           </Link>
         </h3>
 
-        <p className="tabular text-[0.8125rem] text-ink-muted">
-          {formatDateShort(experience.date, locale)} ·{" "}
-          {formatTime(experience.startTime, locale)}
-        </p>
+        {schedule ? (
+          <p className="tabular text-[0.8125rem] text-ink-muted">{schedule}</p>
+        ) : null}
 
         <p className="tabular mt-auto pt-1.5 text-[0.9375rem] font-semibold text-ink">
           {formatPrice(experience.priceAED, locale)}

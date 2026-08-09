@@ -55,6 +55,14 @@ export function CheckoutFlow({
 
   const total = experience.priceAED * guests;
   const stepIndex = STEPS.findIndex((s) => s.key === step);
+  // Either half can be empty if the event was published before its schedule
+  // was set; the separator is only earned when both sides are there.
+  const schedule = [
+    formatDateLong(experience.date, locale),
+    formatTimeRange(experience.startTime, experience.endTime, locale),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   function handleDetailsSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -198,14 +206,11 @@ export function CheckoutFlow({
                 <h3 className="text-[1.0625rem] leading-snug font-semibold text-ink">
                   {experience.title}
                 </h3>
-                <p className="mt-1 text-[0.8125rem] text-ink-muted">
-                  {formatDateLong(experience.date, locale)} ·{" "}
-                  {formatTimeRange(
-                    experience.startTime,
-                    experience.endTime,
-                    locale,
-                  )}
-                </p>
+                {schedule ? (
+                  <p className="mt-1 text-[0.8125rem] text-ink-muted">
+                    {schedule}
+                  </p>
+                ) : null}
                 <p className="mt-0.5 text-[0.8125rem] text-ink-muted">
                   {experience.venue}, {experience.area}
                 </p>
