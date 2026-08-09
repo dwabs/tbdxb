@@ -191,9 +191,15 @@ export function EventForm(
         .from("event")
         .update(payload)
         .eq("id", props.event.id);
-      setSaving(false);
       if (updateError) {
+        setSaving(false);
         setError(updateError.message);
+        return;
+      }
+      const ticketError = await persistTicketTypes();
+      setSaving(false);
+      if (ticketError) {
+        setError(ticketError);
         return;
       }
       showToast("Changes saved.");
@@ -264,45 +270,46 @@ export function EventForm(
     );
   }
 
-  async function saveTicketRow(localId: string) {
-    if (props.mode !== "edit") return;
-    const row = ticketTypes.find((r) => r._localId === localId);
-    if (!row || !row.title.trim() || !row.price_aed) return;
+  /** Persists every ticket row with a title and price — called from the
+   *  single global "Save changes" button rather than its own per-row save,
+   *  so ticket edits follow the same save model as every other field on
+   *  the page. Returns an error message, if any, for the caller to show. */
+  async function persistTicketTypes(): Promise<string | null> {
+    if (props.mode !== "edit") return null;
 
-    const payload = {
-      event_id: props.event.id,
-      title: row.title.trim(),
-      price_aed: Number(row.price_aed),
-      discount_price_aed: row.discount_price_aed ? Number(row.discount_price_aed) : null,
-      quantity_total: Number(row.quantity_total) || 0,
-      position: ticketTypes.indexOf(row),
-    };
+    for (const row of ticketTypes) {
+      if (!row.title.trim() || !row.price_aed) continue;
 
-    if (row.id) {
-      const { error: updateError } = await supabase
-        .from("ticket_type")
-        .update(payload)
-        .eq("id", row.id);
-      if (updateError) {
-        setError(updateError.message);
+      const payload = {
+        event_id: props.event.id,
+        title: row.title.trim(),
+        price_aed: Number(row.price_aed),
+        discount_price_aed: row.discount_price_aed ? Number(row.discount_price_aed) : null,
+        quantity_total: Number(row.quantity_total) || 0,
+        position: ticketTypes.indexOf(row),
+      };
+
+      if (row.id) {
+        const { error: updateError } = await supabase
+          .from("ticket_type")
+          .update(payload)
+          .eq("id", row.id);
+        if (updateError) return updateError.message;
       } else {
-        showToast("Ticket type saved.");
-      }
-    } else {
-      const { data, error: insertError } = await supabase
-        .from("ticket_type")
-        .insert(payload)
-        .select()
-        .single();
-      if (insertError) {
-        setError(insertError.message);
-      } else if (data) {
-        setTicketTypes((prev) =>
-          prev.map((r) => (r._localId === localId ? { ...r, id: data.id } : r)),
-        );
-        showToast("Ticket type saved.");
+        const { data, error: insertError } = await supabase
+          .from("ticket_type")
+          .insert(payload)
+          .select()
+          .single();
+        if (insertError) return insertError.message;
+        if (data) {
+          setTicketTypes((prev) =>
+            prev.map((r) => (r._localId === row._localId ? { ...r, id: data.id } : r)),
+          );
+        }
       }
     }
+    return null;
   }
 
   async function removeTicketRow(localId: string) {
@@ -655,24 +662,14 @@ export function EventForm(
                       }
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => saveTicketRow(row._localId)}
-                    >
-                      Save
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => removeTicketRow(row._localId)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeTicketRow(row._localId)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
                 </div>
               ))}
               <Button type="button" variant="outline" size="sm" onClick={addTicketRow} className="w-fit">

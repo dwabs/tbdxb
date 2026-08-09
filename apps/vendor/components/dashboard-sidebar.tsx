@@ -156,8 +156,11 @@ export function DashboardSidebar({
         </Sheet>
       </header>
 
-      {/* Desktop sidebar — lg and up. */}
-      <aside className="hidden h-svh w-64 shrink-0 flex-col bg-gradient-to-b from-[#4A2536] to-[#28131c] text-white lg:flex">
+      {/* Desktop sidebar — lg and up. Sticky, not just h-svh: the row
+          around it only has min-h-svh, so on pages taller than one
+          viewport (long event lists, the overview charts) a plain h-svh
+          aside stopped short of the page's actual height once scrolled. */}
+      <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col overflow-y-auto bg-gradient-to-b from-[#4A2536] to-[#28131c] text-white lg:flex">
         {brand()}
         {nav()}
         {accountFooter()}

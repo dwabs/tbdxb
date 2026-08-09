@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { IdleTimeout } from "@/components/idle-timeout";
 import { createClient } from "@/lib/supabase/server";
 import type { Vendor } from "@/lib/types";
 
@@ -35,7 +36,11 @@ export default async function DashboardLayout({
       .from("vendor")
       .select("id, name, slug, contact_email, contact_phone, logo_url, bio, status, commission_rate")
       .order("name"),
-    supabase.from("profile").select("is_admin").eq("id", user.id).single(),
+    supabase
+      .from("profile")
+      .select("is_admin, session_timeout_minutes")
+      .eq("id", user.id)
+      .single(),
   ]);
 
   const vendor = (vendors?.[0] ?? null) as Vendor | null;
@@ -57,6 +62,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-svh flex-col bg-background lg:flex-row">
+      <IdleTimeout minutes={profile?.session_timeout_minutes ?? 30} />
       <DashboardSidebar
         vendorName={vendor.name}
         email={user.email ?? ""}

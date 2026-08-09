@@ -1,6 +1,14 @@
 import { BookingsFilterBar } from "@/components/bookings/bookings-filter-bar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
 import { BOOKING_STATUS_META, type Booking, type BookingStatus } from "@/lib/types";
 
@@ -78,46 +86,53 @@ export default async function BookingsPage({
       <BookingsFilterBar />
 
       <Card>
-        <CardContent>
+        <CardContent className="p-0">
           {bookings.length === 0 ? (
-            <p className="py-12 text-center text-sm text-muted-foreground">
+            <p className="px-6 py-12 text-center text-sm text-muted-foreground">
               {hasFilters
                 ? "No bookings match these filters."
                 : "No bookings yet."}
             </p>
           ) : (
-            <ul className="divide-y">
-              {bookings.map((booking) => (
-                <li key={booking.id} className="py-4 first:pt-0 last:pb-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{booking.attendee_name}</p>
-                      <p className="mt-1 truncate text-sm text-muted-foreground">
-                        {booking.event_title} · {booking.quantity}{" "}
-                        {booking.quantity === 1 ? "ticket" : "tickets"} ·{" "}
-                        <span className="tabular-nums">{booking.reference}</span>
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1.5">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm tabular-nums text-muted-foreground">
-                          {DATE.format(new Date(booking.event_date))}
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className={BOOKING_STATUS_META[booking.status].className}
-                        >
-                          {BOOKING_STATUS_META[booking.status].label}
-                        </Badge>
-                      </div>
-                      <span className="text-sm font-medium tabular-nums">
-                        {AED.format(booking.total_aed)}
-                      </span>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Attendee</TableHead>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Tickets</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((booking) => (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-medium">{booking.attendee_name}</TableCell>
+                    <TableCell className="max-w-56 truncate">{booking.event_title}</TableCell>
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {booking.reference}
+                    </TableCell>
+                    <TableCell className="tabular-nums">{booking.quantity}</TableCell>
+                    <TableCell className="tabular-nums">
+                      {DATE.format(new Date(booking.event_date))}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={BOOKING_STATUS_META[booking.status].className}
+                      >
+                        {BOOKING_STATUS_META[booking.status].label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {AED.format(booking.total_aed)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
