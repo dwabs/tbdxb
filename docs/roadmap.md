@@ -464,6 +464,33 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     the RPC's error instead of silently rendering an empty list (same
     `console.error`-on-failure pattern 9b already committed to) — worth
     remembering for any future function returning an `auth.users` column.
+  - **Bug this caused, found 9 Aug 2026 — six failed production deploys.**
+    Approving the queue's one submitted event ("Desert Falconry Morning",
+    a leftover from 9a's own editor testing) published it while its
+    `starts_at` was still null. `lib/events.ts` maps a null `starts_at` to
+    `date: ""`, `formatDateShort` then builds `new Date("T00:00:00Z")`, and
+    `Intl` throws `RangeError: Invalid time value` on an invalid Date.
+    Thrown inside a prerender, that aborts the **entire** build — so one
+    incomplete row took the whole public site's deploys down, from this
+    commit through five more, while `apps/vendor` (a separate Vercel
+    project) kept deploying green the whole time. It reproduces only on a
+    cold cache, which is why a warm local `next build` kept passing and
+    hid it; the reproduction that finally caught it was a fresh clone +
+    clean install + no `.next`. Fixed in `a0fdd43`: every formatter in
+    `lib/utils.ts` returns `""` for anything unparseable rather than
+    throwing, and the four call sites (card, detail facts row, booking
+    panel, checkout summary) drop the line instead of rendering a stray
+    `·` separator — so an incomplete row degrades its own card, never the
+    build. Two lessons worth keeping: **an admin action can break the
+    public build**, so publishing is a deploy-affecting operation, not
+    just a data one; and **check the right Vercel project** — "deployed"
+    was reported several times this session on the strength of the vendor
+    app alone.
+  - **Still open** (needs a decision, see the note in phase 3's area):
+    nothing stops an event with no `starts_at` from being published in the
+    first place — `admin_publish_event` doesn't check it. The code no
+    longer crashes on such a row, but a dateless listing is still live and
+    bookable on the public site.
   - **Verified live**, signed in as the one real admin account: sidebar
     shows the Admin link group; Review queue listed a genuinely `submitted`
     event with its vendor name, Approve called the RPC and the event went
