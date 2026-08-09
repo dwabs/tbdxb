@@ -117,7 +117,14 @@ export default async function BookingsPage({
                     !booking.checked_in_at;
                   return (
                     <TableRow key={booking.id}>
-                      <TableCell className="font-medium">{booking.attendee_name}</TableCell>
+                      <TableCell className="font-medium">
+                        {booking.attendee_name}
+                        {booking.attendee_phone ? (
+                          <span className="block text-xs font-normal text-muted-foreground">
+                            {booking.attendee_phone}
+                          </span>
+                        ) : null}
+                      </TableCell>
                       <TableCell className="max-w-56 truncate">{booking.event_title}</TableCell>
                       <TableCell className="tabular-nums text-muted-foreground">
                         {booking.reference}

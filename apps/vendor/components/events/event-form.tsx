@@ -132,6 +132,8 @@ export function EventForm(
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [statusPending, setStatusPending] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [ticketTypes, setTicketTypes] = useState<TicketRowState[]>(
     props.mode === "edit"
@@ -246,6 +248,21 @@ export function EventForm(
     }
     showToast(status === "submitted" ? "Submitted for review." : "Event archived.");
     router.refresh();
+  }
+
+  async function deleteEvent() {
+    if (props.mode !== "edit") return;
+    setDeleting(true);
+    const { error: deleteError } = await supabase
+      .from("event")
+      .delete()
+      .eq("id", props.event.id);
+    if (deleteError) {
+      setDeleting(false);
+      setError(deleteError.message);
+      return;
+    }
+    router.push("/events");
   }
 
   function addTicketRow() {
@@ -433,32 +450,69 @@ export function EventForm(
               </p>
             ) : null}
           </div>
-          <div className="flex gap-2">
-            {props.event.status === "draft" || props.event.status === "rejected" ? (
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={statusPending}
-                onClick={() => setStatus("submitted")}
-              >
-                {statusPending ? <Loader2 className="size-4 animate-spin" /> : null}
-                Submit for review
-              </Button>
-            ) : null}
-            {props.event.status === "published" || props.event.status === "approved" ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={statusPending}
-                onClick={() => setStatus("archived")}
-              >
-                Archive
-              </Button>
-            ) : null}
-            <Button type="submit" form="event-form" disabled={saving}>
-              {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-              Save changes
-            </Button>
+          <div className="flex items-center gap-2">
+            {confirmingDelete ? (
+              <>
+                <p className="text-sm text-muted-foreground">Delete this event for good?</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={deleting}
+                  onClick={() => setConfirmingDelete(false)}
+                >
+                  Keep it
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleting}
+                  onClick={deleteEvent}
+                >
+                  {deleting ? <Loader2 className="size-4 animate-spin" /> : null}
+                  Delete permanently
+                </Button>
+              </>
+            ) : (
+              <>
+                {props.event.status === "draft" || props.event.status === "rejected" ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => setConfirmingDelete(true)}
+                  >
+                    Delete
+                  </Button>
+                ) : null}
+                {props.event.status === "draft" || props.event.status === "rejected" ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={statusPending}
+                    onClick={() => setStatus("submitted")}
+                  >
+                    {statusPending ? <Loader2 className="size-4 animate-spin" /> : null}
+                    Submit for review
+                  </Button>
+                ) : null}
+                {props.event.status === "published" || props.event.status === "approved" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={statusPending}
+                    onClick={() => setStatus("archived")}
+                  >
+                    Archive
+                  </Button>
+                ) : null}
+                <Button type="submit" form="event-form" disabled={saving}>
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+                  Save changes
+                </Button>
+              </>
+            )}
           </div>
         </div>
       ) : null}

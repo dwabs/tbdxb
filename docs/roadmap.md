@@ -462,6 +462,27 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
   - **Out of scope on purpose:** vendor onboarding/creation UI, and
     `vendor_member` role management (assigning staff, transfer ownership) —
     neither was asked for; both are natural later admin-surface work.
+  - **New gaps found by the 10 Aug 2026 full-system audit, deliberately not
+    fixed yet — explicitly deferred, not rejected:**
+    - **Contact / Partner-With-Us forms fake success.**
+      `components/inquiry-form.tsx` shows "message sent" after a fake
+      600ms delay — no DB insert, no email, nothing is actually sent
+      anywhere. Predates the real Supabase/Resend backend that now exists
+      for auth and bookings; wiring it for real is next-priority work, not
+      a hard problem.
+    - **No check-in/redemption flow.** `booking.checked_in_at` is read
+      (blocks cancellation, see phase 10) but nothing ever writes it — no
+      scanner, no "mark attended" action anywhere in `apps/vendor`. Vendors
+      have no door-side way to redeem a ticket or record attendance.
+    - **No vendor earnings/payout page.** `vendor.commission_rate` and
+      `vendor_event_stats.net_aed` are computed and charted, but there is
+      nowhere a vendor can see what they're owed or request a payout — a
+      real feature, not a QA fix, and bigger than the other two.
+  - **Doc/code mismatch found in the same audit, fixed:**
+    `docs/vendor-dashboard.md` claimed a shared `packages/db` session
+    helper; no such package exists — `lib/supabase/{client,server}.ts`
+    (root) and `apps/vendor/lib/supabase/{client,server}.ts` are two
+    independently maintained copies. Corrected in that doc.
   - **Bug caught applying the migration:** `admin_list_admins()` failed
     every call with "structure of query does not match function result
     type" — `auth.users.email` is `varchar`, not `text`, and `RETURN QUERY`
@@ -664,6 +685,30 @@ just never got scoped in phases 6/7.
   account, clicked Cancel → confirmed inline → row flipped to Cancelled,
   then restored via SQL since it was a real (non-sample) booking on the
   shared test account, not a throwaway row.
+
+### Phase 11 — audit fixes: delete-event, attendee phone · ✅ done (10 Aug 2026)
+
+A full read-only audit of both apps against `README.md`/this doc (see the
+9e "new gaps found" note above for the three items deliberately left open)
+also turned up two small, safe fixes, done same-day:
+
+- **Delete-event**, `0019_vendor_delete_event.sql` — a vendor could archive
+  an event but never remove the row. New RLS delete policy, scoped to
+  `status in ('draft', 'rejected')` only — the two states that were never
+  public and can't have real booking history, mirroring the exact condition
+  that already unlocks "Submit for review" in the UI. Submitted/published/
+  archived rows stay archive-only. `ticket_type`/`event_image`/
+  `event_translation` cascade on `event`'s FK, and Postgres always bypasses
+  RLS for referential-integrity cascade actions, so no extra policy was
+  needed for the cascade itself. UI: a "Delete" text action next to Submit/
+  Archive in `event-form.tsx`, same inline-confirm shape as Cancel booking.
+  Verified at the DB level (JWT-simulated vendor: own draft deletes clean,
+  a real published event is untouched — 0 rows affected) and live through
+  the real UI (created a draft, deleted it, redirected to `/events`, the
+  six real listings unaffected).
+- **Attendee phone**, `apps/vendor/app/(dashboard)/bookings/page.tsx` — the
+  query already selected `attendee_phone`, the table just never rendered
+  it. Now shown as a muted line under the attendee's name.
 
 ### Phase 6 — booking and checkout · ✅ done (8 Aug 2026)
 

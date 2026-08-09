@@ -132,9 +132,14 @@ shared Supabase project. This is the concrete reason
 holds; it was written for a same-origin `/dashboard`.
 
 On real domains (`thebucketlistdxb.com` + `vendor.thebucketlistdxb.com`) a
-shared parent-domain cookie becomes possible. Not worth designing for now, but
-it is why the session helper lives in `packages/db` rather than being written
-twice.
+shared parent-domain cookie becomes possible. Not worth designing for now.
+
+**Correction (10 Aug 2026):** there is no shared `packages/db` — that never
+got built. `lib/supabase/{client,server}.ts` (root app) and
+`apps/vendor/lib/supabase/{client,server}.ts` are two independently
+maintained copies of the same Supabase client setup, currently identical in
+substance. A future fix applied to one and forgotten in the other is a real
+risk; extracting a real shared package is future scope, not done today.
 
 Vendor sign-in is **email + password** (decision 3), same `auth.users` table.
 The gate is membership: a session with no approved `vendor_member` row gets a
