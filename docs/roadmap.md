@@ -271,6 +271,25 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
   are `not null` — but wasn't verified in-browser since the available
   browser automation has no file-picker control; worth a manual check
   before depending on it.
+  - **Bug found and fixed (9 Aug 2026), reported directly by the user:**
+    editing *any* field on a live (`published`) event failed with "new row
+    violates row-level security policy for table \"event\"". `0007`'s
+    "vendors update own events" `with check` required the resulting row's
+    `status` to be in `('draft','submitted','archived')` — meant to stop a
+    vendor setting their own status to `approved`/`published`, but since
+    the check re-validates the *entire* row regardless of which columns
+    actually changed, it blocked editing a title or venue on a live
+    listing just as hard as it blocked a status change. Fixed in
+    `0014_fix_vendor_event_edit_lock.sql` the same way 9d fixed the
+    equivalent `vendor`/`profile` problem: `status` is now column-revoked
+    from `authenticated` entirely, the vendor's own submit/archive
+    transitions move behind new `vendor_submit_event`/`vendor_archive_event`
+    RPCs (same shape as `admin_publish_event`), and the general update
+    policy drops back to a plain ownership check. Verified via
+    `has_column_privilege()` (`status` → `false`, `title` → `true`) and
+    live in the app — editing and saving a field on "Padel & Pizza Social"
+    (a real `published` event) now succeeds and persists, where it
+    previously 403'd.
 - **9b — Public site reads from the database.** · ✅ done (9 Aug 2026).
   `lib/events.ts` swapped from the static `EXPERIENCES` array to querying
   `event`/`ticket_type`/`event_image`/`event_translation` where

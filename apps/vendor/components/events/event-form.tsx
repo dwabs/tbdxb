@@ -226,12 +226,10 @@ export function EventForm(
   async function setStatus(status: "submitted" | "archived") {
     if (props.mode !== "edit") return;
     setStatusPending(true);
-    const patch: Record<string, unknown> = { status };
-    if (status === "submitted") patch.submitted_at = new Date().toISOString();
-    const { error: statusError } = await supabase
-      .from("event")
-      .update(patch)
-      .eq("id", props.event.id);
+    const { error: statusError } = await supabase.rpc(
+      status === "submitted" ? "vendor_submit_event" : "vendor_archive_event",
+      { p_event_id: props.event.id },
+    );
     setStatusPending(false);
     if (statusError) {
       setError(statusError.message);
