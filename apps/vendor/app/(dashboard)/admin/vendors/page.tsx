@@ -1,5 +1,8 @@
+import Link from "next/link";
+
+import { CreateVendorForm } from "@/components/admin/create-vendor-form";
 import { VendorStatusEditor } from "@/components/admin/vendor-status-editor";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import type { Vendor } from "@/lib/types";
 
@@ -18,6 +21,15 @@ export default async function AdminVendorsPage() {
       <h1 className="text-2xl font-semibold tracking-tight">Vendors</h1>
 
       <Card>
+        <CardHeader>
+          <CardTitle>Create vendor</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CreateVendorForm />
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardContent>
           {vendors.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
@@ -29,7 +41,12 @@ export default async function AdminVendorsPage() {
                 <li key={vendor.id} className="py-4 first:pt-0 last:pb-0">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium">{vendor.name}</p>
+                      <Link
+                        href={`/admin/vendors/${vendor.id}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {vendor.name}
+                      </Link>
                       <p className="mt-1 truncate text-sm text-muted-foreground">
                         {vendor.contact_email}
                       </p>

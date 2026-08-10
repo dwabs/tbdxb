@@ -459,9 +459,9 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
     of the admin pages too, not just missing the sidebar link. Today's one
     admin account is also a vendor member. Splitting the vendor-membership
     check from the admin check is separate scope.
-  - **Out of scope on purpose:** vendor onboarding/creation UI, and
-    `vendor_member` role management (assigning staff, transfer ownership) —
-    neither was asked for; both are natural later admin-surface work.
+  - **Vendor onboarding UI and `vendor_member` role management — done, see
+    phase 13.** Was scoped out here on 10 Aug 2026 as "natural later
+    admin-surface work"; built the same day once actually requested.
   - **New gaps found by the 10 Aug 2026 full-system audit, deliberately not
     fixed yet — explicitly deferred, not rejected:**
     - **Contact / Partner-With-Us forms fake success.**
@@ -470,10 +470,8 @@ are done (8 Aug 2026). Split into sub-phases so each lands independently:
       anywhere. Predates the real Supabase/Resend backend that now exists
       for auth and bookings; wiring it for real is next-priority work, not
       a hard problem.
-    - **No check-in/redemption flow.** `booking.checked_in_at` is read
-      (blocks cancellation, see phase 10) but nothing ever writes it — no
-      scanner, no "mark attended" action anywhere in `apps/vendor`. Vendors
-      have no door-side way to redeem a ticket or record attendance.
+    - **Check-in/redemption flow — done, see phase 13.** Was logged here as
+      missing; built the same day.
     - **No vendor earnings/payout page.** `vendor.commission_rate` and
       `vendor_event_stats.net_aed` are computed and charted, but there is
       nowhere a vendor can see what they're owed or request a payout — a
@@ -766,6 +764,106 @@ one real bug found and left for a deliberate go/no-go (see below).
   remove, delete-event's draft/rejected-only gating, settings save
   feedback, and all three admin pages (review queue empty state, vendor
   status/commission editor, admin grant/revoke with the self-revoke guard).
+
+### Phase 13 — Vendor team management + check-in flow · ✅ done (10 Aug 2026)
+
+Two of phase 11/12's deferred audit findings, built on explicit request.
+`vendor_member`/`vendor_role` and `booking.checked_in_at`/`checked_in_by`
+had existed unused since the original schema (`0007`) — this is almost
+entirely application-level work on top of them, following the existing
+security-definer-RPC pattern (`cancel_booking`, `admin_publish_event`)
+rather than new RLS policies, since neither feature's authorization rule
+("only an owner of *this* vendor," "only if not already checked in") can be
+expressed as a row policy without recursion or a race.
+
+**Vendor team management** (`0020_vendor_team_management.sql`):
+`admin_create_vendor` / `add_vendor_member` / `remove_vendor_member` /
+`vendor_list_team` / `find_user_by_email`, all security-definer, all gated
+on `is_admin()` or "caller is an `owner` of this vendor." No new RLS policy
+on `vendor_member` — an INSERT policy can't express "only an owner of *this*
+vendor," since the check would need to read `vendor_member` from inside its
+own policy.
+
+Creating an `auth.users` row is a GoTrue admin-API call, not SQL, so this
+introduces the repo's **first Route Handler**
+(`apps/vendor/app/api/admin/team/route.ts`) and **first service-role
+client** (`apps/vendor/lib/supabase/admin.ts`) — deliberately its own file,
+never imported into a `"use client"` file. `inviteUserByEmail` was
+considered and rejected: Resend has no verified sending domain in
+production, so an invite email would silently appear to work and never
+arrive. Instead the admin gets a one-time generated temp password to relay
+out of band, via `admin.createUser({ email, password, email_confirm: true })`.
+This creates a real gap — nowhere in the app could a temp-password account
+change its password — closed with a small `ChangePasswordForm` on Settings
+(`supabase.auth.updateUser({ password })`).
+
+The `role` column (`owner`/`staff`) is used narrowly: only team-management
+itself (`add_vendor_member`/`remove_vendor_member`) is owner-gated; nothing
+else (event edit/delete, vendor settings) gained new role restrictions —
+that would be guessing at rules never actually asked for.
+
+This feature also makes "one person belongs to two vendors" real for the
+first time (an agency staffer on two clients' teams) — previously
+`layout.tsx` silently took `vendors[0]` alphabetically with no way to see
+or reach the others. Fixed with an `active_vendor` cookie (read in
+`layout.tsx` and `settings/page.tsx`, defaulting to `vendors[0]` when unset
+or no longer valid) and a `VendorSwitcher` client component in the sidebar,
+shown only when the signed-in user has more than one vendor.
+
+**Vendor check-in** (`0021_check_in_booking.sql`): `check_in_booking(p_reference text)`
+returns a structured `{ ok, reason, ... }` row rather than raising — unlike
+`cancel_booking`'s single rare-failure shape, "already checked in" / "not
+found" / "cancelled" are routine, frequent states during a live event, and
+the UI needs to visibly branch on which one it is. The success path is one
+atomic `UPDATE ... WHERE checked_in_at IS NULL RETURNING`, not a separate
+SELECT-then-UPDATE, so two staff scanning the same ticket in the same
+second can't both succeed. "Not found" and "belongs to a different vendor"
+deliberately return the identical message, so one vendor's staff can't use
+the RPC to enumerate that a reference is valid but belongs to someone else.
+
+UI is manual reference entry only, folded into the existing `/bookings`
+table as a `CheckInButton` next to `CancelBookingButton` — no new route, no
+new nav entry. Camera-based QR scanning (the doc's originally reserved
+`/check-in` route) is deliberately deferred: no scan/decode library exists
+in this repo (`qrcode.react`, root app only, *generates* — it doesn't
+read), and scanning is real incremental complexity (new dependency, camera
+permissions, real per-device testing) on top of a feature that needs a
+manual fallback anyway for a dead camera or an unreadable screenshot.
+Manual entry is that fallback, not a lesser version of the real feature.
+
+**A real bug caught during browser verification, not just a code read:**
+both `check_in_booking` and `vendor_list_team` failed at runtime with
+`column reference "..." is ambiguous` — a PL/pgSQL trap specific to
+`returns table(...)` functions: their OUT columns become implicitly
+in-scope variables in the function body, and several names here
+(`checked_in_at`, `attendee_name`, `event_title`, `quantity` in one
+function; `user_id` in the other) happen to collide with real column names
+on the tables being queried. An unqualified reference then resolves
+ambiguously between the two. Fixed by aliasing every table reference
+(`public.booking bk`, `public.vendor_member vm`) rather than leaving any
+column name unqualified. Caught live: the first "Check in" click in the
+browser returned the raw Postgres error text in place of a result, not a
+silent failure — re-applied both corrected functions and re-verified the
+full success/already-checked-in/not-found matrix before considering this
+done.
+
+**Also caught live, a secondary robustness gap:** when the route handler
+throws before producing JSON (this session's case: `SUPABASE_SECRET_KEY`
+unset locally, so `createAdminClient()` throws "supabaseKey is required"),
+Next's framework returns a non-JSON 500 — `res.json()` on the client then
+throws too, as an unhandled rejection, leaving the submit button stuck
+mid-spin with no error shown and no way to retry without reloading. Fixed
+in both `AddTeamMemberForm` and `CreateVendorForm` with
+`.json().catch(() => null)` and an optional-chained fallback message —
+now any route-handler crash, not just this one, surfaces "Something went
+wrong." instead of hanging.
+
+**Prerequisite flagged, not resolved here (infra, not code):**
+`SUPABASE_SECRET_KEY` is not yet set in `apps/vendor/.env.local` or the
+`vendor-tbdxb` Vercel project's environment variables — the create-vendor
+and add-team-member flows are built, migrated, and verified to fail
+gracefully without it, but won't actually create an account until it's
+added from Supabase → Settings → API Keys.
 
 ### Phase 6 — booking and checkout · ✅ done (8 Aug 2026)
 

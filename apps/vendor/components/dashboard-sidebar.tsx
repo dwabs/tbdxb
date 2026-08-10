@@ -17,8 +17,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { VendorSwitcher } from "@/components/vendor-switcher";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import type { Vendor } from "@/lib/types";
 
 type NavLink = { href: string; label: string; icon: LucideIcon };
 
@@ -39,10 +41,14 @@ export function DashboardSidebar({
   vendorName,
   email,
   isAdmin,
+  vendors,
+  activeVendorId,
 }: {
   vendorName: string;
   email: string;
   isAdmin: boolean;
+  vendors: Vendor[];
+  activeVendorId: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -100,8 +106,12 @@ export function DashboardSidebar({
     return (
       <div className="border-t border-white/10 px-3 py-4">
         <div className="px-2.5 pb-3">
-          <p className="truncate text-sm font-semibold">{vendorName}</p>
-          <p className="truncate text-xs text-white/50">{email}</p>
+          {vendors.length > 1 ? (
+            <VendorSwitcher vendors={vendors} activeVendorId={activeVendorId} />
+          ) : (
+            <p className="truncate text-sm font-semibold">{vendorName}</p>
+          )}
+          <p className="mt-1.5 truncate text-xs text-white/50">{email}</p>
         </div>
         <button
           onClick={signOut}

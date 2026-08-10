@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
@@ -31,7 +32,7 @@ export default async function DashboardLayout({
   // one admin account is also a vendor member, so this hasn't mattered yet.
   // Splitting the vendor-membership check from the admin check is separate
   // scope from adding the admin pages themselves.
-  const [{ data: vendors }, { data: profile }] = await Promise.all([
+  const [{ data: vendors }, { data: profile }, cookieStore] = await Promise.all([
     supabase
       .from("vendor")
       .select("id, name, slug, contact_email, contact_phone, logo_url, bio, status, commission_rate")
@@ -41,9 +42,17 @@ export default async function DashboardLayout({
       .select("is_admin, session_timeout_minutes")
       .eq("id", user.id)
       .single(),
+    cookies(),
   ]);
 
-  const vendor = (vendors?.[0] ?? null) as Vendor | null;
+  // Team management (0020) makes belonging to more than one vendor a real
+  // case (an agency staffer on two clients' teams) — the active_vendor
+  // cookie picks which one, defaulting to the first alphabetically when
+  // unset or no longer valid. VendorSwitcher (in the sidebar) sets it.
+  const activeVendorId = cookieStore.get("active_vendor")?.value;
+  const vendor = ((vendors ?? []).find((v) => v.id === activeVendorId) ??
+    vendors?.[0] ??
+    null) as Vendor | null;
 
   if (!vendor) {
     return (
@@ -67,6 +76,8 @@ export default async function DashboardLayout({
         vendorName={vendor.name}
         email={user.email ?? ""}
         isAdmin={profile?.is_admin ?? false}
+        vendors={(vendors ?? []) as Vendor[]}
+        activeVendorId={vendor.id}
       />
       <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
         <div className="mx-auto w-full max-w-6xl">{children}</div>

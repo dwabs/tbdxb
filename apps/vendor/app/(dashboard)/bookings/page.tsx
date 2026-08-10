@@ -1,5 +1,6 @@
 import { BookingsFilterBar } from "@/components/bookings/bookings-filter-bar";
 import { CancelBookingButton } from "@/components/bookings/cancel-booking-button";
+import { CheckInButton } from "@/components/bookings/check-in-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -23,6 +24,13 @@ const AED = new Intl.NumberFormat("en-AE", {
   style: "currency",
   currency: "AED",
   maximumFractionDigits: 0,
+});
+
+const CHECKED_IN_AT = new Intl.DateTimeFormat("en-AE", {
+  day: "numeric",
+  month: "short",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
 const STATUSES = Object.keys(BOOKING_STATUS_META) as BookingStatus[];
@@ -145,7 +153,18 @@ export default async function BookingsPage({
                         {AED.format(booking.total_aed)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {canCancel ? <CancelBookingButton bookingId={booking.id} /> : null}
+                        {booking.checked_in_at ? (
+                          <span className="text-xs text-muted-foreground">
+                            Checked in ✓ {CHECKED_IN_AT.format(new Date(booking.checked_in_at))}
+                          </span>
+                        ) : (
+                          <div className="flex justify-end gap-2">
+                            {booking.status === "confirmed" ? (
+                              <CheckInButton reference={booking.reference} />
+                            ) : null}
+                            {canCancel ? <CancelBookingButton bookingId={booking.id} /> : null}
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

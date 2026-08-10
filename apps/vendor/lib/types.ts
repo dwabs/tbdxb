@@ -121,6 +121,18 @@ export type AdminProfile = {
   created_at: string;
 };
 
+export type VendorRole = "owner" | "staff";
+
+/** vendor_list_team()'s return shape — same live auth.users join as
+ *  AdminProfile, for the same reason (see 0020's migration comment). */
+export type TeamMember = {
+  user_id: string;
+  full_name: string | null;
+  email: string;
+  role: VendorRole;
+  created_at: string;
+};
+
 export type VendorSummaryStats = {
   vendor_id: string;
   tickets_sold: number;
