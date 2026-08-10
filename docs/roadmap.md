@@ -858,12 +858,23 @@ in both `AddTeamMemberForm` and `CreateVendorForm` with
 now any route-handler crash, not just this one, surfaces "Something went
 wrong." instead of hanging.
 
-**Prerequisite flagged, not resolved here (infra, not code):**
-`SUPABASE_SECRET_KEY` is not yet set in `apps/vendor/.env.local` or the
-`vendor-tbdxb` Vercel project's environment variables — the create-vendor
-and add-team-member flows are built, migrated, and verified to fail
-gracefully without it, but won't actually create an account until it's
-added from Supabase → Settings → API Keys.
+**Prerequisite, now resolved (infra, not code):** `SUPABASE_SECRET_KEY` was
+initially unset, so the create-vendor and add-team-member flows were built
+and migrated but couldn't create accounts. Added to the `vendor-tbdxb`
+Vercel project (Sensitive, Production + Preview) on 10 Aug 2026 and
+redeployed. Note this is a Vercel-side variable: `.env.local` only affects
+local `npm run dev` and has no bearing on the deployed site.
+
+Verified in production with a deliberately non-destructive probe rather
+than by creating throwaway data: `POST /api/admin/team` with
+`mode: "add_member"` for an email that already exists and is already an
+`owner` of that vendor. That still executes the line that was previously
+throwing (`createAdminClient()`), but `find_user_by_email` resolves the
+existing user so `createUser` is never reached, and `add_vendor_member`'s
+`on conflict do update set role = excluded.role` writes back the role it
+already had. Returned `200 {"tempPassword": null}` — the null being the
+proof no account was created — and the team list was confirmed byte-for-byte
+unchanged afterward (same single owner, same join date).
 
 ### Phase 6 — booking and checkout · ✅ done (8 Aug 2026)
 
