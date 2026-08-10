@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -604,20 +605,18 @@ export function EventForm(
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="grid gap-1.5">
                 <Label htmlFor="startsAt">Starts</Label>
-                <Input
+                <DateTimeField
                   id="startsAt"
-                  type="datetime-local"
                   value={fields.startsAt}
-                  onChange={(e) => setField("startsAt", e.target.value)}
+                  onChange={(value) => setField("startsAt", value)}
                 />
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="endsAt">Ends</Label>
-                <Input
+                <DateTimeField
                   id="endsAt"
-                  type="datetime-local"
                   value={fields.endsAt}
-                  onChange={(e) => setField("endsAt", e.target.value)}
+                  onChange={(value) => setField("endsAt", value)}
                 />
               </div>
             </div>
