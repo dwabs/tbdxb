@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "apps/vendor", "run", "dev"],
       "port": 3200
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "apps/admin", "run", "dev"],
+      "port": 3300
     }
   ]
 }

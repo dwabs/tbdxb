@@ -31,6 +31,18 @@ account management under `/admin`. See
 [`docs/vendor-dashboard.md`](./docs/vendor-dashboard.md) and the "Phase 9"
 section of [`docs/roadmap.md`](./docs/roadmap.md) for the full build history.
 
+### Admin app
+
+A third app, `apps/admin` (own `package.json`, port 3300 locally), splitting
+the admin surface out of the vendor dashboard into its own site with a
+dark/white identity, distinct from the vendor app's brand-tinted one — same
+shared logo. Currently an empty, auth-gated shell only (sign-in +
+`profile.is_admin` check, no real pages yet); the existing admin pages still
+live in `apps/vendor` until the move happens. Needs its own Vercel project
+(root directory `apps/admin`) before it can deploy to
+`admin-tbdxb.vercel.app` — not yet created. See
+[`docs/admin-site-and-bookings-plan.md`](./docs/admin-site-and-bookings-plan.md).
+
 ---
 
 ## Design direction
