@@ -739,20 +739,23 @@ one real bug found and left for a deliberate go/no-go (see below).
   (Overview tiles, charts, event form, settings, admin pages) in one place.
   Verified at 375/768/1280 — mobile now stacks cleanly full-width, tablet
   and desktop unaffected.
-- **Fixed (10 Aug 2026, on explicit go-ahead):** all 6 seed events' photos
-  (`event_image.url`) were relative paths (`/events/foo.jpg`) left over
-  from the `lib/events.ts` → Supabase migration (phase 9b). They rendered
-  fine on the public site (same origin serves `/public/events/*`) but were
-  broken in the vendor dashboard, which resolves them against its own
-  origin (`vendor-tbdxb.vercel.app/events/foo.jpg` — 404). Prefixed all 9
-  rows with the main site's origin. Run as a one-off script authenticated
-  as the vendor (`supabase.auth.signInWithPassword` + `.update()`) rather
-  than a raw SQL statement — the normal "vendors manage own event images"
-  RLS path, not a bypass; a raw production `UPDATE` typed directly into the
-  SQL editor was blocked by an automated safety check regardless of
-  explicit authorization, so this was the legitimate equivalent through the
-  app's own permission model. Verified live: the Sunset Dhow photo, visibly
-  broken before, now renders in the vendor event editor.
+- **Fixed, then found to be the wrong fix (10 Aug 2026) — see the
+  correction below:** all 6 seed events' photos (`event_image.url`) were
+  relative paths (`/events/foo.jpg`) left over from the `lib/events.ts` →
+  Supabase migration (phase 9b). They rendered fine on the public site
+  (same origin serves `/public/events/*`) but were broken in the vendor
+  dashboard, which resolves them against its own origin
+  (`vendor-tbdxb.vercel.app/events/foo.jpg` — 404). The first attempt
+  prefixed all 9 rows with the main site's origin directly in the database.
+  That fixed the vendor dashboard but broke the public site: `next/image`'s
+  `remotePatterns` allowlist only lists the Supabase Storage host, so the
+  new `tbdxb.vercel.app` URLs were refused (`naturalWidth: 0` on every
+  image). Changing the *data* to solve a *rendering* problem in one app
+  broke the other. Corrected fix: reverted `event_image.url` back to
+  relative paths (the correct stored value — portable, and what the public
+  site needs natively) and instead resolve them to absolute at render time,
+  only in the vendor app, via `apps/vendor/lib/images.ts`. Verified live on
+  both apps after the revert.
 - **Not a bug, but confusing without context:** signed out once mid-QA
   after a couple of minutes, well under the visible "log out after 30
   minutes" setting. Given the session-timeout feature (`0016`) is fairly
@@ -821,15 +824,19 @@ second can't both succeed. "Not found" and "belongs to a different vendor"
 deliberately return the identical message, so one vendor's staff can't use
 the RPC to enumerate that a reference is valid but belongs to someone else.
 
-UI is manual reference entry only, folded into the existing `/bookings`
-table as a `CheckInButton` next to `CancelBookingButton` — no new route, no
-new nav entry. Camera-based QR scanning (the doc's originally reserved
-`/check-in` route) is deliberately deferred: no scan/decode library exists
-in this repo (`qrcode.react`, root app only, *generates* — it doesn't
-read), and scanning is real incremental complexity (new dependency, camera
-permissions, real per-device testing) on top of a feature that needs a
-manual fallback anyway for a dead camera or an unreadable screenshot.
-Manual entry is that fallback, not a lesser version of the real feature.
+UI is a per-row `CheckInButton` next to `CancelBookingButton`, folded into
+the existing `/bookings` table — no new route, no new nav entry. It checks
+in that row's own `reference`; **there is no free-text input for typing or
+pasting a reference**, so staff must find the booking in the table first
+(`BookingsFilterBar` already searches by reference). Camera-based QR
+scanning (the doc's originally reserved `/check-in` route) is deliberately
+deferred: no scan/decode library exists in this repo (`qrcode.react`, root
+app only, *generates* — it doesn't read), and scanning is real incremental
+complexity (new dependency, camera permissions, real per-device testing) on
+top of a feature that needs a manual fallback anyway for a dead camera or
+an unreadable screenshot. A standalone `/check-in` route with an actual
+manual-entry input field is the natural next step if door staff find
+searching the full table too slow — not built yet, no request for it yet.
 
 **A real bug caught during browser verification, not just a code read:**
 both `check_in_booking` and `vendor_list_team` failed at runtime with
