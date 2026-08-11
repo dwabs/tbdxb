@@ -16,7 +16,7 @@ export function TabsList({ className, ...props }: React.ComponentProps<typeof Ta
   return (
     <TabsPrimitive.List
       className={cn(
-        "inline-flex h-9 w-fit items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+        "inline-flex h-9 w-full items-center justify-center rounded-md bg-muted p-1 text-muted-foreground sm:w-fit",
         className,
       )}
       {...props}
