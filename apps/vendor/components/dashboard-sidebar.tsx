@@ -6,6 +6,7 @@ import {
   LogOut,
   type LucideIcon,
   Menu,
+  QrCode,
   Settings,
   ShieldCheck,
   Store,
@@ -28,6 +29,7 @@ const LINKS: NavLink[] = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/events", label: "Events", icon: CalendarDays },
   { href: "/bookings", label: "Bookings", icon: Ticket },
+  { href: "/check-in", label: "Check-in", icon: QrCode },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
