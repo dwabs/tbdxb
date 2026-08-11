@@ -1,9 +1,8 @@
 # Admin site split + booking flow changes — plan
 
-Status: **Phases 1–3 done and deployed. Phase 4 built and verified locally,
-not yet deployed** — needs a new Vercel project, see Phase 4 below. Phases
-are independently shippable — each ends in something deployed and checkable
-before the next begins.
+Status: **Phases 1–4 done and deployed**, `apps/admin` is live at
+`admin-tbdxb.vercel.app`. Phases are independently shippable — each ends in
+something deployed and checkable before the next begins.
 
 ## Goal
 
@@ -100,7 +99,7 @@ The event edit page (`events/[id]`) gets tabs:
 See open decision #5 above re: whether the global `/bookings` list
 survives this phase.
 
-### Phase 4 — Scaffold `apps/admin` — **built, pending deploy**
+### Phase 4 — Scaffold `apps/admin` — **done, deployed**
 
 New Next.js app at `apps/admin` (own `package.json`/`node_modules`,
 mirroring `apps/vendor`'s config verbatim: tsconfig, eslint, postcss,
@@ -118,12 +117,12 @@ signed-out visit to `/` redirects to `/login` with no console errors. Local
 dev runs on port 3300 (`npm --prefix apps/admin run dev`, or the `admin`
 entry in `.claude/launch.json`).
 
-**Still outstanding, infra not code:** a new Vercel project pointing its
-root directory at `apps/admin`, deployed to `admin-tbdxb.vercel.app`, plus
-its environment variables (`NEXT_PUBLIC_SUPABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). Nothing here needs
-`SUPABASE_SECRET_KEY` yet — that lands with Phase 5 when the service-role
-team route handler moves over.
+Deployed: a new Vercel project (`admin-tbdxb`) with root directory
+`apps/admin`, live at `admin-tbdxb.vercel.app`, with
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` set.
+Confirmed the login page renders correctly in production. Nothing here
+needed `SUPABASE_SECRET_KEY` — that lands with Phase 5 when the
+service-role team route handler moves over.
 
 ### Phase 5 — Move existing admin pages into `apps/admin`
 
