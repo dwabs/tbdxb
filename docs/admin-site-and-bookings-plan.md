@@ -1,8 +1,9 @@
 # Admin site split + booking flow changes — plan
 
-Status: **Phases 1–4 done and deployed**, `apps/admin` is live at
-`admin-tbdxb.vercel.app`. Phases are independently shippable — each ends in
-something deployed and checkable before the next begins.
+Status: **Phases 1–5 done**, `apps/admin` is live at `admin-tbdxb.vercel.app`
+with the review queue, vendor management, and admin management moved in.
+Phases are independently shippable — each ends in something deployed and
+checkable before the next begins.
 
 ## Goal
 
@@ -53,6 +54,12 @@ something deployed and checkable before the next begins.
    where the vendor often doesn't know which event a booking belongs to
    ahead of time). The new per-event tab is an additional, more focused
    view, not a replacement. Flag if it should be removed instead.
+6. **`apps/admin` nav should be a sidebar, not a header** — the current
+   `AdminHeader` (Phase 4/5) is a top bar with a horizontal link row,
+   chosen for speed while the app only had one page. Now that Phase 5 has
+   added four real sections, the preference is a sidebar like
+   `apps/vendor`'s `DashboardSidebar` (fixed column desktop, off-canvas
+   Sheet on mobile). Not built yet — flagged for a follow-up pass.
 
 ## Design note (Phase 4)
 
@@ -124,14 +131,47 @@ Confirmed the login page renders correctly in production. Nothing here
 needed `SUPABASE_SECRET_KEY` — that lands with Phase 5 when the
 service-role team route handler moves over.
 
-### Phase 5 — Move existing admin pages into `apps/admin`
+### Phase 5 — Move existing admin pages into `apps/admin` — **done, deployed**
 
-Move `admin/vendors`, `admin/vendors/[id]`, `admin/admins`, `admin/review`
-and their supporting components (`VendorStatusEditor`, `CreateVendorForm`,
-`TeamList`, admin grant/revoke, the `/api/admin/team` route handler +
-service-role client) from `apps/vendor` to `apps/admin`. Old copies stay
-live in `apps/vendor` during this phase (see decision #3) so nothing breaks
-mid-move. Verify full parity before moving on.
+Copied, not moved: `admin/vendors`, `admin/vendors/[id]`, `admin/admins`,
+`admin/review` and their supporting components (`VendorStatusEditor`,
+`CreateVendorForm`, `GrantAdminForm`/`RevokeAdminButton`,
+`ReviewQueueActions`, `TeamList`, `AddTeamMemberForm`,
+`RemoveTeamMemberButton`, the `/api/admin/team` route handler +
+`lib/supabase/admin.ts` service-role client, `lib/slug.ts`) from
+`apps/vendor` into `apps/admin`, dropping the `/admin` URL prefix since the
+whole app is admin-only now (`/vendors`, `/vendors/[id]`, `/admins`,
+`/review`). Old copies deliberately stay live in `apps/vendor` — not just
+during this phase, but permanently for `TeamList`/`AddTeamMemberForm`/the
+route handler, since vendor owners still use those from their own Settings
+page for self-service team management. Only the admin-only pages
+(`admin/vendors`, `admin/admins`, `admin/review`) and their exclusively-
+admin components are candidates for deletion from `apps/vendor` in Phase 6.
+
+New in `apps/admin`: `lib/types.ts` (trimmed to `Vendor`, `AdminProfile`,
+`TeamMember`, etc. — no `EventRow`/`Booking`, this app doesn't touch those
+yet), `components/ui/select.tsx` + `textarea.tsx` (copied for
+`VendorStatusEditor`/`AddTeamMemberForm`), and `@radix-ui/react-select`
+added to `package.json`. `AdminHeader` grew a horizontal nav row (Dashboard/
+Review queue/Vendors/Admins) — see open decision #6 re: a sidebar instead.
+
+`SUPABASE_SECRET_KEY` added to `admin-tbdxb`'s Vercel project (Sensitive,
+Production + Preview) the same way as `vendor-tbdxb`'s — pasted directly
+from Supabase's dashboard by the user, not typed by the assistant, since
+entering API keys into a field isn't something the assistant does even for
+first-party infra. Left unset in `apps/admin/.env.local` (empty value,
+matching `apps/vendor`'s own local `.env.local`), so local dev of the
+team-management routes still needs it set by hand — same known limitation
+already documented for `apps/vendor`.
+
+Verified: `tsc`/`eslint`/`build` clean, and in-browser signed in as the
+platform's one real admin — `/admins` (grant form + self row), `/vendors`
+(create form + status editor), `/vendors/[id]` (status + team list + add-
+member form, Select component renders correctly), `/review` (empty-state
+render, no submitted events to review against). No console errors. The
+create-vendor/add-member flows themselves weren't exercised live (would
+create real test data); the RPC/route-handler code is an unmodified copy of
+`apps/vendor`'s already-verified Phase 13 implementation.
 
 ### Phase 6 — Remove admin surface from `apps/vendor`
 

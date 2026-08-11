@@ -7,11 +7,11 @@ export default function DashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Nothing here yet</CardTitle>
+          <CardTitle>No platform stats yet</CardTitle>
           <CardDescription>
-            This is the shell — sign-in and admin access are wired up.
-            Platform stats, vendor management, and the user list move in
-            over the next phases.
+            Review queue, vendor management, and admin management are live
+            in the nav above. Vendor/event counts, bookings, views, and
+            revenue land here next.
           </CardDescription>
         </CardHeader>
       </Card>
