@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Toast, useToast } from "@/components/ui/toast";
 import { CATEGORIES } from "@/lib/categories";
 import { dubaiDateTimeToISO, slugify } from "@/lib/slug";
+import { resolveImageUrl } from "@/lib/images";
 import { createClient } from "@/lib/supabase/client";
 import {
   STATUS_META,
@@ -744,7 +745,7 @@ export function EventForm(
                       <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
                         {/* eslint-disable-next-line @next/next/no-img-element -- vendor-uploaded, unoptimized is fine */}
                         <img
-                          src={image.url}
+                          src={resolveImageUrl(image.url)}
                           alt={image.alt}
                           className="size-full object-cover"
                         />
