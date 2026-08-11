@@ -42,14 +42,13 @@ export default async function EditEventPage({
 
   return (
     <div className="grid gap-6">
+      <h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
+
       <Tabs defaultValue="details">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold tracking-tight">{event.title}</h1>
-          <TabsList>
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="bookings">Bookings ({bookings.length})</TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="bookings">Bookings ({bookings.length})</TabsTrigger>
+        </TabsList>
         <TabsContent value="details">
           <EventForm
             mode="edit"

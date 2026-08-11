@@ -113,7 +113,7 @@ export function CheckInLookupForm() {
 
   return (
     <div className="grid gap-4">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
         <Input
           ref={inputRef}
           value={reference}
@@ -123,7 +123,12 @@ export function CheckInLookupForm() {
           autoComplete="off"
           className="h-12 text-lg tracking-wide"
         />
-        <Button type="submit" size="lg" disabled={pending || !reference.trim()}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-12 w-full sm:w-auto"
+          disabled={pending || !reference.trim()}
+        >
           {pending ? <Loader2 className="size-4 animate-spin" /> : null}
           Check in
         </Button>
