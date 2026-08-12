@@ -1,3 +1,4 @@
+import { BreakdownSparkline, TrendSparkline } from "@/components/dashboard/mini-charts";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { createClient } from "@/lib/supabase/server";
 import type { AdminPlatformStats } from "@/lib/types";
@@ -9,14 +10,68 @@ const AED = new Intl.NumberFormat("en-AE", {
 });
 
 const NUMBER = new Intl.NumberFormat("en-AE");
+const WEEK_LABEL = new Intl.DateTimeFormat("en-AE", { day: "numeric", month: "short" });
+
+/** Sunday-start week buckets for the last 12 weeks, oldest first — same
+ *  bucketing apps/vendor's Overview chart uses, just platform-wide here. */
+function lastTwelveWeeks(): { start: Date; end: Date; label: string }[] {
+  const weeks: { start: Date; end: Date; label: string }[] = [];
+  const now = new Date();
+  const currentWeekStart = new Date(now);
+  currentWeekStart.setHours(0, 0, 0, 0);
+  currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+
+  for (let i = 11; i >= 0; i--) {
+    const start = new Date(currentWeekStart);
+    start.setDate(start.getDate() - i * 7);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    weeks.push({ start, end, label: WEEK_LABEL.format(start) });
+  }
+  return weeks;
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("admin_platform_stats").single();
+  const weeks = lastTwelveWeeks();
+
+  const [{ data, error }, { data: bookingRows }, { data: topViewedRows }] = await Promise.all([
+    supabase.rpc("admin_platform_stats").single(),
+    supabase
+      .from("booking")
+      .select("created_at, quantity")
+      .neq("status", "cancelled")
+      .eq("is_sample", false)
+      .gte("created_at", weeks[0].start.toISOString()),
+    supabase
+      .from("event")
+      .select("title, view_count")
+      .gt("view_count", 0)
+      .order("view_count", { ascending: false })
+      .limit(5),
+  ]);
 
   if (error) console.error("admin_platform_stats:", error.message);
 
   const stats = data as AdminPlatformStats | null;
+
+  // Bookings/tickets have real timestamped rows, so a 12-week trend is
+  // honest data. view_count is a running counter with no history behind
+  // it (see migration 0018) — there's nothing to plot a trend from, so
+  // Views gets a top-viewed-events breakdown instead of a fabricated one.
+  const bookingsSeries = weeks.map((w) => ({ label: w.label, value: 0 }));
+  const ticketsSeries = weeks.map((w) => ({ label: w.label, value: 0 }));
+  for (const row of bookingRows ?? []) {
+    const createdAt = new Date(row.created_at as string);
+    const bucket = weeks.findIndex((w) => createdAt >= w.start && createdAt < w.end);
+    if (bucket === -1) continue;
+    bookingsSeries[bucket].value += 1;
+    ticketsSeries[bucket].value += row.quantity as number;
+  }
+
+  const topViewed = ((topViewedRows ?? []) as { title: string; view_count: number }[]).map(
+    (e) => ({ label: e.title, value: e.view_count }),
+  );
 
   return (
     <div className="grid gap-8">
@@ -55,15 +110,26 @@ export default async function DashboardPage() {
           <StatTile
             label="Bookings"
             value={NUMBER.format(stats?.bookings_total ?? 0)}
+            caption="Last 12 weeks"
+            chart={<TrendSparkline data={bookingsSeries} tooltipLabel="Bookings" />}
           />
           <StatTile
             label="Tickets sold"
             value={NUMBER.format(stats?.tickets_sold ?? 0)}
+            caption="Last 12 weeks"
+            chart={<TrendSparkline data={ticketsSeries} tooltipLabel="Tickets" />}
           />
           <StatTile
             label="Views"
             value={NUMBER.format(stats?.views_total ?? 0)}
-            caption="Only reflects visits since view tracking was added — earlier history isn't counted."
+            caption={
+              topViewed.length > 0
+                ? "Top viewed events — only reflects visits since tracking was added"
+                : "Only reflects visits since view tracking was added — earlier history isn't counted."
+            }
+            chart={
+              topViewed.length > 0 ? <BreakdownSparkline data={topViewed} /> : undefined
+            }
           />
         </div>
       </section>
