@@ -27,7 +27,6 @@ const STEPS = [
 export function CheckoutFlow({
   t,
   locale,
-  userId,
   experience,
   guests,
   fullName: initialFullName,
@@ -35,7 +34,6 @@ export function CheckoutFlow({
 }: {
   t: Dictionary["checkout"];
   locale: Locale;
-  userId: string;
   experience: Experience;
   guests: number;
   fullName: string;
@@ -79,31 +77,23 @@ export function CheckoutFlow({
   async function handleConfirm() {
     setPending(true);
     setError("");
-    const { data, error: insertError } = await supabase
-      .from("booking")
-      .insert({
-        user_id: userId,
-        event_id: experience.id,
-        ticket_type_id: experience.ticketTypeId,
-        event_slug: experience.slug,
-        event_title: experience.title,
-        event_image: experience.images[0]?.src ?? "",
-        location: `${experience.venue}, ${experience.area}`,
-        quantity: guests,
-        total_aed: total,
-        event_date: experience.date,
-        attendee_name: fullName.trim(),
-        attendee_phone: mobile ?? "",
-      })
-      .select("reference")
-      .single();
+    // Server-recomputed, not client-trusted: create_booking looks up the
+    // real event/ticket-type price and availability itself rather than
+    // taking total_aed/quantity from browser state — see migration 0026.
+    const { data, error: rpcError } = await supabase.rpc("create_booking", {
+      p_event_id: experience.id,
+      p_ticket_type_id: experience.ticketTypeId,
+      p_quantity: guests,
+      p_attendee_name: fullName.trim(),
+      p_attendee_phone: mobile ?? "",
+    });
 
     setPending(false);
-    if (insertError || !data) {
+    if (rpcError || !data) {
       setError(t.payment.error);
       return;
     }
-    setReference(data.reference);
+    setReference(data);
     setStep("confirmation");
   }
 

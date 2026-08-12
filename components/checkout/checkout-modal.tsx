@@ -8,7 +8,6 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 export function CheckoutModal({
   t,
   locale,
-  userId,
   experience,
   guests,
   fullName,
@@ -18,7 +17,6 @@ export function CheckoutModal({
 }: {
   t: Dictionary["checkout"];
   locale: Locale;
-  userId: string;
   experience: Experience;
   guests: number;
   fullName: string;
@@ -39,7 +37,6 @@ export function CheckoutModal({
           <CheckoutFlow
             t={t}
             locale={locale}
-            userId={userId}
             experience={experience}
             guests={guests}
             fullName={fullName}

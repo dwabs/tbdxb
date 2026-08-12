@@ -174,7 +174,6 @@ export function BookingPanel({
         <CheckoutModal
           t={checkoutT}
           locale={locale}
-          userId={userId}
           experience={experience}
           guests={guests}
           fullName={fullName}
