@@ -25,7 +25,7 @@ now and expensive later.
 | 1 | **Monorepo — npm workspaces**, `apps/web` + `apps/vendor` + shared `packages/` | The two apps share a database schema, generated types, the `Experience` shape and validation rules. Duplicating those across repos guarantees drift, and drift here means a vendor saves an event the public site can't render. |
 | 2 | **One Supabase project**, not two | "Own database" means our Postgres instead of `api.thebucketlistdxb.com` — not a second instance. Events written by vendors must be read by the public site; two databases would need a sync job that can only ever be a source of bugs. |
 | 3 | **Vendors sign in with email + password**, customers keep OTP | Vendors log in daily. Our only email path (Resend) is not domain-verified, so every OTP is a launch blocker per login. Password auth needs email exactly once, at invite. |
-| 4 | **Admin lives in the vendor app** at `/admin`, gated on `profile.is_admin` | A third deployment for a queue two or three people use is ceremony. Same app, different gate. |
+| 4 | **Admin lives in the vendor app** at `/admin`, gated on `profile.is_admin` — **superseded**: split into its own app, `apps/admin`, once the admin surface outgrew a nav section (see `docs/admin-site-and-bookings-plan.md`) | A third deployment for a queue two or three people use is ceremony. Same app, different gate. |
 | 5 | **Ticket types are modelled properly** (many per event) | Their API has them, vendors expect them, and it is the only way to express "early bird" or capacity. Cost: the public checkout gains a ticket picker — see phase 5. |
 | 6 | **One event = one date window.** Recurring sessions are out of scope | `Experience` already assumes a single `date` + `startTime`/`endTime`. Recurrence is a real need for weekly experiences but it is a separate table and a separate booking model. Not v1. |
 | 7 | **Existing six demo experiences get seeded into the database** owned by a house vendor | The public site has real content the moment it switches over, and there is a worked example in the admin queue on day one. |
@@ -300,9 +300,11 @@ later, not a refactor.
 /check-in                   QR scanner
 /earnings                   balance, transactions, withdrawal requests
 /settings                   business profile, team members, payout method
-/admin/events               review queue: approve / reject with reason
-/admin/vendors              vendor applications
 ```
+
+The `/admin/*` rows this map originally had are superseded — the admin
+surface moved out entirely into its own app (`apps/admin`), not a route
+under this one. See `docs/admin-site-and-bookings-plan.md`.
 
 Route protection happens in the layouts, where there is database access —
 `proxy.ts` may do a cheap cookie-presence redirect to avoid a signed-out flash,

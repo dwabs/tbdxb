@@ -26,12 +26,6 @@ export default async function DashboardLayout({
 
   if (!user) redirect("/login");
 
-  // Known limitation: this gate runs before anything below it, including
-  // the admin pages — a pure-admin account with no vendor membership would
-  // be locked out of those too, not just missing the sidebar link. Today's
-  // one admin account is also a vendor member, so this hasn't mattered yet.
-  // Splitting the vendor-membership check from the admin check is separate
-  // scope from adding the admin pages themselves.
   const [{ data: vendors }, { data: profile }, cookieStore] = await Promise.all([
     supabase
       .from("vendor")
@@ -39,7 +33,7 @@ export default async function DashboardLayout({
       .order("name"),
     supabase
       .from("profile")
-      .select("is_admin, session_timeout_minutes")
+      .select("session_timeout_minutes")
       .eq("id", user.id)
       .single(),
     cookies(),
@@ -75,7 +69,6 @@ export default async function DashboardLayout({
       <DashboardSidebar
         vendorName={vendor.name}
         email={user.email ?? ""}
-        isAdmin={profile?.is_admin ?? false}
         vendors={(vendors ?? []) as Vendor[]}
         activeVendorId={vendor.id}
       />

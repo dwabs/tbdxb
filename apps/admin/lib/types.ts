@@ -6,6 +6,24 @@
 
 export type VendorStatus = "pending" | "approved" | "suspended";
 
+export type EventStatus =
+  | "draft"
+  | "submitted"
+  | "approved"
+  | "published"
+  | "rejected"
+  | "archived";
+
+/** Badge styling per lifecycle state, mirrors apps/vendor's STATUS_META. */
+export const STATUS_META: Record<EventStatus, { label: string; className: string }> = {
+  draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
+  submitted: { label: "In review", className: "bg-amber-100 text-amber-900" },
+  approved: { label: "Approved", className: "bg-sky-100 text-sky-900" },
+  published: { label: "Live", className: "bg-emerald-100 text-emerald-900" },
+  rejected: { label: "Changes needed", className: "bg-red-100 text-red-900" },
+  archived: { label: "Archived", className: "bg-muted text-muted-foreground" },
+};
+
 export type Vendor = {
   id: string;
   name: string;
@@ -47,4 +65,94 @@ export type TeamMember = {
   email: string;
   role: VendorRole;
   created_at: string;
+};
+
+export type EventRow = {
+  id: string;
+  vendor_id: string;
+  slug: string;
+  status: EventStatus;
+  title: string;
+  venue: string;
+  area: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  duration_label: string;
+  group_size: string;
+  tags: string[];
+  view_count: number;
+};
+
+export type TicketType = {
+  id: string;
+  event_id: string;
+  title: string;
+  price_aed: number;
+  discount_price_aed: number | null;
+  quantity_total: number;
+  quantity_sold: number;
+  position: number;
+};
+
+export type BookingStatus = "confirmed" | "cancelled" | "completed";
+
+/** Same shape as apps/vendor's Booking, plus vendor_id/vendor_name — this
+ *  app's bookings span every vendor, so the vendor isn't always implicit. */
+export type AdminBooking = {
+  id: string;
+  reference: string;
+  event_id: string | null;
+  event_title: string;
+  event_slug: string;
+  quantity: number;
+  total_aed: number;
+  event_date: string;
+  status: BookingStatus;
+  attendee_name: string;
+  attendee_phone: string;
+  checked_in_at: string | null;
+  created_at: string;
+  vendor_id: string | null;
+  vendor_name: string | null;
+};
+
+export const BOOKING_STATUS_META: Record<
+  BookingStatus,
+  { label: string; className: string }
+> = {
+  confirmed: { label: "Confirmed", className: "bg-emerald-100 text-emerald-900" },
+  completed: { label: "Completed", className: "bg-sky-100 text-sky-900" },
+  cancelled: { label: "Cancelled", className: "bg-red-100 text-red-900" },
+};
+
+/** admin_list_users()'s return shape (0024) — a page of every signed-up
+ *  user, with a total_count column repeated on every row so the client can
+ *  render pagination without a second round trip. */
+export type AdminUser = {
+  id: string;
+  full_name: string | null;
+  email: string;
+  is_admin: boolean;
+  created_at: string;
+  vendor_names: string[];
+  total_count: number;
+};
+
+/** admin_platform_stats()'s return shape (0023) — a single row of platform-
+ *  wide totals for the dashboard. */
+export type AdminPlatformStats = {
+  vendors_pending: number;
+  vendors_approved: number;
+  vendors_suspended: number;
+  events_draft: number;
+  events_submitted: number;
+  events_approved: number;
+  events_published: number;
+  events_rejected: number;
+  events_archived: number;
+  bookings_total: number;
+  tickets_sold: number;
+  views_total: number;
+  gross_revenue_aed: number;
+  commission_revenue_aed: number;
 };

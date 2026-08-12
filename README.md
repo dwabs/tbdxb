@@ -25,11 +25,11 @@ A second app, `apps/vendor` (own `package.json`, deployed separately at
 `vendor-tbdxb.vercel.app`), where vendors create and manage events against
 the same Supabase project — this is what the main site's `/events` now reads
 from instead of a static array. Overview, event editor (with ticket types and
-photo upload), bookings, and self-service settings for vendors; `is_admin`
-accounts additionally get a review queue, vendor management, and admin
-account management under `/admin`. See
-[`docs/vendor-dashboard.md`](./docs/vendor-dashboard.md) and the "Phase 9"
-section of [`docs/roadmap.md`](./docs/roadmap.md) for the full build history.
+photo upload), bookings, check-in, and self-service settings (including team
+management) for vendors — vendor-only now that the admin surface has fully
+moved to `apps/admin`. See [`docs/vendor-dashboard.md`](./docs/vendor-dashboard.md)
+and the "Phase 9"/"Phase 13" sections of [`docs/roadmap.md`](./docs/roadmap.md)
+for the full build history.
 
 ### Admin app
 
@@ -37,11 +37,11 @@ A third app, `apps/admin` (own `package.json`, port 3300 locally, deployed
 at `admin-tbdxb.vercel.app`), splitting the admin surface out of the vendor
 dashboard into its own site with a dark/white identity, distinct from the
 vendor app's brand-tinted one — same shared logo. Auth-gated (sign-in +
-`profile.is_admin` check) with a review queue, vendor management (create
-vendor, status/commission, team), and admin management. The same pages
-also still live in `apps/vendor` for now — see decision #3 in
+`profile.is_admin` check) with a sidebar nav: a review queue, vendor
+management (create vendor, status/commission, team), and admin management.
+The old copies of these pages have been removed from `apps/vendor` — see
 [`docs/admin-site-and-bookings-plan.md`](./docs/admin-site-and-bookings-plan.md)
-for the removal plan.
+for the full build history.
 
 ---
 

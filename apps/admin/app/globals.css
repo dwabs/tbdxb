@@ -70,3 +70,39 @@
     font-synthesis-weight: none;
   }
 }
+
+/* Mobile sidebar (components/ui/sheet.tsx) — slides in from the left, no
+   RTL to account for since this app is English-only. */
+@keyframes sheet-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-content-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.sheet-overlay[data-state="open"] {
+  animation: sheet-overlay-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sheet-overlay[data-state="closed"] {
+  animation: sheet-overlay-in 0.15s cubic-bezier(0.22, 1, 0.36, 1) reverse;
+}
+
+.sheet-content[data-state="open"] {
+  animation: sheet-content-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sheet-content[data-state="closed"] {
+  animation: sheet-content-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) reverse;
+}

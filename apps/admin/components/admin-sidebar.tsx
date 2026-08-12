@@ -1,46 +1,37 @@
 "use client";
 
 import {
-  CalendarDays,
   LayoutDashboard,
   LogOut,
   type LucideIcon,
   Menu,
-  QrCode,
-  Settings,
+  ShieldCheck,
+  Store,
   Ticket,
+  UserCog,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { LogoMark, Wordmark } from "@/components/logo";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { VendorSwitcher } from "@/components/vendor-switcher";
-import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import type { Vendor } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type NavLink = { href: string; label: string; icon: LucideIcon };
 
 const LINKS: NavLink[] = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/events", label: "Events", icon: CalendarDays },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/review", label: "Review queue", icon: ShieldCheck },
+  { href: "/vendors", label: "Vendors", icon: Store },
   { href: "/bookings", label: "Bookings", icon: Ticket },
-  { href: "/check-in", label: "Check-in", icon: QrCode },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/admins", label: "Admins", icon: UserCog },
+  { href: "/users", label: "Users", icon: Users },
 ];
 
-export function DashboardSidebar({
-  vendorName,
-  email,
-  vendors,
-  activeVendorId,
-}: {
-  vendorName: string;
-  email: string;
-  vendors: Vendor[];
-  activeVendorId: string;
-}) {
+export function AdminSidebar({ email }: { email: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -66,8 +57,8 @@ export function DashboardSidebar({
         className={cn(
           "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
           active
-            ? "bg-white/15 text-white"
-            : "text-white/60 hover:bg-white/5 hover:text-white",
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
         )}
       >
         <Icon className="size-4" />
@@ -82,18 +73,13 @@ export function DashboardSidebar({
 
   function accountFooter() {
     return (
-      <div className="border-t border-white/10 px-3 py-4">
-        <div className="px-2.5 pb-3">
-          {vendors.length > 1 ? (
-            <VendorSwitcher vendors={vendors} activeVendorId={activeVendorId} />
-          ) : (
-            <p className="truncate text-sm font-semibold">{vendorName}</p>
-          )}
-          <p className="mt-1.5 truncate text-xs text-white/50">{email}</p>
-        </div>
+      <div className="border-t px-3 py-4">
+        <p className="truncate px-2.5 pb-3 text-sm text-muted-foreground">
+          {email}
+        </p>
         <button
           onClick={signOut}
-          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+          className="flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-accent-foreground"
         >
           <LogOut className="size-4" />
           Sign out
@@ -104,13 +90,12 @@ export function DashboardSidebar({
 
   function brand() {
     return (
-      <div className="px-5 py-6">
-        <p className="text-lg leading-none font-bold tracking-tight">
-          thebucketlist<span className="text-[#F47EB4]">dxb</span>
-        </p>
-        <p className="mt-1 text-xs font-medium tracking-wide text-white/50 uppercase">
-          Vendor
-        </p>
+      <div className="flex items-center gap-2 px-5 py-6">
+        <LogoMark className="size-7" />
+        <Wordmark className="text-sm" />
+        <span className="ml-1 rounded-full bg-accent px-2 py-0.5 text-[0.6875rem] font-semibold tracking-wide text-accent-foreground uppercase">
+          Admin
+        </span>
       </div>
     );
   }
@@ -119,23 +104,21 @@ export function DashboardSidebar({
     <>
       {/* Mobile top bar — below lg, replaces the fixed column with a
           hamburger that opens the same nav in an off-canvas sheet. */}
-      <header className="flex items-center justify-between border-b border-line bg-[#4A2536] px-4 py-3 text-white lg:hidden">
-        <p className="text-base leading-none font-bold tracking-tight">
-          thebucketlist<span className="text-[#F47EB4]">dxb</span>
-        </p>
+      <header className="flex items-center justify-between border-b bg-secondary px-4 py-3 lg:hidden">
+        <div className="flex items-center gap-2">
+          <LogoMark className="size-6" />
+          <Wordmark className="text-sm" />
+        </div>
         <Sheet open={open} onOpenChange={setOpen}>
           <button
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Open menu"
-            className="-me-1.5 grid size-11 place-items-center rounded-md text-white/80 hover:bg-white/10 hover:text-white"
+            className="-me-1.5 grid size-11 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           >
             <Menu className="size-5" />
           </button>
-          <SheetContent
-            closeLabel="Close menu"
-            className="bg-gradient-to-b from-[#4A2536] to-[#28131c] text-white"
-          >
+          <SheetContent closeLabel="Close menu" className="bg-secondary">
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             {brand()}
             {nav()}
@@ -146,9 +129,8 @@ export function DashboardSidebar({
 
       {/* Desktop sidebar — lg and up. Sticky, not just h-svh: the row
           around it only has min-h-svh, so on pages taller than one
-          viewport (long event lists, the overview charts) a plain h-svh
-          aside stopped short of the page's actual height once scrolled. */}
-      <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col overflow-y-auto bg-gradient-to-b from-[#4A2536] to-[#28131c] text-white lg:flex">
+          viewport a plain h-svh aside would stop short once scrolled. */}
+      <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col overflow-y-auto border-r bg-secondary lg:flex">
         {brand()}
         {nav()}
         {accountFooter()}

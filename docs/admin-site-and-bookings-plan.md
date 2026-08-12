@@ -1,9 +1,14 @@
 # Admin site split + booking flow changes — plan
 
-Status: **Phases 1–5 done**, `apps/admin` is live at `admin-tbdxb.vercel.app`
-with the review queue, vendor management, and admin management moved in.
-Phases are independently shippable — each ends in something deployed and
-checkable before the next begins.
+Status: **All phases (1–9) done and deployed.** `apps/vendor` has manual +
+QR check-in (`/check-in`) and a per-event Details/Bookings tab. `apps/admin`
+is live at `admin-tbdxb.vercel.app` with a sidebar nav, platform dashboard,
+review queue, vendor management (with a per-vendor Events list), a full
+searchable/paginated user list, admin management, and cross-vendor booking
+oversight (global list + per-event Details/Bookings tabs). The admin
+surface has been fully removed from `apps/vendor`. Phases were
+independently shippable — each ended in something deployed and checkable
+before the next began.
 
 ## Goal
 
@@ -41,10 +46,9 @@ checkable before the next begins.
 1. **Revenue definition** — show gross and commission both, labeled.
 2. **View-count caveat** — surface the "counting started on [date]" caveat
    wherever views are shown.
-3. **Transition window (Phase 6)** — keep the admin pages live inside
-   `apps/vendor` until `apps/admin` is deployed and verified, then delete
-   them in a separate follow-up commit. Do not delete and rebuild in the
-   same PR.
+3. **Transition window (Phase 6)** — **resolved**: kept the admin pages
+   live inside `apps/vendor` until `apps/admin` was deployed and verified,
+   then deleted them in Phase 6, a separate follow-up commit.
 4. **User list scope (Phase 8)** — default: all `auth.users` joined to
    `profile`, not just vendor-affiliated accounts. This will be the largest
    table in the app; pagination and search are required from day one, not
@@ -54,12 +58,11 @@ checkable before the next begins.
    where the vendor often doesn't know which event a booking belongs to
    ahead of time). The new per-event tab is an additional, more focused
    view, not a replacement. Flag if it should be removed instead.
-6. **`apps/admin` nav should be a sidebar, not a header** — the current
-   `AdminHeader` (Phase 4/5) is a top bar with a horizontal link row,
-   chosen for speed while the app only had one page. Now that Phase 5 has
-   added four real sections, the preference is a sidebar like
-   `apps/vendor`'s `DashboardSidebar` (fixed column desktop, off-canvas
-   Sheet on mobile). Not built yet — flagged for a follow-up pass.
+6. **`apps/admin` nav should be a sidebar, not a header** — **resolved**:
+   `AdminHeader` was replaced with `AdminSidebar` (fixed column desktop,
+   off-canvas Sheet on mobile, same structural pattern as `apps/vendor`'s
+   `DashboardSidebar` but flat `bg-secondary`/token colors, no brand-tinted
+   gradient — this app stays deliberately dark/white-only).
 
 ## Design note (Phase 4)
 
@@ -77,7 +80,7 @@ proven in `apps/vendor`).
 
 ## Phases
 
-### Phase 1 — Manual check-in entry (vendor)
+### Phase 1 — Manual check-in entry (vendor) — **done, deployed**
 
 New standalone `/check-in` route in `apps/vendor` (previously reserved,
 never built): a text input, paste/type a reference, hit "Check in." Calls
@@ -86,25 +89,24 @@ success/already-checked-in/not-found/cancelled states as the current
 per-row button, which stays as-is on `/bookings` (both paths hit the same
 RPC, no conflict).
 
-### Phase 2 — QR code scanner (vendor)
+### Phase 2 — QR code scanner (vendor) — **done, deployed**
 
-Adds a camera-based scanner to the same `/check-in` route — a decoded code
+Adds a camera-based scanner to the same `/check-in` route (`@yudiel/react-qr-scanner`,
+in `components/bookings/check-in-lookup-form.tsx`) — a decoded code
 auto-fills the reference field from Phase 1 rather than being a separate
-flow. New dependency (no scan/decode library exists in the repo today).
-Needs real per-device testing (iOS Safari vs. Android Chrome `getUserMedia`
-behave differently) and a manual-entry fallback when the camera is denied
-or unavailable.
+flow, with a manual-entry fallback and labeled errors for denied/missing/
+in-use camera and insecure-context/unsupported-browser cases.
 
-### Phase 3 — Event bookings tab (vendor)
+### Phase 3 — Event bookings tab (vendor) — **done, deployed**
 
-The event edit page (`events/[id]`) gets tabs:
-- **Details** — today's `EventForm`, unchanged.
+The event edit page (`events/[id]`) has tabs:
+- **Details** — `EventForm`.
 - **Bookings** — a table scoped to just that event's bookings, same
-  columns/check-in/cancel actions as today's global list, pre-filtered by
+  columns/check-in/cancel actions as the global list, pre-filtered by
   `event_id` (no per-row event-name column needed since it's implicit).
 
-See open decision #5 above re: whether the global `/bookings` list
-survives this phase.
+Open decision #5 resolved: the global `/bookings` list survives as a
+cross-event view; the per-event tab is additional, not a replacement.
 
 ### Phase 4 — Scaffold `apps/admin` — **done, deployed**
 
@@ -173,33 +175,51 @@ create-vendor/add-member flows themselves weren't exercised live (would
 create real test data); the RPC/route-handler code is an unmodified copy of
 `apps/vendor`'s already-verified Phase 13 implementation.
 
-### Phase 6 — Remove admin surface from `apps/vendor`
+### Phase 6 — Remove admin surface from `apps/vendor` — **done, deployed**
 
-Delete the now-duplicated pages/components/route from `apps/vendor`, drop
-the admin nav links, update docs (roadmap, README, vendor-dashboard.md).
+Deleted the duplicated `admin/{review,vendors,vendors/[id],admins}` pages
+and their exclusively-admin components from `apps/vendor`, dropped the
+admin nav links (and the now-dead `isAdmin` prop) from
+`dashboard-sidebar.tsx`, updated README.md and docs/vendor-dashboard.md.
 `apps/vendor` is vendor-only from here on — a vendor owner/staff signs in,
 manages their own events, bookings, team, and settings, with no path to any
-other vendor's data or platform-wide info.
+other vendor's data or platform-wide info. `TeamList`/`AddTeamMemberForm`/
+the `/api/admin/team` route handler stay in `apps/vendor` permanently, per
+Phase 5's note, since vendor Settings still uses them for self-service.
 
-### Phase 7 — Platform dashboard (admin)
+### Phase 7 — Platform dashboard (admin) — **done, deployed**
 
-Total vendors (by status: pending/approved/suspended), total events (by
-status: draft/submitted/published/rejected/archived), total bookings, total
-views (with the undercounting caveat), and revenue (gross + commission, per
-decision #1).
+`admin_platform_stats()` (migration `0022_admin_platform_stats.sql`, one
+row/one round trip) returns vendor counts by status, event counts by
+status, total bookings/tickets sold, total views (with the undercounting
+caveat shown on the tile), and revenue as gross ticket sales *and* platform
+commission, separately labeled per decision #1. Commission is
+`total_aed * vendor.commission_rate` summed per booking (the platform's
+cut), not `vendor_event_stats.net_aed` (the vendor's take).
 
-### Phase 8 — Full user list (admin)
+### Phase 8 — Full user list (admin) — **done, deployed**
 
-All `auth.users` rows joined to `profile` (per decision #4), paginated and
-searchable from the start. New RPC or the service-role
-`auth.admin.listUsers()` API.
+`admin_list_users(p_query, p_limit, p_offset)` (migration
+`0024_admin_list_users.sql`) joins `profile` to `auth.users` (same
+live-join pattern as `admin_list_admins`/`vendor_list_team`, since
+`profile` has no `email` column), aggregates each user's vendor
+affiliations, and carries the total match count via `count(*) over()` for
+pagination — the first paginated feature in the codebase. `/users` in
+`apps/admin` renders it with a search bar (name/email substring) and
+Prev/Next paging, per decision #4 (all users, not just vendor-affiliated).
 
-### Phase 9 — Cross-vendor booking oversight (admin)
+### Phase 9 — Cross-vendor booking oversight (admin) — **done, deployed**
 
-A global bookings list/search across all vendors (today bookings are only
-visible one vendor at a time, inside `apps/vendor`), plus the same
-Details/Bookings tab pattern from Phase 3 when admin drills into any
-vendor's specific event.
+`/bookings` in `apps/admin` lists/searches bookings across every vendor
+(optionally scoped to one via a vendor filter), backed by a new
+`"admins read all bookings"` RLS policy on `public.booking` (migration
+`0022_admin_booking_access.sql`, alongside `is_admin()` bypasses added to
+`check_in_booking`/`cancel_booking` so an admin account with zero
+`vendor_member` rows — the normal case — can act on any vendor's booking).
+`/vendors/[id]/events/[eventId]` gives admin the same Details/Bookings tab
+pattern as Phase 3, but **read-only** on Details (no ticket-type editor or
+image upload — oversight only, content editing stays a vendor
+responsibility).
 
 ## Explicit non-goals for this pass
 
