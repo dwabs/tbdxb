@@ -1,4 +1,4 @@
-import { BreakdownSparkline, TrendSparkline } from "@/components/dashboard/mini-charts";
+import { TrendSparkline } from "@/components/dashboard/mini-charts";
 import { StatTile } from "@/components/dashboard/stat-tile";
 import { createClient } from "@/lib/supabase/server";
 import type { AdminPlatformStats } from "@/lib/types";
@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const weeks = lastTwelveWeeks();
 
-  const [{ data, error }, { data: bookingRows }, { data: topViewedRows }] = await Promise.all([
+  const [{ data, error }, { data: bookingRows }, { data: viewRows }] = await Promise.all([
     supabase.rpc("admin_platform_stats").single(),
     supabase
       .from("booking")
@@ -44,23 +44,22 @@ export default async function DashboardPage() {
       .eq("is_sample", false)
       .gte("created_at", weeks[0].start.toISOString()),
     supabase
-      .from("event")
-      .select("title, view_count")
-      .gt("view_count", 0)
-      .order("view_count", { ascending: false })
-      .limit(5),
+      .from("event_view_log")
+      .select("viewed_at")
+      .gte("viewed_at", weeks[0].start.toISOString()),
   ]);
 
   if (error) console.error("admin_platform_stats:", error.message);
 
   const stats = data as AdminPlatformStats | null;
 
-  // Bookings/tickets have real timestamped rows, so a 12-week trend is
-  // honest data. view_count is a running counter with no history behind
-  // it (see migration 0018) — there's nothing to plot a trend from, so
-  // Views gets a top-viewed-events breakdown instead of a fabricated one.
+  // Bookings/tickets/views all get a real 12-week trend now — event_view_log
+  // (migration 0025) gives views the same timestamped history bookings
+  // already had. It only starts counting from its own deploy date, same as
+  // view_count itself did (0018), so it reads mostly flat until it fills in.
   const bookingsSeries = weeks.map((w) => ({ label: w.label, value: 0 }));
   const ticketsSeries = weeks.map((w) => ({ label: w.label, value: 0 }));
+  const viewsSeries = weeks.map((w) => ({ label: w.label, value: 0 }));
   for (const row of bookingRows ?? []) {
     const createdAt = new Date(row.created_at as string);
     const bucket = weeks.findIndex((w) => createdAt >= w.start && createdAt < w.end);
@@ -68,10 +67,12 @@ export default async function DashboardPage() {
     bookingsSeries[bucket].value += 1;
     ticketsSeries[bucket].value += row.quantity as number;
   }
-
-  const topViewed = ((topViewedRows ?? []) as { title: string; view_count: number }[]).map(
-    (e) => ({ label: e.title, value: e.view_count }),
-  );
+  for (const row of viewRows ?? []) {
+    const viewedAt = new Date(row.viewed_at as string);
+    const bucket = weeks.findIndex((w) => viewedAt >= w.start && viewedAt < w.end);
+    if (bucket === -1) continue;
+    viewsSeries[bucket].value += 1;
+  }
 
   return (
     <div className="grid gap-8">
@@ -122,14 +123,8 @@ export default async function DashboardPage() {
           <StatTile
             label="Views"
             value={NUMBER.format(stats?.views_total ?? 0)}
-            caption={
-              topViewed.length > 0
-                ? "Top viewed events — only reflects visits since tracking was added"
-                : "Only reflects visits since view tracking was added — earlier history isn't counted."
-            }
-            chart={
-              topViewed.length > 0 ? <BreakdownSparkline data={topViewed} /> : undefined
-            }
+            caption="Last 12 weeks — only reflects visits since tracking was added"
+            chart={<TrendSparkline data={viewsSeries} tooltipLabel="Views" />}
           />
         </div>
       </section>

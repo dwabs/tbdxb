@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 
 const tooltipStyle = {
   borderRadius: 8,
@@ -11,8 +11,7 @@ const tooltipStyle = {
   padding: "6px 10px",
 };
 
-/** 12-week trend sparkline — no axes/gridlines, just shape. Used where a
- *  real timestamped history exists (booking rows), unlike view_count below. */
+/** 12-week trend sparkline — no axes/gridlines, just shape. */
 export function TrendSparkline({
   data,
   tooltipLabel,
@@ -44,27 +43,6 @@ export function TrendSparkline({
           fill={`url(#${id})`}
         />
       </AreaChart>
-    </ResponsiveContainer>
-  );
-}
-
-/** Top-N categorical breakdown — used for views, since view_count is a
- *  running counter with no timestamp log, so there's no real trend to plot. */
-export function BreakdownSparkline({
-  data,
-}: {
-  data: { label: string; value: number }[];
-}) {
-  return (
-    <ResponsiveContainer width="100%" height={56}>
-      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 8, bottom: 0, left: 0 }}>
-        <YAxis type="category" dataKey="label" hide />
-        <Tooltip
-          contentStyle={tooltipStyle}
-          formatter={(value, _name, item) => [value, item.payload.label]}
-        />
-        <Bar dataKey="value" fill="var(--primary)" fillOpacity={0.55} radius={[3, 3, 3, 3]} />
-      </BarChart>
     </ResponsiveContainer>
   );
 }
