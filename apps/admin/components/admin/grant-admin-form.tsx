@@ -6,11 +6,13 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 
 export function GrantAdminForm() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -29,6 +31,7 @@ export function GrantAdminForm() {
       return;
     }
     setEmail("");
+    showToast("Admin access granted.");
     router.refresh();
   }
 

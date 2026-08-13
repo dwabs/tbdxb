@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 import { VENDOR_STATUS_META, type Vendor, type VendorStatus } from "@/lib/types";
 
@@ -21,6 +22,7 @@ const STATUSES = Object.keys(VENDOR_STATUS_META) as VendorStatus[];
 export function VendorStatusEditor({ vendor }: { vendor: Vendor }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [status, setStatus] = useState<VendorStatus>(vendor.status);
   // Percent in the UI, fraction in the DB — commission_rate is stored 0-1.
   const [commissionPct, setCommissionPct] = useState(
@@ -50,6 +52,7 @@ export function VendorStatusEditor({ vendor }: { vendor: Vendor }) {
       setError(rpcError.message);
       return;
     }
+    showToast("Vendor updated.");
     router.refresh();
   }
 

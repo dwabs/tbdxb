@@ -5,16 +5,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 
 /** Closes a real gap that team-invite (0020) creates: an admin-issued temp
- *  password had nowhere to be changed anywhere in this app. Same
- *  saving/saved/error shape as SessionTimeoutForm, just a different field. */
+ *  password had nowhere to be changed anywhere in this app. */
 export function ChangePasswordForm() {
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
   async function handleSubmit(event: React.FormEvent) {
@@ -24,7 +24,6 @@ export function ChangePasswordForm() {
       return;
     }
     setSaving(true);
-    setSaved(false);
     setError("");
     const { error: updateError } = await supabase.auth.updateUser({ password });
     setSaving(false);
@@ -33,7 +32,7 @@ export function ChangePasswordForm() {
       return;
     }
     setPassword("");
-    setSaved(true);
+    showToast("Password updated.");
   }
 
   return (
@@ -45,18 +44,17 @@ export function ChangePasswordForm() {
           type="password"
           placeholder="New password"
           value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setSaved(false);
-          }}
+          onChange={(e) => setPassword(e.target.value)}
           className="max-w-xs"
         />
         <Button type="submit" size="sm" disabled={saving || !password}>
           Update
         </Button>
-        <p aria-live="polite" className="text-sm text-muted-foreground">
-          {error || (saved ? "Saved." : "")}
-        </p>
+        {error ? (
+          <p aria-live="polite" className="text-sm text-destructive">
+            {error}
+          </p>
+        ) : null}
       </div>
     </form>
   );

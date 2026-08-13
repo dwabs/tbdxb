@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 
 export function RevokeAdminButton({ userId }: { userId: string }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,6 +26,7 @@ export function RevokeAdminButton({ userId }: { userId: string }) {
       setError(rpcError.message);
       return;
     }
+    showToast("Admin access revoked.");
     router.refresh();
   }
 

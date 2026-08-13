@@ -80,26 +80,17 @@ export default async function DashboardPage() {
 
       <section className="grid gap-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase">
-          Vendors
+          Revenue
         </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatTile label="Pending" value={stats?.vendors_pending ?? 0} />
-          <StatTile label="Approved" value={stats?.vendors_approved ?? 0} />
-          <StatTile label="Suspended" value={stats?.vendors_suspended ?? 0} />
-        </div>
-      </section>
-
-      <section className="grid gap-3">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase">
-          Events
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <StatTile label="Draft" value={stats?.events_draft ?? 0} />
-          <StatTile label="In review" value={stats?.events_submitted ?? 0} />
-          <StatTile label="Approved" value={stats?.events_approved ?? 0} />
-          <StatTile label="Live" value={stats?.events_published ?? 0} />
-          <StatTile label="Rejected" value={stats?.events_rejected ?? 0} />
-          <StatTile label="Archived" value={stats?.events_archived ?? 0} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StatTile
+            label="Gross ticket sales"
+            value={AED.format(stats?.gross_revenue_aed ?? 0)}
+          />
+          <StatTile
+            label="Platform commission"
+            value={AED.format(stats?.commission_revenue_aed ?? 0)}
+          />
         </div>
       </section>
 
@@ -131,17 +122,26 @@ export default async function DashboardPage() {
 
       <section className="grid gap-3">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase">
-          Revenue
+          Events
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <StatTile
-            label="Gross ticket sales"
-            value={AED.format(stats?.gross_revenue_aed ?? 0)}
-          />
-          <StatTile
-            label="Platform commission"
-            value={AED.format(stats?.commission_revenue_aed ?? 0)}
-          />
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <StatTile label="Draft" value={stats?.events_draft ?? 0} />
+          <StatTile label="In review" value={stats?.events_submitted ?? 0} />
+          <StatTile label="Approved" value={stats?.events_approved ?? 0} />
+          <StatTile label="Live" value={stats?.events_published ?? 0} />
+          <StatTile label="Rejected" value={stats?.events_rejected ?? 0} />
+          <StatTile label="Archived" value={stats?.events_archived ?? 0} />
+        </div>
+      </section>
+
+      <section className="grid gap-3">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase">
+          Vendors
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatTile label="Pending" value={stats?.vendors_pending ?? 0} />
+          <StatTile label="Approved" value={stats?.vendors_approved ?? 0} />
+          <StatTile label="Suspended" value={stats?.vendors_suspended ?? 0} />
         </div>
       </section>
     </div>

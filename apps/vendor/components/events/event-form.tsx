@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Toast, useToast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/toast";
 import { CATEGORIES } from "@/lib/categories";
 import { dubaiDateTimeToISO, slugify } from "@/lib/slug";
 import { resolveImageUrl } from "@/lib/images";
@@ -126,7 +126,7 @@ export function EventForm(
 ) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
-  const { toast, show: showToast, dismiss: dismissToast } = useToast();
+  const showToast = useToast();
 
   const [fields, setFields] = useState<CoreFields>(() =>
     props.mode === "edit" ? fieldsFromEvent(props.event) : emptyFields(),
@@ -436,8 +436,6 @@ export function EventForm(
 
   return (
     <div className="grid gap-6">
-      <Toast toast={toast} onDone={dismissToast} />
-
       {props.mode === "edit" ? (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

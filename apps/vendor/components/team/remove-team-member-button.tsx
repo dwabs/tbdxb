@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 
 export function RemoveTeamMemberButton({
@@ -16,6 +17,7 @@ export function RemoveTeamMemberButton({
 }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [pending, setPending] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
@@ -32,6 +34,7 @@ export function RemoveTeamMemberButton({
       setError(rpcError.message);
       return;
     }
+    showToast("Team member removed.");
     router.refresh();
   }
 

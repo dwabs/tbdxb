@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { IdleTimeout } from "@/components/idle-timeout";
+import { ToastProvider } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/server";
 import type { Vendor } from "@/lib/types";
 
@@ -64,17 +65,19 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-svh flex-col bg-background lg:flex-row">
-      <IdleTimeout minutes={profile?.session_timeout_minutes ?? 30} />
-      <DashboardSidebar
-        vendorName={vendor.name}
-        email={user.email ?? ""}
-        vendors={(vendors ?? []) as Vendor[]}
-        activeVendorId={vendor.id}
-      />
-      <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
-      </main>
-    </div>
+    <ToastProvider>
+      <div className="flex min-h-svh flex-col bg-background lg:flex-row">
+        <IdleTimeout minutes={profile?.session_timeout_minutes ?? 30} />
+        <DashboardSidebar
+          vendorName={vendor.name}
+          email={user.email ?? ""}
+          vendors={(vendors ?? []) as Vendor[]}
+          activeVendorId={vendor.id}
+        />
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        </main>
+      </div>
+    </ToastProvider>
   );
 }

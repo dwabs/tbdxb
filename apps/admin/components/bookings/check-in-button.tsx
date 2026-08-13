@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 
 const REASON_LABEL: Record<string, string> = {
@@ -19,6 +20,7 @@ const REASON_LABEL: Record<string, string> = {
 export function CheckInButton({ reference }: { reference: string }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -36,6 +38,7 @@ export function CheckInButton({ reference }: { reference: string }) {
     }
     const result = data as { ok: boolean; reason: string };
     if (result.ok) {
+      showToast("Checked in.");
       router.refresh();
       return;
     }

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { ToastProvider } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -45,11 +46,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-svh flex-col bg-background lg:flex-row">
-      <AdminSidebar email={user.email ?? ""} />
-      <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
-      </main>
-    </div>
+    <ToastProvider>
+      <div className="flex min-h-svh flex-col bg-background lg:flex-row">
+        <AdminSidebar email={user.email ?? ""} />
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-8 sm:py-8 lg:px-10">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
+        </main>
+      </div>
+    </ToastProvider>
   );
 }

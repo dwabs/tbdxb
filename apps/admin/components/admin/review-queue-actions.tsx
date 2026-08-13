@@ -6,11 +6,13 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 
 export function ReviewQueueActions({ eventId }: { eventId: string }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [rejecting, setRejecting] = useState(false);
@@ -27,6 +29,7 @@ export function ReviewQueueActions({ eventId }: { eventId: string }) {
       setError(rpcError.message);
       return;
     }
+    showToast("Event approved.");
     router.refresh();
   }
 
@@ -43,6 +46,7 @@ export function ReviewQueueActions({ eventId }: { eventId: string }) {
       setError(rpcError.message);
       return;
     }
+    showToast("Event rejected.");
     router.refresh();
   }
 

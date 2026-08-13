@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { createClient } from "@/lib/supabase/client";
 
 export function CancelBookingButton({ bookingId }: { bookingId: string }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
+  const showToast = useToast();
   const [pending, setPending] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
@@ -25,6 +27,7 @@ export function CancelBookingButton({ bookingId }: { bookingId: string }) {
       setError(rpcError.message);
       return;
     }
+    showToast("Booking cancelled.");
     router.refresh();
   }
 
