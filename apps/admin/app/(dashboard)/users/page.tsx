@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { UsersFilterBar } from "@/components/users/users-filter-bar";
 import { UsersPagination } from "@/components/users/users-pagination";
@@ -25,6 +27,18 @@ export default async function UsersPage({
   if (error) console.error("admin_list_users:", error.message);
 
   const users = (data ?? []) as AdminUser[];
+
+  // total_count only rides along on returned rows, so a page number past
+  // the last real one gets zero rows back — no way to tell whether that's
+  // "past the end" or a real empty search from this response alone.
+  // Either way, page > 1 with nothing back means the number is stale (a
+  // search narrowed the results, or rows were deleted) — clamp to page 1
+  // instead of stranding the admin on a dead "No users found" with no
+  // pagination control to get back.
+  if (users.length === 0 && page > 1) {
+    redirect(q ? `/users?q=${encodeURIComponent(q)}` : "/users");
+  }
+
   const totalCount = users[0]?.total_count ?? 0;
 
   return (

@@ -14,13 +14,17 @@ export type EventStatus =
   | "rejected"
   | "archived";
 
-/** Badge styling per lifecycle state, mirrors apps/vendor's STATUS_META. */
+/** Badge styling per lifecycle state — mirrors apps/vendor's STATUS_META
+ *  labels, but translucent-on-dark rather than pale-on-light: this app is
+ *  dark-only (app/layout.tsx forces the `dark` class), so the light-mode
+ *  bg-{color}-100/text-{color}-900 pair vendor uses would render as a
+ *  near-white chip instead of a muted dark-mode one. */
 export const STATUS_META: Record<EventStatus, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
-  submitted: { label: "In review", className: "bg-amber-100 text-amber-900" },
-  approved: { label: "Approved", className: "bg-sky-100 text-sky-900" },
-  published: { label: "Live", className: "bg-emerald-100 text-emerald-900" },
-  rejected: { label: "Changes needed", className: "bg-red-100 text-red-900" },
+  submitted: { label: "In review", className: "bg-amber-500/15 text-amber-400" },
+  approved: { label: "Approved", className: "bg-sky-500/15 text-sky-400" },
+  published: { label: "Live", className: "bg-emerald-500/15 text-emerald-400" },
+  rejected: { label: "Changes needed", className: "bg-red-500/15 text-red-400" },
   archived: { label: "Archived", className: "bg-muted text-muted-foreground" },
 };
 
@@ -41,9 +45,9 @@ export const VENDOR_STATUS_META: Record<
   VendorStatus,
   { label: string; className: string }
 > = {
-  pending: { label: "Pending", className: "bg-amber-100 text-amber-900" },
-  approved: { label: "Approved", className: "bg-emerald-100 text-emerald-900" },
-  suspended: { label: "Suspended", className: "bg-red-100 text-red-900" },
+  pending: { label: "Pending", className: "bg-amber-500/15 text-amber-400" },
+  approved: { label: "Approved", className: "bg-emerald-500/15 text-emerald-400" },
+  suspended: { label: "Suspended", className: "bg-red-500/15 text-red-400" },
 };
 
 /** admin_list_admins()'s return shape — email comes from a live auth.users
@@ -120,9 +124,9 @@ export const BOOKING_STATUS_META: Record<
   BookingStatus,
   { label: string; className: string }
 > = {
-  confirmed: { label: "Confirmed", className: "bg-emerald-100 text-emerald-900" },
-  completed: { label: "Completed", className: "bg-sky-100 text-sky-900" },
-  cancelled: { label: "Cancelled", className: "bg-red-100 text-red-900" },
+  confirmed: { label: "Confirmed", className: "bg-emerald-500/15 text-emerald-400" },
+  completed: { label: "Completed", className: "bg-sky-500/15 text-sky-400" },
+  cancelled: { label: "Cancelled", className: "bg-red-500/15 text-red-400" },
 };
 
 /** admin_list_users()'s return shape (0024) — a page of every signed-up
