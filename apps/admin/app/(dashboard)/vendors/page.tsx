@@ -2,23 +2,36 @@ import Link from "next/link";
 
 import { CreateVendorForm } from "@/components/admin/create-vendor-form";
 import { VendorStatusEditor } from "@/components/admin/vendor-status-editor";
+import { PageStats } from "@/components/dashboard/page-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import type { Vendor } from "@/lib/types";
+import type { AdminPlatformStats, Vendor } from "@/lib/types";
 
 export default async function VendorsPage() {
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("vendor")
-    .select("id, name, slug, contact_email, contact_phone, logo_url, bio, status, commission_rate")
-    .order("name");
+  const [{ data }, { data: statsData }] = await Promise.all([
+    supabase
+      .from("vendor")
+      .select("id, name, slug, contact_email, contact_phone, logo_url, bio, status, commission_rate")
+      .order("name"),
+    supabase.rpc("admin_platform_stats").single(),
+  ]);
 
   const vendors = (data ?? []) as Vendor[];
+  const stats = statsData as AdminPlatformStats | null;
 
   return (
     <div className="grid gap-6">
       <h1 className="text-2xl font-semibold tracking-tight">Vendors</h1>
+
+      <PageStats
+        items={[
+          { label: "Pending", value: stats?.vendors_pending ?? 0 },
+          { label: "Approved", value: stats?.vendors_approved ?? 0 },
+          { label: "Suspended", value: stats?.vendors_suspended ?? 0 },
+        ]}
+      />
 
       <Card>
         <CardHeader>

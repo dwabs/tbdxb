@@ -1,7 +1,15 @@
 import { BookingsFilterBar } from "@/components/bookings/bookings-filter-bar";
 import { BookingsTable } from "@/components/bookings/bookings-table";
+import { PageStats } from "@/components/dashboard/page-stats";
 import { createClient } from "@/lib/supabase/server";
-import { BOOKING_STATUS_META, type AdminBooking, type BookingStatus } from "@/lib/types";
+import {
+  BOOKING_STATUS_META,
+  type AdminBooking,
+  type AdminPlatformStats,
+  type BookingStatus,
+} from "@/lib/types";
+
+const NUMBER = new Intl.NumberFormat("en-AE");
 
 const STATUSES = Object.keys(BOOKING_STATUS_META) as BookingStatus[];
 
@@ -40,11 +48,12 @@ export default async function BookingsPage({
 
   const supabase = await createClient();
 
-  const { data: vendorRows } = await supabase
-    .from("vendor")
-    .select("id, name")
-    .order("name");
+  const [{ data: vendorRows }, { data: statsData }] = await Promise.all([
+    supabase.from("vendor").select("id, name").order("name"),
+    supabase.rpc("admin_platform_stats").single(),
+  ]);
   const vendors = vendorRows ?? [];
+  const stats = statsData as AdminPlatformStats | null;
 
   let eventIds: string[] | null = null;
   if (vendorId) {
@@ -100,6 +109,14 @@ export default async function BookingsPage({
   return (
     <div className="grid gap-6">
       <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
+
+      <PageStats
+        items={[
+          { label: "Bookings", value: NUMBER.format(stats?.bookings_total ?? 0) },
+          { label: "Tickets sold", value: NUMBER.format(stats?.tickets_sold ?? 0) },
+          { label: "Views", value: NUMBER.format(stats?.views_total ?? 0) },
+        ]}
+      />
 
       <BookingsFilterBar vendors={vendors} />
 

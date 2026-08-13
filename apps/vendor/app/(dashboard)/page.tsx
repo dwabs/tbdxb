@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { OverviewCharts } from "@/components/overview/overview-charts";
+import { StatTile } from "@/components/stat-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,16 +138,7 @@ export default async function OverviewPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {tiles.map((tile) => (
-          <Card key={tile.label}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {tile.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-semibold tabular-nums">{tile.value}</p>
-            </CardContent>
-          </Card>
+          <StatTile key={tile.label} label={tile.label} value={tile.value} />
         ))}
       </div>
 

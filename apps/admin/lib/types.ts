@@ -77,6 +77,9 @@ export type EventRow = {
   slug: string;
   status: EventStatus;
   title: string;
+  summary: string;
+  body: string;
+  category: string;
   venue: string;
   area: string;
   starts_at: string | null;
@@ -85,6 +88,17 @@ export type EventRow = {
   group_size: string;
   tags: string[];
   view_count: number;
+  rejection_reason: string | null;
+};
+
+export type EventImage = {
+  id: string;
+  event_id: string;
+  url: string;
+  alt: string;
+  width: number;
+  height: number;
+  position: number;
 };
 
 export type TicketType = {

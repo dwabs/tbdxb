@@ -2,10 +2,12 @@ import { cookies } from "next/headers";
 
 import { BookingsFilterBar } from "@/components/bookings/bookings-filter-bar";
 import { BookingsTable } from "@/components/bookings/bookings-table";
+import { PageStats } from "@/components/page-stats";
 import { createClient } from "@/lib/supabase/server";
 import { BOOKING_STATUS_META, type Booking, type BookingStatus } from "@/lib/types";
 
 const STATUSES = Object.keys(BOOKING_STATUS_META) as BookingStatus[];
+const NUMBER = new Intl.NumberFormat("en-AE");
 
 export default async function BookingsPage({
   searchParams,
@@ -45,6 +47,29 @@ export default async function BookingsPage({
     .eq("vendor_id", vendorId ?? "00000000-0000-0000-0000-000000000000");
   const eventIds = (ownEvents ?? []).map((e) => e.id);
 
+  // Unfiltered totals for the stats strip — independent of the list's own
+  // search/status/when filters below, so the numbers stay stable while
+  // filtering the table.
+  let bookingsTotal = 0;
+  let ticketsSold = 0;
+  let viewsTotal = 0;
+  if (eventIds.length > 0) {
+    const [{ count }, { data: eventStats }] = await Promise.all([
+      supabase
+        .from("booking")
+        .select("id", { count: "exact", head: true })
+        .in("event_id", eventIds)
+        .neq("status", "cancelled")
+        .eq("is_sample", false),
+      supabase.from("vendor_event_stats").select("view_count, tickets_sold").eq("vendor_id", vendorId ?? ""),
+    ]);
+    bookingsTotal = count ?? 0;
+    for (const row of eventStats ?? []) {
+      ticketsSold += row.tickets_sold as number;
+      viewsTotal += row.view_count as number;
+    }
+  }
+
   let bookings: Booking[] = [];
   if (eventIds.length > 0) {
     let query = supabase
@@ -77,6 +102,14 @@ export default async function BookingsPage({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
       </div>
+
+      <PageStats
+        items={[
+          { label: "Bookings", value: NUMBER.format(bookingsTotal) },
+          { label: "Tickets sold", value: NUMBER.format(ticketsSold) },
+          { label: "Views", value: NUMBER.format(viewsTotal) },
+        ]}
+      />
 
       <BookingsFilterBar />
 

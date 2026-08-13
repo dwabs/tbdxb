@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { EventsFilterBar } from "@/components/events/events-filter-bar";
+import { PageStats } from "@/components/page-stats";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,16 +64,30 @@ export default async function EventsPage({
   if (when === "upcoming") query = query.gte("starts_at", new Date().toISOString());
   if (when === "past") query = query.lt("starts_at", new Date().toISOString());
 
-  const { data } = await query.order("starts_at", {
-    ascending: when !== "past",
-    nullsFirst: false,
-  });
+  // Unfiltered status counts for the stats strip — independent of the list's
+  // own search/status/when filters above, so the numbers stay stable while
+  // filtering the table.
+  const [{ data }, { data: statusRows }] = await Promise.all([
+    query.order("starts_at", { ascending: when !== "past", nullsFirst: false }),
+    supabase
+      .from("event")
+      .select("status")
+      .eq("vendor_id", vendorId ?? "00000000-0000-0000-0000-000000000000"),
+  ]);
 
   const events = (data ?? []) as Pick<
     EventRow,
     "id" | "slug" | "title" | "status" | "starts_at" | "venue" | "area" | "view_count"
   >[];
   const hasFilters = Boolean(q || status || (when && when !== "upcoming"));
+
+  const statusCounts = Object.fromEntries(STATUSES.map((s) => [s, 0])) as Record<
+    EventStatus,
+    number
+  >;
+  for (const row of statusRows ?? []) {
+    statusCounts[row.status as EventStatus] += 1;
+  }
 
   return (
     <div className="grid gap-6">
@@ -82,6 +97,13 @@ export default async function EventsPage({
           <Link href="/events/new">New event</Link>
         </Button>
       </div>
+
+      <PageStats
+        items={STATUSES.map((s) => ({
+          label: STATUS_META[s].label,
+          value: statusCounts[s],
+        }))}
+      />
 
       <EventsFilterBar />
 
