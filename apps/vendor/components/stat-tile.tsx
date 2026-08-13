@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function StatTile({ label, value }: { label: string; value: string | number }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card className="gap-4">
+      <CardHeader>
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
       </CardHeader>
       <CardContent>

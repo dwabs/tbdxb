@@ -98,8 +98,14 @@ export async function POST(request: Request) {
       email_confirm: true,
     });
     if (createError || !created.user) {
+      // Logged server-side only, never relayed: this call runs on the
+      // service-role client, so a malformed SUPABASE_SECRET_KEY (or any
+      // other transport failure) surfaces here as a raw fetch/header error
+      // whose message can include the key itself — that must never reach
+      // the browser.
+      console.error("admin.auth.admin.createUser:", createError?.message);
       return Response.json(
-        { error: createError?.message ?? "Couldn't create the account." },
+        { error: "Couldn't create the account. Check server logs." },
         { status: 500 },
       );
     }
