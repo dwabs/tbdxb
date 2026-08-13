@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { EventsFilterBar } from "@/components/events/events-filter-bar";
@@ -32,9 +33,25 @@ export default async function EventsPage({
 
   const supabase = await createClient();
 
+  // Same active_vendor cookie as layout.tsx/settings — a user on more than
+  // one vendor's team must only see the active one's events here, not every
+  // vendor they belong to merged together.
+  const [{ data: vendors }, cookieStore] = await Promise.all([
+    supabase.from("vendor").select("id").order("name"),
+    cookies(),
+  ]);
+  const activeVendorId = cookieStore.get("active_vendor")?.value;
+  const vendorId =
+    (vendors ?? []).find((v) => v.id === activeVendorId)?.id ?? vendors?.[0]?.id;
+
+  // vendorId is always set in practice — the layout above already redirects
+  // anyone with zero vendor_member rows before this page can render — but
+  // typed as optional rather than asserted, so a future change here fails
+  // safe (an empty list) instead of erroring on an invalid filter.
   let query = supabase
     .from("event")
-    .select("id, slug, title, status, starts_at, venue, area, view_count");
+    .select("id, slug, title, status, starts_at, venue, area, view_count")
+    .eq("vendor_id", vendorId ?? "00000000-0000-0000-0000-000000000000");
 
   // Stripped rather than escaped: these characters are structural in
   // PostgREST's .or() filter syntax (condition/group separators), and a

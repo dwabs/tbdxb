@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+
 import { BookingsFilterBar } from "@/components/bookings/bookings-filter-bar";
 import { BookingsTable } from "@/components/bookings/bookings-table";
 import { createClient } from "@/lib/supabase/server";
@@ -22,11 +24,25 @@ export default async function BookingsPage({
 
   const supabase = await createClient();
 
+  // Same active_vendor cookie as layout.tsx/settings — without it, a user
+  // on more than one vendor's team would see every vendor's bookings
+  // merged into one list instead of just the active one's.
+  const [{ data: vendors }, cookieStore] = await Promise.all([
+    supabase.from("vendor").select("id").order("name"),
+    cookies(),
+  ]);
+  const activeVendorId = cookieStore.get("active_vendor")?.value;
+  const vendorId =
+    (vendors ?? []).find((v) => v.id === activeVendorId)?.id ?? vendors?.[0]?.id;
+
   // "own events" bookings, scoped explicitly rather than relying on RLS
   // alone: the vendor policy is additive to the customer "own bookings"
   // policy, so an operator account that has also booked as a customer
   // would otherwise see those personal rows mixed into this list too.
-  const { data: ownEvents } = await supabase.from("event").select("id");
+  const { data: ownEvents } = await supabase
+    .from("event")
+    .select("id")
+    .eq("vendor_id", vendorId ?? "00000000-0000-0000-0000-000000000000");
   const eventIds = (ownEvents ?? []).map((e) => e.id);
 
   let bookings: Booking[] = [];

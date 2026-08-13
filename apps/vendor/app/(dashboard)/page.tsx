@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { OverviewCharts } from "@/components/overview/overview-charts";
@@ -42,16 +43,34 @@ function lastTwelveWeeks(): { start: Date; end: Date; label: string }[] {
 export default async function OverviewPage() {
   const supabase = await createClient();
 
+  // Same active_vendor cookie as layout.tsx/settings — vendor_summary_stats
+  // and vendor_event_stats are security_invoker views, so for a user on
+  // more than one vendor's team an unfiltered select returns one row per
+  // vendor they belong to, not one merged row. Left unscoped, .maybeSingle()
+  // on 2+ rows errors (silently discarded, since only `data` is
+  // destructured below), rendering an all-zero Overview instead of an
+  // actual error.
+  const [{ data: vendors }, cookieStore] = await Promise.all([
+    supabase.from("vendor").select("id").order("name"),
+    cookies(),
+  ]);
+  const activeVendorId = cookieStore.get("active_vendor")?.value;
+  const vendorId =
+    (vendors ?? []).find((v) => v.id === activeVendorId)?.id ??
+    vendors?.[0]?.id ??
+    "00000000-0000-0000-0000-000000000000";
+
   const [{ data: stats }, { data: events }, { data: ownEvents }, { data: eventStats }] =
     await Promise.all([
-      supabase.from("vendor_summary_stats").select("*").maybeSingle(),
+      supabase.from("vendor_summary_stats").select("*").eq("vendor_id", vendorId).maybeSingle(),
       supabase
         .from("event")
         .select("id, slug, title, status, starts_at, updated_at")
+        .eq("vendor_id", vendorId)
         .order("updated_at", { ascending: false })
         .limit(5),
-      supabase.from("event").select("id"),
-      supabase.from("vendor_event_stats").select("*"),
+      supabase.from("event").select("id").eq("vendor_id", vendorId),
+      supabase.from("vendor_event_stats").select("*").eq("vendor_id", vendorId),
     ]);
 
   const summary = stats as VendorSummaryStats | null;
