@@ -102,29 +102,11 @@ export const BOOKING_STATUS_META: Record<
   cancelled: { label: "Cancelled", className: "bg-red-100 text-red-900" },
 };
 
-/** Badge styling per vendor lifecycle state, same shape as STATUS_META. */
-export const VENDOR_STATUS_META: Record<
-  VendorStatus,
-  { label: string; className: string }
-> = {
-  pending: { label: "Pending", className: "bg-amber-100 text-amber-900" },
-  approved: { label: "Approved", className: "bg-emerald-100 text-emerald-900" },
-  suspended: { label: "Suspended", className: "bg-red-100 text-red-900" },
-};
-
-/** admin_list_admins()'s return shape — email comes from a live auth.users
- *  join, not a column on profile (see 0011's migration comment). */
-export type AdminProfile = {
-  id: string;
-  full_name: string | null;
-  email: string;
-  created_at: string;
-};
-
 export type VendorRole = "owner" | "staff";
 
-/** vendor_list_team()'s return shape — same live auth.users join as
- *  AdminProfile, for the same reason (see 0020's migration comment). */
+/** vendor_list_team()'s return shape — email comes from a live auth.users
+ *  join, not a column on profile (same reason as admin_list_admins(), see
+ *  0011's migration comment; this one's join is in 0020's). */
 export type TeamMember = {
   user_id: string;
   full_name: string | null;

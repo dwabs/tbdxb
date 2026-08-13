@@ -430,7 +430,8 @@ export function EventForm(
   }
 
   async function saveImageAlt(imageId: string, alt: string) {
-    await supabase.from("event_image").update({ alt }).eq("id", imageId);
+    const { error } = await supabase.from("event_image").update({ alt }).eq("id", imageId);
+    if (error) showToast("Couldn't save alt text.", "error");
   }
 
   return (
