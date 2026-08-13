@@ -41,7 +41,7 @@ export function PhoneField({
       </label>
       <div
         className={cn(
-          "mt-1.5 flex h-12 items-center gap-2 rounded-2xl border pl-3 pr-4 transition-colors duration-200 focus-within:border-ink",
+          "mt-1.5 flex h-12 items-center gap-2 rounded-2xl border ps-3 pe-4 transition-colors duration-200 focus-within:border-ink",
           error ? "border-accent-soft bg-blush" : "border-line-strong",
         )}
       >
