@@ -1,6 +1,27 @@
 # Documentation
 
-Two kinds of document live here. Know which you are reading.
+Three kinds of document live here. Know which you are reading.
+
+## For the owner — start here if you are not a developer
+
+**[`TheBucketListDXB-Owners-Handbook.pdf`](TheBucketListDXB-Owners-Handbook.pdf)**
+— a 19-page printable guide written for a non-technical owner: setting up a
+computer, working with Claude Code (with prompts to copy), everyday tasks,
+publishing, safety rules, troubleshooting and a glossary.
+
+Regenerate it after changing the source with:
+
+```bash
+python3 docs/build-owners-handbook.py
+```
+
+(needs `pip3 install reportlab`; the script writes the PDF beside itself).
+Keep it in step with the reference docs below — it describes the same system
+in plain English.
+
+---
+
+The rest of this folder is for whoever is writing code, human or agent.
 
 ## Reference — current, maintained, read these
 
