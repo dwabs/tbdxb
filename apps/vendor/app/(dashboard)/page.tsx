@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { OverviewCharts } from "@/components/overview/overview-charts";
@@ -6,6 +5,7 @@ import { StatTile } from "@/components/stat-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { resolveActiveVendor } from "@/lib/active-vendor";
 import { createClient } from "@/lib/supabase/server";
 import {
   STATUS_META,
@@ -44,22 +44,14 @@ function lastTwelveWeeks(): { start: Date; end: Date; label: string }[] {
 export default async function OverviewPage() {
   const supabase = await createClient();
 
-  // Same active_vendor cookie as layout.tsx/settings — vendor_summary_stats
-  // and vendor_event_stats are security_invoker views, so for a user on
-  // more than one vendor's team an unfiltered select returns one row per
-  // vendor they belong to, not one merged row. Left unscoped, .maybeSingle()
-  // on 2+ rows errors (silently discarded, since only `data` is
-  // destructured below), rendering an all-zero Overview instead of an
-  // actual error.
-  const [{ data: vendors }, cookieStore] = await Promise.all([
-    supabase.from("vendor").select("id").order("name"),
-    cookies(),
-  ]);
-  const activeVendorId = cookieStore.get("active_vendor")?.value;
-  const vendorId =
-    (vendors ?? []).find((v) => v.id === activeVendorId)?.id ??
-    vendors?.[0]?.id ??
-    "00000000-0000-0000-0000-000000000000";
+  // vendor_summary_stats and vendor_event_stats are security_invoker views,
+  // so an unfiltered select returns one row per vendor the caller can read,
+  // not one merged row — .maybeSingle() on 2+ rows then errors (silently
+  // discarded, since only `data` is destructured below) and the Overview
+  // renders all-zero instead of failing loudly. Scope explicitly; see
+  // resolveActiveVendor for why RLS alone isn't the filter.
+  const { vendor } = await resolveActiveVendor(supabase);
+  const vendorId = vendor?.id ?? "00000000-0000-0000-0000-000000000000";
 
   const [{ data: stats }, { data: events }, { data: ownEvents }, { data: eventStats }] =
     await Promise.all([

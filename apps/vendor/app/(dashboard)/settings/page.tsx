@@ -1,13 +1,11 @@
-import { cookies } from "next/headers";
-
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { SessionTimeoutForm } from "@/components/settings/session-timeout-form";
 import { VendorSettingsForm } from "@/components/settings/vendor-settings-form";
 import { AddTeamMemberForm } from "@/components/team/add-team-member-form";
 import { TeamList } from "@/components/team/team-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { resolveActiveVendor } from "@/lib/active-vendor";
 import { createClient } from "@/lib/supabase/server";
-import type { Vendor } from "@/lib/types";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -16,30 +14,16 @@ export default async function SettingsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Same active_vendor cookie as layout.tsx (0020's team management is what
-  // first makes multi-vendor membership real) — kept consistent so the Team
-  // card below manages the same vendor the sidebar/switcher is showing.
-  const cookieStore = await cookies();
-  const activeVendorId = cookieStore.get("active_vendor")?.value;
-
-  const [{ data: vendors }, { data: profileData }] = await Promise.all([
-    supabase
-      .from("vendor")
-      .select("id, name, contact_email, contact_phone, logo_url, bio")
-      .order("name"),
+  // Same active vendor the sidebar/switcher is showing, so the Team card
+  // below manages the one on screen.
+  const [{ vendor }, { data: profileData }] = await Promise.all([
+    resolveActiveVendor(supabase),
     supabase
       .from("profile")
       .select("session_timeout_minutes")
       .eq("id", user!.id)
       .single(),
   ]);
-
-  const vendor = ((vendors ?? []).find((v) => v.id === activeVendorId) ??
-    vendors?.[0] ??
-    null) as Pick<
-    Vendor,
-    "id" | "name" | "contact_email" | "contact_phone" | "logo_url" | "bio"
-  > | null;
 
   const { data: membership } = vendor
     ? await supabase

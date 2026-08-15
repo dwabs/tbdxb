@@ -1,8 +1,7 @@
-import { cookies } from "next/headers";
-
 import { BookingsFilterBar } from "@/components/bookings/bookings-filter-bar";
 import { BookingsTable } from "@/components/bookings/bookings-table";
 import { PageStats } from "@/components/page-stats";
+import { resolveActiveVendor } from "@/lib/active-vendor";
 import { createClient } from "@/lib/supabase/server";
 import { BOOKING_STATUS_META, type Booking, type BookingStatus } from "@/lib/types";
 
@@ -26,16 +25,10 @@ export default async function BookingsPage({
 
   const supabase = await createClient();
 
-  // Same active_vendor cookie as layout.tsx/settings — without it, a user
-  // on more than one vendor's team would see every vendor's bookings
-  // merged into one list instead of just the active one's.
-  const [{ data: vendors }, cookieStore] = await Promise.all([
-    supabase.from("vendor").select("id").order("name"),
-    cookies(),
-  ]);
-  const activeVendorId = cookieStore.get("active_vendor")?.value;
-  const vendorId =
-    (vendors ?? []).find((v) => v.id === activeVendorId)?.id ?? vendors?.[0]?.id;
+  // Only the active vendor's bookings, not every vendor this account can
+  // reach — see resolveActiveVendor for why RLS alone isn't the filter.
+  const { vendor } = await resolveActiveVendor(supabase);
+  const vendorId = vendor?.id;
 
   // "own events" bookings, scoped explicitly rather than relying on RLS
   // alone: the vendor policy is additive to the customer "own bookings"

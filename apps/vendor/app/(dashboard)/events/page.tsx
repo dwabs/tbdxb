@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { EventsFilterBar } from "@/components/events/events-filter-bar";
@@ -6,6 +5,7 @@ import { PageStats } from "@/components/page-stats";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { resolveActiveVendor } from "@/lib/active-vendor";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_META, type EventRow, type EventStatus } from "@/lib/types";
 
@@ -34,16 +34,10 @@ export default async function EventsPage({
 
   const supabase = await createClient();
 
-  // Same active_vendor cookie as layout.tsx/settings — a user on more than
-  // one vendor's team must only see the active one's events here, not every
-  // vendor they belong to merged together.
-  const [{ data: vendors }, cookieStore] = await Promise.all([
-    supabase.from("vendor").select("id").order("name"),
-    cookies(),
-  ]);
-  const activeVendorId = cookieStore.get("active_vendor")?.value;
-  const vendorId =
-    (vendors ?? []).find((v) => v.id === activeVendorId)?.id ?? vendors?.[0]?.id;
+  // Only the active vendor's events, not every vendor this account can
+  // reach — see resolveActiveVendor for why RLS alone isn't the filter.
+  const { vendor } = await resolveActiveVendor(supabase);
+  const vendorId = vendor?.id;
 
   // vendorId is always set in practice — the layout above already redirects
   // anyone with zero vendor_member rows before this page can render — but
