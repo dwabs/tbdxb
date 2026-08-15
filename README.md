@@ -7,6 +7,12 @@ npm install
 npm run dev
 ```
 
+> **Working on this project — or handing it to an AI agent?** Start with
+> [`CLAUDE.md`](./CLAUDE.md) for the map and the non-negotiable rules, then
+> [`docs/`](./docs/README.md) for architecture, the data model, conventions
+> and operations. Those are the maintained reference; the older plan
+> documents in `docs/` are history.
+
 Every route below lives under both `/en` and `/ar`.
 
 | Route | What it is |
